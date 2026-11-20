@@ -1,0 +1,42 @@
+{
+ "system": "rumblex-vllm",
+ "settings": {
+  "model": "Reson8/Rumble-2-Flash",
+  "device": "cuda:0",
+  "compute_type": "bfloat16",
+  "batch_size": 32,
+  "dtype": "torch.bfloat16",
+  "digits": false,
+  "max_chunk_s": 20.0,
+  "backend": "vllm",
+  "base_url": "http://localhost:8000/v1",
+  "concurrency": 32,
+  "language": "English"
+ },
+ "environment": {
+  "python": "3.11.13",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+  "date": "2026-11-20",
+  "torch": "2.14.1+cu126",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "rumblex_commit": "514bd41"
+ },
+ "data": {
+  "split": "test_clean",
+  "n": 1,
+  "seed": 0,
+  "wer_normalizer": "whisper-english"
+ },
+ "load_seconds": 6.12,
+ "speed": {
+  "audio_seconds": 1200.0,
+  "total_seconds": 10.72,
+  "rtfx": 111.9,
+  "stages": {
+   "transcribe": 10.35,
+   "align": 0.37
+  },
+  "words": 2828,
+  "peak_gpu_mb": 23559
+ }
+}

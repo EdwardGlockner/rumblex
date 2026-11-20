@@ -1,0 +1,692 @@
+{
+ "model": "Reson8/Rumble-2-Flash",
+ "snapshot": "~/.cache/huggingface/hub/models--Reson8--Rumble-2-Flash/snapshots/95bd5f9133a2398e5e48a98c089fe48e122bde97",
+ "device": "cpu",
+ "dtype": "float32",
+ "torch": "2.14.0+cu126",
+ "static": {
+  "encoder": {
+   "d_model": 896,
+   "encoder_layers": 18,
+   "encoder_attention_heads": 14,
+   "n_window": 50,
+   "n_window_infer": 800,
+   "num_mel_bins": 128,
+   "output_dim": 1024
+  },
+  "decoder": {
+   "hidden_size": 1024,
+   "num_hidden_layers": 14,
+   "vocab_size": 99630
+  },
+  "ctc_meta": {
+   "tap": "model.audio_tower.ln_post",
+   "num_classes": 99631,
+   "blank": 99630,
+   "frames_per_second": 13,
+   "encoder_window_seconds": 8,
+   "decode": "greedy: argmax per frame, collapse repeats, drop blank, token_ids[class], tokenizer.decode"
+  },
+  "ctc_identity_mapping": true,
+  "tokenizer_len": 99630
+ },
+ "fragmentation": {
+  "'paracetamol'": [
+   "par",
+   "acet",
+   "am",
+   "ol"
+  ],
+  "' paracetamol'": [
+   "Ġpar",
+   "acet",
+   "am",
+   "ol"
+  ],
+  "'Paracetamol'": [
+   "Par",
+   "acet",
+   "am",
+   "ol"
+  ],
+  "' Paracetamol'": [
+   "ĠPar",
+   "acet",
+   "am",
+   "ol"
+  ],
+  "'ibuprofen'": [
+   "ib",
+   "upro",
+   "fen"
+  ],
+  "' ibuprofen'": [
+   "Ġib",
+   "upro",
+   "fen"
+  ],
+  "'metoprolol'": [
+   "met",
+   "op",
+   "rol",
+   "ol"
+  ],
+  "' metoprolol'": [
+   "Ġmet",
+   "op",
+   "rol",
+   "ol"
+  ],
+  "'amoxicilline'": [
+   "am",
+   "oxic",
+   "ill",
+   "ine"
+  ],
+  "' amoxicilline'": [
+   "Ġam",
+   "oxic",
+   "ill",
+   "ine"
+  ],
+  "'ziekenhuisopname'": [
+   "zie",
+   "ken",
+   "h",
+   "uis",
+   "op",
+   "name"
+  ],
+  "' ziekenhuisopname'": [
+   "Ġzie",
+   "ken",
+   "h",
+   "uis",
+   "op",
+   "name"
+  ],
+  "'arbeidsongeschiktheidsverzekering'": [
+   "ar",
+   "be",
+   "ids",
+   "ong",
+   "esch",
+   "ik",
+   "the",
+   "ids",
+   "ver",
+   "zek",
+   "ering"
+  ],
+  "' arbeidsongeschiktheidsverzekering'": [
+   "Ġarbe",
+   "ids",
+   "ong",
+   "esch",
+   "ik",
+   "the",
+   "ids",
+   "ver",
+   "zek",
+   "ering"
+  ],
+  "'huisartsenpraktijk'": [
+   "h",
+   "uis",
+   "arts",
+   "en",
+   "pr",
+   "akt",
+   "ijk"
+  ],
+  "' huisartsenpraktijk'": [
+   "Ġhuis",
+   "arts",
+   "en",
+   "pr",
+   "akt",
+   "ijk"
+  ],
+  "'deployment'": [
+   "deployment"
+  ],
+  "' deployment'": [
+   "Ġdeployment"
+  ],
+  "'pipeline'": [
+   "pipeline"
+  ],
+  "' pipeline'": [
+   "Ġpipeline"
+  ],
+  "'debuggen'": [
+   "debug",
+   "gen"
+  ],
+  "' debuggen'": [
+   "Ġdebug",
+   "gen"
+  ],
+  "'Kubernetes'": [
+   "K",
+   "ubernetes"
+  ],
+  "' Kubernetes'": [
+   "ĠKubernetes"
+  ],
+  "'Reson8'": [
+   "Res",
+   "on",
+   "8"
+  ],
+  "' Reson8'": [
+   "ĠRes",
+   "on",
+   "8"
+  ],
+  "'RumbleX'": [
+   "R",
+   "umble",
+   "X"
+  ],
+  "' RumbleX'": [
+   "ĠR",
+   "umble",
+   "X"
+  ]
+ },
+ "load_seconds": 2.94,
+ "attn_implementation": "sdpa",
+ "clips": [
+  {
+   "file": "librispeech_mr_quilter.wav",
+   "seconds": 5.86,
+   "ar_seconds": 33.905,
+   "ar_language": "English",
+   "ar_text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel.",
+   "ln_post_calls_during_generate": 1,
+   "ctc_seconds": 0.964,
+   "mel_frames": 585,
+   "ctc_frames": 76,
+   "ctc_frames_per_second": 12.98,
+   "ctc_logits_shape": [
+    76,
+    99631
+   ],
+   "ln_post_shape": [
+    76,
+    896
+   ],
+   "blank_frame_fraction": 0.684,
+   "mean_top_prob": 0.928,
+   "frames_top_prob_gt_0.9": 0.816,
+   "ctc_text": "Mr Qu quilt is the apost of the middle classes, and we are glad to welcome his gospel.",
+   "ar_tokens": 22,
+   "ctc_tokens": 20,
+   "token_edit_distance_ctc_vs_ar": 3,
+   "tokens_per_frame_ar": 0.289,
+   "generate_ln_post_shape": [
+    76,
+    896
+   ],
+   "generate_vs_ctc_states_max_abs_diff": 0.0,
+   "generate_states_ctc_argmax_agreement": 1.0,
+   "viterbi_seconds": 0.004,
+   "viterbi_ok": true,
+   "aligned_words_first_15": [
+    {
+     "w": "Mr.",
+     "s": 0.54,
+     "e": 0.77
+    },
+    {
+     "w": "Quilter",
+     "s": 0.85,
+     "e": 1.0
+    },
+    {
+     "w": "is",
+     "s": 1.23,
+     "e": 1.38
+    },
+    {
+     "w": "the",
+     "s": 1.38,
+     "e": 1.46
+    },
+    {
+     "w": "apostle",
+     "s": 1.69,
+     "e": 2.0
+    },
+    {
+     "w": "of",
+     "s": 2.15,
+     "e": 2.23
+    },
+    {
+     "w": "the",
+     "s": 2.31,
+     "e": 2.38
+    },
+    {
+     "w": "middle",
+     "s": 2.38,
+     "e": 2.46
+    },
+    {
+     "w": "classes,",
+     "s": 2.77,
+     "e": 3.31
+    },
+    {
+     "w": "and",
+     "s": 3.31,
+     "e": 3.38
+    },
+    {
+     "w": "we",
+     "s": 3.46,
+     "e": 3.62
+    },
+    {
+     "w": "are",
+     "s": 3.62,
+     "e": 3.69
+    },
+    {
+     "w": "glad",
+     "s": 3.77,
+     "e": 3.92
+    },
+    {
+     "w": "to",
+     "s": 4.08,
+     "e": 4.15
+    },
+    {
+     "w": "welcome",
+     "s": 4.46,
+     "e": 4.54
+    }
+   ],
+   "mean_frames_per_token_span": 1.18
+  },
+  {
+   "file": "bcn_weather.mp3",
+   "seconds": 11.04,
+   "ar_seconds": 4.574,
+   "ar_language": "English",
+   "ar_text": "Yesterday it was 35 degrees in Barcelona, but today the temperature will go go down to minus 20 degrees.",
+   "ln_post_calls_during_generate": 1,
+   "ctc_seconds": 1.373,
+   "mel_frames": 1104,
+   "ctc_frames": 144,
+   "ctc_frames_per_second": 13.043,
+   "ctc_logits_shape": [
+    144,
+    99631
+   ],
+   "ln_post_shape": [
+    144,
+    896
+   ],
+   "blank_frame_fraction": 0.764,
+   "mean_top_prob": 0.908,
+   "frames_top_prob_gt_0.9": 0.729,
+   "ctc_text": "Yesterday, it was uh 35 degrees in Barcelona, but today the temperature will go down to minus 20 degrees.",
+   "ar_tokens": 25,
+   "ctc_tokens": 26,
+   "token_edit_distance_ctc_vs_ar": 3,
+   "tokens_per_frame_ar": 0.174,
+   "generate_ln_post_shape": [
+    144,
+    896
+   ],
+   "generate_vs_ctc_states_max_abs_diff": 0.0,
+   "generate_states_ctc_argmax_agreement": 1.0,
+   "viterbi_seconds": 0.01,
+   "viterbi_ok": true,
+   "aligned_words_first_15": [
+    {
+     "w": "Yesterday",
+     "s": 1.0,
+     "e": 1.15
+    },
+    {
+     "w": "it",
+     "s": 1.54,
+     "e": 1.62
+    },
+    {
+     "w": "was",
+     "s": 1.69,
+     "e": 1.85
+    },
+    {
+     "w": "35",
+     "s": 2.23,
+     "e": 2.62
+    },
+    {
+     "w": "degrees",
+     "s": 2.77,
+     "e": 2.85
+    },
+    {
+     "w": "in",
+     "s": 3.0,
+     "e": 3.15
+    },
+    {
+     "w": "Barcelona,",
+     "s": 3.15,
+     "e": 3.77
+    },
+    {
+     "w": "but",
+     "s": 3.85,
+     "e": 3.92
+    },
+    {
+     "w": "today",
+     "s": 4.0,
+     "e": 4.15
+    },
+    {
+     "w": "the",
+     "s": 4.85,
+     "e": 4.92
+    },
+    {
+     "w": "temperature",
+     "s": 5.23,
+     "e": 5.31
+    },
+    {
+     "w": "will",
+     "s": 5.46,
+     "e": 5.54
+    },
+    {
+     "w": "go",
+     "s": 5.62,
+     "e": 5.69
+    },
+    {
+     "w": "go",
+     "s": 6.15,
+     "e": 6.23
+    },
+    {
+     "w": "down",
+     "s": 6.38,
+     "e": 6.46
+    }
+   ],
+   "mean_frames_per_token_span": 1.32
+  },
+  {
+   "file": "obama_first_45_secs.mp3",
+   "seconds": 45.0,
+   "ar_seconds": 66.044,
+   "ar_language": "English",
+   "ar_text": "This week, I traveled to Chicago to deliver my final farewell address to the nation, following in the tradition of presidents before me. It was an opportunity to say thank you. Whether we've seen eye to eye or rarely agreed at all, my conversations with you, the American people, in living rooms and schools, at farms and on factory floors, at diners and on distant military outposts. All these conversations are what have kept me honest, kept me inspired, and kept me going. Every day, I learned from you. You made me a better president, and you made me a better man. Over the course of these eight years, I've seen the goodness, the resilience, and the hope of the American people.",
+   "ln_post_calls_during_generate": 1,
+   "ctc_seconds": 3.712,
+   "mel_frames": 4500,
+   "ctc_frames": 585,
+   "ctc_frames_per_second": 13.0,
+   "ctc_logits_shape": [
+    585,
+    99631
+   ],
+   "ln_post_shape": [
+    585,
+    896
+   ],
+   "blank_frame_fraction": 0.715,
+   "mean_top_prob": 0.914,
+   "frames_top_prob_gt_0.9": 0.756,
+   "ctc_text": "This week, I traveled to Chicago to deliver my final fair farewell addressed to the nation, following in the tradition of Presidents before me. it was an opportunity to say thank you. Whether we've seen i or rarely agreed at all, My conversation with you, the American people in living rooms in schools at farms and on factory floors, at Din and on distant military out. All these conversations are what have kept me honest, kept me inspired and kept me going. Every day I learned from you. You made me a better president, and you made me a better man. Over the course of these  eight years, I've seen the goodness the resilience and the hope of the",
+   "ar_tokens": 147,
+   "ctc_tokens": 137,
+   "token_edit_distance_ctc_vs_ar": 23,
+   "tokens_per_frame_ar": 0.251,
+   "generate_ln_post_shape": [
+    585,
+    896
+   ],
+   "generate_vs_ctc_states_max_abs_diff": 0.0,
+   "generate_states_ctc_argmax_agreement": 1.0,
+   "viterbi_seconds": 0.207,
+   "viterbi_ok": true,
+   "aligned_words_first_15": [
+    {
+     "w": "This",
+     "s": 0.85,
+     "e": 0.92
+    },
+    {
+     "w": "week,",
+     "s": 1.08,
+     "e": 1.38
+    },
+    {
+     "w": "I",
+     "s": 1.54,
+     "e": 1.62
+    },
+    {
+     "w": "traveled",
+     "s": 1.77,
+     "e": 1.85
+    },
+    {
+     "w": "to",
+     "s": 2.0,
+     "e": 2.08
+    },
+    {
+     "w": "Chicago",
+     "s": 2.15,
+     "e": 2.38
+    },
+    {
+     "w": "to",
+     "s": 2.92,
+     "e": 3.0
+    },
+    {
+     "w": "deliver",
+     "s": 3.23,
+     "e": 3.31
+    },
+    {
+     "w": "my",
+     "s": 3.46,
+     "e": 3.62
+    },
+    {
+     "w": "final",
+     "s": 3.77,
+     "e": 3.85
+    },
+    {
+     "w": "farewell",
+     "s": 4.31,
+     "e": 4.38
+    },
+    {
+     "w": "address",
+     "s": 4.62,
+     "e": 4.69
+    },
+    {
+     "w": "to",
+     "s": 4.85,
+     "e": 4.92
+    },
+    {
+     "w": "the",
+     "s": 5.0,
+     "e": 5.08
+    },
+    {
+     "w": "nation,",
+     "s": 5.08,
+     "e": 5.54
+    }
+   ],
+   "mean_frames_per_token_span": 1.19
+  },
+  {
+   "file": "two_speakers.wav",
+   "seconds": 60.0,
+   "ar_seconds": 39.963,
+   "ar_language": "English",
+   "ar_text": "Debate is heating up over whether or not the Fearless Girl statue should stay on Wall Street. The statue was put up to highlight International Women's Day, and it immediately became a tourist draw and an internet sensation. The Fearless Girl is right across from the iconic Wall Street charging bull. So originally, this was put up only until April 2nd, but just yesterday, the mayor's office said we're actually going to let this stay until February of 2018. So this was kind of meant to, it went in this location specifically because they want to encourage more people, more firms on Wall Street to hire more women. So that's kind of where this got started, Susan Elizabeth. And I know there's been a lot of talk about it. I mean, it stirred up a huge conversation. People are getting behind it. I think it should be permanent. The bull placement, because they're they're staring each other down now, and I didn't know much about the history of the bull, but it was actually in the wake of the stock market crash that happened in 1987. It was supposed to be a symbol of Americans' financial resilience and kind of that can-do spirit. And the sculptor of the bull is not happy about this because he says his",
+   "ln_post_calls_during_generate": 1,
+   "ctc_seconds": 4.226,
+   "mel_frames": 6000,
+   "ctc_frames": 780,
+   "ctc_frames_per_second": 13.0,
+   "ctc_logits_shape": [
+    780,
+    99631
+   ],
+   "ln_post_shape": [
+    780,
+    896
+   ],
+   "blank_frame_fraction": 0.603,
+   "mean_top_prob": 0.898,
+   "frames_top_prob_gt_0.9": 0.703,
+   "ctc_text": "De debate is heating up over whether or not the fearless girl should stay on Wall Street. the St was put up to highlight international Women Day, and it immediately be became a straw draw and an internet sensation. the Fearless girl is right across from the iconic Wall Street charging bull. So originally this was put up only until April second, but just yesterday, the mayor's office said, we're actually going to let the stay until February of 2018. So this was kind of meant to it went in this location specifically because they want to encourage more people more firms on Wall Street to hire more women. So that's kind of of where this got started Susan's Elizabeth. And I know there's been a lot of talk about it. I mean it's stirred up a huge conversation. people are getting behind it. I think it should be permanent. The bowl placement, because they they're staring each other down now, and I didn know it much about the history of the bull, but it was actually in the wake of the stock market crash that happened in 1987. It was supposed to be a symbol of Americans financial resilience and kind of that can do spirit, and the sculpture of the bowl is not happy about this because he says",
+   "ar_tokens": 265,
+   "ctc_tokens": 256,
+   "token_edit_distance_ctc_vs_ar": 39,
+   "tokens_per_frame_ar": 0.34,
+   "generate_ln_post_shape": [
+    780,
+    896
+   ],
+   "generate_vs_ctc_states_max_abs_diff": 0.0,
+   "generate_states_ctc_argmax_agreement": 1.0,
+   "viterbi_seconds": 0.428,
+   "viterbi_ok": true,
+   "aligned_words_first_15": [
+    {
+     "w": "Debate",
+     "s": 0.15,
+     "e": 0.31
+    },
+    {
+     "w": "is",
+     "s": 0.46,
+     "e": 0.54
+    },
+    {
+     "w": "heating",
+     "s": 0.62,
+     "e": 0.69
+    },
+    {
+     "w": "up",
+     "s": 0.77,
+     "e": 0.85
+    },
+    {
+     "w": "over",
+     "s": 1.0,
+     "e": 1.08
+    },
+    {
+     "w": "whether",
+     "s": 1.15,
+     "e": 1.31
+    },
+    {
+     "w": "or",
+     "s": 1.38,
+     "e": 1.46
+    },
+    {
+     "w": "not",
+     "s": 1.46,
+     "e": 1.54
+    },
+    {
+     "w": "the",
+     "s": 1.62,
+     "e": 1.69
+    },
+    {
+     "w": "Fearless",
+     "s": 1.92,
+     "e": 2.15
+    },
+    {
+     "w": "Girl",
+     "s": 2.38,
+     "e": 2.46
+    },
+    {
+     "w": "statue",
+     "s": 2.69,
+     "e": 2.77
+    },
+    {
+     "w": "should",
+     "s": 3.08,
+     "e": 3.15
+    },
+    {
+     "w": "stay",
+     "s": 3.38,
+     "e": 3.46
+    },
+    {
+     "w": "on",
+     "s": 3.62,
+     "e": 3.77
+    }
+   ],
+   "mean_frames_per_token_span": 1.19
+  }
+ ],
+ "options_first_clip": {
+  "default": {
+   "control_tokens_in_prompt": [
+    "<digits>",
+    "<nofiller>",
+    "<verbatim>"
+   ],
+   "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel."
+  },
+  "digits=False": {
+   "control_tokens_in_prompt": [
+    "<nodigits>",
+    "<nofiller>",
+    "<verbatim>"
+   ],
+   "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel."
+  },
+  "filler=True": {
+   "control_tokens_in_prompt": [
+    "<digits>",
+    "<filler>",
+    "<verbatim>"
+   ],
+   "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel."
+  },
+  "verbatim=False": {
+   "control_tokens_in_prompt": [
+    "<digits>",
+    "<nofiller>",
+    "<noverbatim>"
+   ],
+   "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel."
+  }
+ }
+}

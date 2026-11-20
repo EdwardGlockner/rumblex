@@ -1,0 +1,5 @@
+[17:01:07] env
+[17:06:00] ok: diag_bf16
+[17:09:37] ok: diag_fp32
+[17:09:37] start: vllm server
+[17:14:14] ok: diag_vllm

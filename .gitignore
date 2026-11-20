@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.cache/
+# local audio / model downloads
+samples/
+*.wav
+*.mp3
+*.mp4
+
+# datasets and cached encoder states
+data/
+
+# benchmark and example output
+results/
+logs/
+results.tar.gz
+session.out
+*.bundle
+out/
+subs/

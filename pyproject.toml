@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rumblex"
+version = "0.1.0"
+description = "Transcription with word timestamps, speaker labels and subtitles on Reson8/Rumble-2-Flash"
+dynamic = ["readme"]
+license = "Apache-2.0"
+requires-python = ">=3.11"
+authors = [{ name = "Edward Glockner" }]
+keywords = ["speech recognition", "asr", "transcription", "word timestamps", "forced alignment", "ctc",
+            "diarization", "subtitles", "srt", "vtt", "rumble-2-flash", "whisperx"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.6",
+    "torchaudio>=2.6",
+    "transformers>=5.21",
+    "huggingface_hub",
+    "safetensors",
+    "numpy",
+    "soundfile",
+    "rich",
+    "silero-vad>=6.2.3",
+]
+
+[project.optional-dependencies]
+diarize = ["pyannote.audio>=4.1,<5"]
+vllm = ["openai"]  # the client side; vLLM itself runs wherever the server is
+# ruff is pinned: its default rule set changes between releases.
+dev = ["pytest", "ruff==0.17.6", "jiwer", "pyarrow", "whisper-normalizer"]
+
+[project.urls]
+Homepage = "https://github.com/EdwardGlockner/rumblex"
+Source = "https://github.com/EdwardGlockner/rumblex"
+Issues = "https://github.com/EdwardGlockner/rumblex/issues"
+Changelog = "https://github.com/EdwardGlockner/rumblex/blob/main/CHANGELOG.md"
+
+[project.scripts]
+rumblex = "rumblex.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rumblex"]
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src/rumblex", "tests", "README.md", "CHANGELOG.md", "LICENSE", "pyproject.toml"]
+
+# PyPI shows the README without the repo around it: point relative links at GitHub.
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '!\[([^\]]*)\]\((?!https?://)([^)]+)\)'
+replacement = '![\1](https://raw.githubusercontent.com/EdwardGlockner/rumblex/main/\2)'
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = '\]\((?!https?://|#)([^)]+)\)'
+replacement = '](https://github.com/EdwardGlockner/rumblex/blob/main/\1)'
+
+# Only for `uv sync` in this repo, not for `pip install rumblex`: the cu126 torch builds still include
+# Pascal GPUs (sm_61), which newer CUDA builds dropped. On newer GPUs (e.g. Blackwell) use a cu128+ index.
+# macOS has no CUDA builds and takes torch from PyPI.
+[tool.uv.sources]
+torch = { index = "pytorch-cu126", marker = "sys_platform != 'darwin'" }
+torchaudio = { index = "pytorch-cu126", marker = "sys_platform != 'darwin'" }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.ruff]
+line-length = 110
+src = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore:path is deprecated:DeprecationWarning:silero_vad"]  # inside silero-vad, not ours

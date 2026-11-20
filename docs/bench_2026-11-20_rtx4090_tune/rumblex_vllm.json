@@ -1,0 +1,71 @@
+{
+ "system": "rumblex-vllm",
+ "settings": {
+  "model": "Reson8/Rumble-2-Flash",
+  "device": "cuda:0",
+  "compute_type": "bfloat16",
+  "batch_size": 8,
+  "dtype": "torch.bfloat16",
+  "digits": false,
+  "max_chunk_s": 20.0,
+  "backend": "vllm",
+  "base_url": "http://localhost:8000/v1",
+  "concurrency": 32,
+  "language": "English"
+ },
+ "environment": {
+  "python": "3.11.13",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+  "date": "2026-11-20",
+  "torch": "2.14.1+cu126",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "rumblex_commit": "514bd41"
+ },
+ "data": {
+  "split": "test_clean",
+  "n": 200,
+  "seed": 0,
+  "wer_normalizer": "whisper-english"
+ },
+ "load_seconds": 6.06,
+ "accuracy": {
+  "utterances": 200,
+  "audio_seconds": 1514.8,
+  "wer": 0.021,
+  "sub": 65,
+  "del": 10,
+  "ins": 11,
+  "ref_words": 4099,
+  "timing": {
+   "n_ref": 4092,
+   "n_hyp": 4087,
+   "n_matched": 3989,
+   "start_mae_ms": 57.1,
+   "start_median_ae_ms": 42.0,
+   "start_mean_signed_ms": 22.3,
+   "start_within_20ms": 0.2642,
+   "start_within_50ms": 0.5788,
+   "start_within_100ms": 0.8536,
+   "start_within_200ms": 0.9699,
+   "end_mae_ms": 57.1,
+   "end_median_ae_ms": 40.0,
+   "end_mean_signed_ms": -1.5,
+   "end_within_20ms": 0.285,
+   "end_within_50ms": 0.5924,
+   "end_within_100ms": 0.8574,
+   "end_within_200ms": 0.9642
+  },
+  "rtfx_per_utterance": 62.1
+ },
+ "speed": {
+  "audio_seconds": 3600.0,
+  "total_seconds": 31.82,
+  "rtfx": 113.1,
+  "stages": {
+   "transcribe": 30.69,
+   "align": 1.11
+  },
+  "words": 9419,
+  "peak_gpu_mb": 20315
+ }
+}

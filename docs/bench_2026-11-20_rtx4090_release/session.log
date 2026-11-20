@@ -1,0 +1,15 @@
+[21:19:25] env
+[21:21:13] dataset: librispeech
+[21:22:13] ok: rumblex_librispeech
+[21:24:04] ok: whisperx_librispeech
+[21:24:04] dataset: ami
+[21:25:29] ok: rumblex_ami
+[21:27:09] ok: whisperx_ami
+[21:27:09] dataset: earnings22
+[21:28:42] ok: rumblex_earnings22
+[21:31:01] ok: whisperx_earnings22
+[21:31:01] dataset: fleurs_nl
+[21:32:52] ok: rumblex_fleurs_nl
+[21:35:38] ok: whisperx_fleurs_nl
+[21:35:38] start: vllm server
+[21:37:17] ok: rumblex_vllm_librispeech

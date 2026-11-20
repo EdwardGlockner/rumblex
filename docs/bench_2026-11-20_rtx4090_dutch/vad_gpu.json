@@ -1,0 +1,22 @@
+{
+ "audio_seconds": 1213.1,
+ "torch_threads": 1,
+ "gpu": "NVIDIA GeForce RTX 4090",
+ "cpu_sequential": {
+  "seconds": 13.47,
+  "regions": 232,
+  "longest_s": 17.64
+ },
+ "cpu_batched": {
+  "seconds": 2.27,
+  "regions": 232,
+  "longest_s": 17.64,
+  "agreement_vs_sequential": 0.99958
+ },
+ "gpu_batched": {
+  "seconds": 0.6,
+  "regions": 231,
+  "longest_s": 17.64,
+  "agreement_vs_sequential": 0.9992
+ }
+}

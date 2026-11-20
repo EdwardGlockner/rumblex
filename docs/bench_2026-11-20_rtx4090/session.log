@@ -1,0 +1,11 @@
+[09:41:40] env: rumblex
+[09:42:07] env: whisperx
+[09:42:36] env: vllm
+[09:43:10] run: rumblex (transformers, bf16)
+[09:44:49] ok: rumblex
+[09:44:49] run: whisperx (large-v3, float16)
+[09:46:35] ok: whisperx
+[09:46:35] start: vllm server
+[09:47:35] run: rumblex-vllm
+[09:48:33] ok: rumblex_vllm
+[09:48:33] report

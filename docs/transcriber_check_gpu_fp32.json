@@ -1,0 +1,177 @@
+{
+ "device": "cuda:0",
+ "torch": "2.14.0+cu126",
+ "audio_seconds": 129.9,
+ "chunks": [
+  [
+   0.44,
+   5.6
+  ],
+  [
+   8.73,
+   17.54
+  ],
+  [
+   21.31,
+   35.78
+  ],
+  [
+   36.22,
+   55.97
+  ],
+  [
+   56.64,
+   66.02
+  ],
+  [
+   68.92,
+   81.76
+  ],
+  [
+   81.76,
+   96.16
+  ],
+  [
+   96.16,
+   116.02
+  ],
+  [
+   116.02,
+   128.0
+  ]
+ ],
+ "load_seconds": 7.51,
+ "dtype": "torch.float32",
+ "batch1": {
+  "seconds": 20.841,
+  "rtfx": 6.2,
+  "peak_vram_gb": 2.3
+ },
+ "batch8": {
+  "seconds": 7.625,
+  "rtfx": 17.0,
+  "peak_vram_gb": 4.04
+ },
+ "texts": [
+  {
+   "chunk": [
+    0.44,
+    5.6
+   ],
+   "language": "English",
+   "text": "Mr. Quilter is the apostle of the middle classes, and we are glad to welcome his gospel."
+  },
+  {
+   "chunk": [
+    8.73,
+    17.54
+   ],
+   "language": "English",
+   "text": "Yesterday it was 35 degrees in Barcelona, but today the temperature will go go down to minus 20 degrees."
+  },
+  {
+   "chunk": [
+    21.31,
+    35.78
+   ],
+   "language": "English",
+   "text": "This week, I traveled to Chicago to deliver my final farewell address to the nation, following in the tradition of presidents before me. It was an opportunity to say thank you, whether we've seen eye to eye or rarely agreed at all."
+  },
+  {
+   "chunk": [
+    36.22,
+    55.97
+   ],
+   "language": "English",
+   "text": "My conversations with you, the American people, in living rooms and schools, at farms and on factory floors, at diners and on distant military outposts—all these conversations are what have kept me honest, kept me inspired, and kept me going. Every day, I learned from you."
+  },
+  {
+   "chunk": [
+    56.64,
+    66.02
+   ],
+   "language": "English",
+   "text": "You made me a better president, and you made me a better man. Over the course of these 8 years, I've seen the goodness, the resilience, and the hope of the."
+  },
+  {
+   "chunk": [
+    68.92,
+    81.76
+   ],
+   "language": "English",
+   "text": "Over whether or not the Fearless Girl statue should stay on Wall Street, the statue was put up to highlight International Women's Day, and it immediately became a tourist draw and an internet sensation. The Fearless Girl is right across from the iconic Wall Street."
+  },
+  {
+   "chunk": [
+    81.76,
+    96.16
+   ],
+   "language": "English",
+   "text": "Charging bull. So originally this was put up only until April 2nd, but just yesterday the mayor's office said we're actually going to let this stay until February of 2018. So this was kind of meant to it went in this location specifically because they want to encourage more."
+  },
+  {
+   "chunk": [
+    96.16,
+    116.02
+   ],
+   "language": "English",
+   "text": "People, more firms on Wall Street to hire more women. So that's kind of where this got started, Susan Elizabeth. And I know there's been a lot of talk about it. I mean, it's stirred up a huge conversation. People are getting behind it. I think it should be permanent. The bull placement, because they're they're staring each other down now, and I didn't know much about the history of the bull, but it was actually in the wake of the"
+  },
+  {
+   "chunk": [
+    116.02,
+    128.0
+   ],
+   "language": "English",
+   "text": "Stock market crash that happened in 1987. It was supposed to be a symbol of Americans' financial resilience and kind of that can-do spirit. And the sculptor of the bowl is not happy about this because he says it's."
+  }
+ ],
+ "batched_vs_single": {
+  "text_equal": 9,
+  "token_ids_equal": 9,
+  "language_equal": 9,
+  "n": 9,
+  "states_shape_mismatches": [],
+  "states_max_abs_diff": 7.672980427742004e-05,
+  "differing_texts": []
+ },
+ "frames_per_second": [
+  13.178,
+  13.056,
+  13.06,
+  13.011,
+  13.107,
+  13.01,
+  13.056,
+  12.994,
+  13.096
+ ],
+ "captured_vs_reference_states": {
+  "max_abs_diff": [
+   0.0,
+   2e-05,
+   2e-05,
+   2e-05,
+   1e-05,
+   1e-05,
+   1e-05,
+   2e-05,
+   3e-05
+  ],
+  "ctc_argmax_agreement": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "forced_language_en": [
+  "English",
+  "English"
+ ]
+}

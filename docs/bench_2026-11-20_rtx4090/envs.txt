@@ -1,0 +1,5 @@
+.venv 2.14.1+cu126 12.6
+.venv-wx 2.8.0+cu128 12.8
+.venv-vllm 2.14.0+cu130 13.0
+whisperx 3.8.6
+vllm 0.34.0

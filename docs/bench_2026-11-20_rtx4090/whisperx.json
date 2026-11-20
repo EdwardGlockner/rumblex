@@ -1,0 +1,66 @@
+{
+ "system": "whisperx",
+ "settings": {
+  "model": "large-v3",
+  "device": "cuda",
+  "compute_type": "float16",
+  "batch_size": 16,
+  "whisperx": "3.8.6",
+  "language": "English"
+ },
+ "environment": {
+  "python": "3.11.13",
+  "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.39",
+  "date": "2026-11-20",
+  "torch": "2.8.0+cu128",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "rumblex_commit": "817f678"
+ },
+ "data": {
+  "split": "test_clean",
+  "n": 200,
+  "seed": 0,
+  "wer_normalizer": "whisper-english"
+ },
+ "load_seconds": 12.54,
+ "accuracy": {
+  "utterances": 200,
+  "audio_seconds": 1514.8,
+  "wer": 0.0161,
+  "sub": 48,
+  "del": 8,
+  "ins": 10,
+  "ref_words": 4099,
+  "timing": {
+   "n_ref": 4092,
+   "n_hyp": 4076,
+   "n_matched": 3984,
+   "start_mae_ms": 74.8,
+   "start_median_ae_ms": 67.0,
+   "start_mean_signed_ms": 70.7,
+   "start_within_20ms": 0.0269,
+   "start_within_50ms": 0.2633,
+   "start_within_100ms": 0.8248,
+   "start_within_200ms": 0.988,
+   "end_mae_ms": 33.9,
+   "end_median_ae_ms": 22.0,
+   "end_mean_signed_ms": -9.6,
+   "end_within_20ms": 0.4752,
+   "end_within_50ms": 0.8228,
+   "end_within_100ms": 0.941,
+   "end_within_200ms": 0.9937
+  },
+  "rtfx_per_utterance": 30.9
+ },
+ "speed": {
+  "audio_seconds": 3600.0,
+  "total_seconds": 38.12,
+  "rtfx": 94.4,
+  "stages": {
+   "transcribe": 21.75,
+   "align": 16.36
+  },
+  "words": 9391,
+  "peak_gpu_mb": 11324
+ }
+}

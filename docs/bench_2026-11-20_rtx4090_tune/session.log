@@ -1,0 +1,17 @@
+[13:35:22] env
+[13:37:18] sweep: transformers
+[13:38:29] ok: profile
+[13:38:29] chosen transformers: batch 64, chunk 30.0
+[13:38:29] start: vllm server
+[13:40:14] ok: vllm_c32_b8_ch20
+[13:40:35] ok: vllm_c32_b8_ch30
+[13:40:55] ok: vllm_c32_b32_ch20
+[13:41:16] ok: vllm_c32_b32_ch30
+[13:41:36] ok: vllm_c128_b8_ch20
+[13:41:56] ok: vllm_c128_b8_ch30
+[13:42:17] ok: vllm_c128_b32_ch20
+[13:42:38] ok: vllm_c128_b32_ch30
+[13:42:38] chosen vllm: concurrency 32, encoder batch 8, chunk 20
+[13:43:45] ok: rumblex_vllm
+[13:45:23] ok: rumblex
+[13:47:33] ok: whisperx

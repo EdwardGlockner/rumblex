@@ -1,0 +1,536 @@
+"""Word timestamps from Rumble-2-Flash's auxiliary CTC head.
+
+For each chunk, the encoder states captured during transcription go through the CTC head
+(`ctc/ctc_head.safetensors`, one Linear 896 -> 99,631; class 99,630 is blank, the rest map 1:1 onto
+the decoder tokenizer). The decoder's own text tokens are force-aligned to those log-probs with CTC
+Viterbi, and tokens are grouped into words at the leading-space marker.
+
+The head is very peaky (a token is a ~1-frame spike), so the alignment gives good onsets but no word
+ends. A word ends where the next one starts (`END_RULES["next_start"]`), pulled back to the first
+silence in the audio when the audio is available (`refine_ends`). Both were chosen on LibriSpeech
+dev_clean and reported on test_clean in docs/alignment_eval.md.
+If alignment fails for a chunk, words are spread over the chunk's VAD speech regions by length.
+
+Words are split at spaces, so languages written without spaces (Chinese, Japanese) get one "word"
+per chunk.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from itertools import pairwise
+from pathlib import Path
+
+import numpy as np
+import torch
+
+from rumblex.audio import SAMPLE_RATE
+from rumblex.types import Segment, TranscriptResult, WordSegment
+
+BLANK = 99_630
+NUM_CLASSES = 99_631
+
+# Encoder geometry (docs/model_inspection.md): 100 mel frames (1 s) per conv block -> 13 frames.
+# Three stride-2 convs put frame k of a block at mel frame 8k, i.e. 80 ms apart, block-aligned.
+BLOCK_SECONDS = 1.0
+FRAMES_PER_BLOCK = 13
+FRAME_STEP = 0.08
+
+
+def frame_times(n: int, grid: str = "block") -> np.ndarray:
+    """Time in seconds (chunk-local) of each encoder frame's centre.
+    `block`: c + 0.08 k for frame k of 1 s block c (the conv geometry). `uniform`: i / 13."""
+    i = np.arange(n)
+    if grid == "block":
+        return (i // FRAMES_PER_BLOCK) * BLOCK_SECONDS + (i % FRAMES_PER_BLOCK) * FRAME_STEP
+    if grid == "uniform":
+        return i / FRAMES_PER_BLOCK
+    raise ValueError(f"unknown frame grid {grid!r}")
+
+
+def _model_file(model: str, filename: str) -> str:
+    local = Path(model) / filename
+    if local.is_file():
+        return str(local)
+    from huggingface_hub import hf_hub_download
+
+    return hf_hub_download(model, filename)
+
+
+class CTCHead:
+    """The checkpoint's CTC head, loaded from its safetensors file (no remote code)."""
+
+    def __init__(self, weight: torch.Tensor, bias: torch.Tensor, device: str | torch.device = "cpu"):
+        if weight.shape[0] != NUM_CLASSES:
+            raise ValueError(f"CTC head has {weight.shape[0]} classes, expected {NUM_CLASSES}")
+        self.device = torch.device(device)
+        self.weight = weight.to(self.device, torch.float32)
+        self.bias = bias.to(self.device, torch.float32)
+
+    @classmethod
+    def from_pretrained(
+        cls, model: str = "Reson8/Rumble-2-Flash", device: str | torch.device = "cpu"
+    ) -> CTCHead:
+        """`model` is a Hugging Face repo id or a local copy of the checkpoint (a folder with `ctc/`)."""
+        from safetensors.torch import load_file
+
+        vocab = json.loads(Path(_model_file(model, "ctc/ctc_vocab.json")).read_text(encoding="utf-8"))
+        if vocab["blank"] != BLANK or vocab["token_ids"] != list(range(BLANK)):
+            raise ValueError("ctc_vocab.json is not the identity mapping this aligner assumes")
+        sd = load_file(_model_file(model, "ctc/ctc_head.safetensors"))
+        return cls(sd["weight"], sd["bias"], device)
+
+    @torch.inference_mode()
+    def emissions(self, states: torch.Tensor, classes: Sequence[int]) -> np.ndarray:
+        """Log-probs [frames, len(classes)] of the given classes, normalised over all 99,631."""
+        h = states.to(self.device, torch.float32)
+        idx = torch.as_tensor(list(classes), device=self.device)
+        out = []
+        for i in range(0, h.shape[0], 512):  # 512 x 99,631 floats = 200 MB at most
+            logits = torch.nn.functional.linear(h[i : i + 512], self.weight, self.bias)
+            out.append(logits[:, idx] - torch.logsumexp(logits, dim=-1, keepdim=True))
+        return torch.cat(out).cpu().numpy() if out else np.zeros((0, len(idx)), np.float32)
+
+
+def ctc_viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> np.ndarray | None:
+    """CTC forced alignment, vectorised over states.
+
+    `em`: [T, 1 + n_tokens] log-probs, column 0 = blank, column k+1 = target token k.
+    `same_as_prev[k]`: token k equals token k-1 (then a blank must separate them).
+    Returns the state path [T] over the 2n+1 extended states (even = blank, 2k+1 = token k),
+    or None if the tokens can't fit in T frames.
+    """
+    T, L = em.shape[0], n_tokens
+    S = 2 * L + 1
+    if T == 0 or L + sum(same_as_prev) > T:
+        return None
+    cols = np.zeros(S, dtype=np.int64)
+    cols[1::2] = np.arange(1, L + 1)
+    e = em[:, cols]  # [T, S]
+    skip_ok = np.zeros(S, dtype=bool)  # may jump s-2 -> s: token states whose token differs from the previous
+    skip_ok[3::2] = ~np.asarray(same_as_prev[1:], dtype=bool) if L > 1 else []
+    neg = -np.inf
+    dp = np.full(S, neg)
+    dp[0] = e[0, 0]
+    if S > 1:
+        dp[1] = e[0, 1]
+    back = np.zeros((T, S), dtype=np.int8)
+    for t in range(1, T):
+        stay = dp
+        step = np.concatenate(([neg], dp[:-1]))
+        skip = np.where(skip_ok, np.concatenate(([neg, neg], dp[:-2])), neg)
+        cand = np.stack([stay, step, skip])
+        arg = cand.argmax(0)
+        dp = cand[arg, np.arange(S)] + e[t]
+        back[t] = arg
+    s = S - 1 if S == 1 or dp[S - 1] >= dp[S - 2] else S - 2
+    if not np.isfinite(dp[s]):
+        return None
+    path = np.empty(T, dtype=np.int64)
+    for t in range(T - 1, -1, -1):
+        path[t] = s
+        s -= int(back[t, s])  # int(): numpy 2 would make s an int8 and overflow past 127 states
+    return path
+
+
+def token_spans(path: np.ndarray, n_tokens: int) -> list[tuple[int, int]]:
+    """(first, last) frame of each token on a Viterbi path."""
+    spans = [[-1, -1] for _ in range(n_tokens)]
+    for t, s in enumerate(path):
+        if s % 2:
+            k = s // 2
+            if spans[k][0] < 0:
+                spans[k][0] = t
+            spans[k][1] = t
+    return [(a, b) for a, b in spans]
+
+
+_HAS_ALNUM = re.compile(r"\w")
+
+
+@dataclass
+class AlignedWord:
+    text: str
+    first: int  # first frame of its first token
+    last: int  # last frame of its last token
+    score: float
+
+
+def group_words(
+    token_ids: Sequence[int],
+    spans: Sequence[tuple[int, int]],
+    token_probs: Sequence[float],
+    tokens: Sequence[str],
+    decode: Callable[[list[int]], str],
+) -> list[AlignedWord]:
+    """Group BPE tokens into words at the leading-space marker (`Ġ`). Punctuation-only groups
+    (e.g. a lone ` -`) are attached to the previous word, or before the first word (an opening quote)."""
+    groups: list[list[int]] = []
+    for k, tok in enumerate(tokens):
+        if not groups or tok.startswith("Ġ"):
+            groups.append([k])
+        else:
+            groups[-1].append(k)
+    words: list[AlignedWord] = []
+    lead: list[int] = []  # punctuation-only groups before the first word
+    for g in groups:
+        text = decode([token_ids[k] for k in g]).strip()
+        if not text:
+            continue
+        score = float(np.mean([token_probs[k] for k in g]))
+        if not _HAS_ALNUM.search(text):
+            if words:
+                words[-1].text += text
+            else:
+                lead += g
+            continue
+        if lead and not words:
+            text = decode([token_ids[k] for k in lead]).strip() + text
+        words.append(AlignedWord(text, spans[g[0]][0], spans[g[-1]][1], score))
+    if lead and not words:  # nothing but punctuation: keep it as one word
+        text = decode([token_ids[k] for k in lead]).strip()
+        score = float(np.mean([token_probs[k] for k in lead]))
+        words.append(AlignedWord(text, spans[lead[0]][0], spans[lead[-1]][1], score))
+    return words
+
+
+# Each rule maps word starts and spike ends (seconds, [n]) plus the chunk's speech regions to word ends.
+
+
+def _end_spike(starts, spike_end, regions):
+    return spike_end.copy()
+
+
+def _end_next_start(starts, spike_end, regions):
+    ends = spike_end.copy()
+    ends[:-1] = np.maximum(ends[:-1], starts[1:])
+    return ends
+
+
+def _end_midpoint(starts, spike_end, regions):
+    ends = spike_end.copy()
+    ends[:-1] = np.maximum(ends[:-1], (ends[:-1] + starts[1:]) / 2)
+    return ends
+
+
+def _end_region(starts, spike_end, regions):
+    """Run on to the next word's start, but not past the end of the VAD speech region the word is in,
+    so a word before a pause doesn't swallow the pause. The last word runs to its region's end."""
+    nxt = np.append(starts[1:], np.inf)
+    region_end = np.full_like(spike_end, np.inf)
+    for r0, r1 in regions:
+        inside = (spike_end > r0) & (spike_end <= r1 + 1e-6)
+        region_end[inside] = r1
+    cap = np.minimum(nxt, region_end)
+    cap[~np.isfinite(cap)] = spike_end[~np.isfinite(cap)]
+    return np.maximum(spike_end, cap)
+
+
+END_RULES: dict[str, Callable] = {
+    "spike": _end_spike,
+    "next_start": _end_next_start,
+    "midpoint": _end_midpoint,
+    "region": _end_region,
+}
+
+
+# Chosen on LibriSpeech dev_clean (docs/alignment_eval.md): 25 dB below the speech level, for 30 ms.
+SILENCE_DB = 25.0
+MIN_SILENCE = 0.03
+
+
+@dataclass
+class LoudnessRefinement:
+    """Audio for refining word times on loudness. `audio` covers the chunk, starting at global time
+    `audio_start`. Moving ends to the first silence helped on dev_clean; moving starts to sound onsets
+    did not, so `starts` is off by default."""
+
+    audio: np.ndarray
+    audio_start: float
+    silence_db: float = SILENCE_DB
+    min_silence: float = MIN_SILENCE
+    starts: bool = False
+    ends: bool = True
+
+
+def word_times(
+    words: Sequence[AlignedWord],
+    n_frames: int,
+    chunk_start: float,
+    regions: Sequence[tuple[float, float]],
+    grid: str = "block",
+    end_rule: str = "next_start",
+    start_shift: float = 0.0,
+    loudness: LoudnessRefinement | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Start/end seconds (global) for aligned words. A frame is FRAME_STEP wide around its centre.
+    Words never overlap: an end is clamped to the next word's start."""
+    times = frame_times(n_frames, grid) + chunk_start
+    spike_start = np.array([times[w.first] for w in words])
+    starts = np.maximum(spike_start - FRAME_STEP / 2 + start_shift, chunk_start)
+    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
+    lr = loudness
+    if lr is not None and lr.starts:
+        starts = refine_starts(
+            starts, spike_start, spike_end, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence
+        )
+    ends = END_RULES[end_rule](starts, spike_end, list(regions))
+    ends[:-1] = np.minimum(ends[:-1], starts[1:])
+    if lr is not None and lr.ends:
+        ends = refine_ends(starts, spike_end, ends, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence)
+    ends = np.maximum(ends, starts + 0.01)
+    return starts, ends
+
+
+ENERGY_HOP = 0.01  # seconds per loudness frame
+
+
+def frame_db(audio: np.ndarray, sr: int = SAMPLE_RATE, hop: float = ENERGY_HOP) -> np.ndarray:
+    """Loudness (dB of RMS) per non-overlapping `hop` frame."""
+    n = round(hop * sr)
+    k = len(audio) // n
+    if k == 0:
+        return np.zeros(0)
+    f = audio[: k * n].astype(np.float64).reshape(k, n)
+    return 10 * np.log10((f**2).mean(axis=1) + 1e-12)
+
+
+def _silent_frames(audio: np.ndarray, silence_db: float) -> np.ndarray:
+    """Per 10 ms frame: is it `silence_db` below the chunk's speech level (95th percentile loudness)?"""
+    db = frame_db(audio)
+    return db < np.percentile(db, 95) - silence_db if db.size else np.zeros(0, bool)
+
+
+def refine_ends(
+    starts: np.ndarray,
+    spike_end: np.ndarray,
+    ends: np.ndarray,
+    audio: np.ndarray,
+    audio_start: float,
+    silence_db: float = SILENCE_DB,
+    min_silence: float = MIN_SILENCE,
+) -> np.ndarray:
+    """Pull word ends back to where the audio goes silent.
+
+    `audio` covers the chunk and starts at global time `audio_start`. Between a word's last CTC spike and
+    its current end (usually the next word's start), the first run of at least `min_silence` seconds whose
+    loudness is `silence_db` below the chunk's speech level (95th percentile) ends the word. Without
+    such a run the end is kept, so this only ever moves ends earlier.
+    """
+    silent = _silent_frames(audio, silence_db)
+    if silent.size == 0:
+        return ends
+    need = max(1, round(min_silence / ENERGY_HOP))
+    # run[i] = number of consecutive silent frames starting at frame i
+    run = np.zeros(len(silent) + 1, dtype=np.int64)
+    for i in range(len(silent) - 1, -1, -1):
+        run[i] = run[i + 1] + 1 if silent[i] else 0
+    out = ends.copy()
+    for i in range(len(ends)):
+        a = max(0, int(np.floor((spike_end[i] - audio_start) / ENERGY_HOP)))
+        b = min(len(silent), int(np.ceil((ends[i] - audio_start) / ENERGY_HOP)))
+        if b - a < need:
+            continue
+        hits = np.nonzero(run[a:b] >= need)[0]
+        if hits.size:
+            out[i] = max(audio_start + (a + hits[0]) * ENERGY_HOP, starts[i] + 0.01)
+    return out
+
+
+def refine_starts(
+    starts: np.ndarray,
+    spike_start: np.ndarray,
+    spike_end: np.ndarray,
+    audio: np.ndarray,
+    audio_start: float,
+    silence_db: float = SILENCE_DB,
+    min_silence: float = MIN_SILENCE,
+) -> np.ndarray:
+    """Move a word's start to where sound resumes after a silence, if there is one.
+
+    Searches between the previous word's last spike (or the chunk start) and the word's first spike for
+    the last run of at least `min_silence` seconds of silence (same definition as `refine_ends`); the
+    word then starts where that run ends. Words with no such silence before them are left alone.
+    """
+    silent = _silent_frames(audio, silence_db)
+    if silent.size == 0:
+        return starts
+    need = max(1, round(min_silence / ENERGY_HOP))
+    back = np.zeros(len(silent), dtype=np.int64)  # back[i] = consecutive silent frames ending at frame i
+    for i in range(len(silent)):
+        back[i] = (back[i - 1] + 1 if i else 1) if silent[i] else 0
+    out = starts.copy()
+    for i in range(len(starts)):
+        lo = spike_end[i - 1] if i else audio_start
+        a = max(0, int(np.floor((lo - audio_start) / ENERGY_HOP)))
+        b = min(len(silent), int(np.ceil((spike_start[i] - audio_start) / ENERGY_HOP)))
+        hits = np.nonzero(back[a:b] >= need)[0]
+        if hits.size:
+            onset = audio_start + (a + hits[-1] + 1) * ENERGY_HOP
+            out[i] = min(onset, spike_start[i])
+    return out
+
+
+@dataclass
+class AlignOptions:
+    end_rule: str = "next_start"  # chosen on dev_clean, see docs/alignment_eval.md
+    grid: str = "block"
+    start_shift: float = -0.022  # added to every start; median start error on dev_clean (block grid)
+    split_sentences: bool = True
+    # Loudness refinement, used when the audio is passed to align() (see LoudnessRefinement).
+    refine_ends: bool = True
+    refine_starts: bool = False
+    silence_db: float = SILENCE_DB
+    min_silence: float = MIN_SILENCE
+
+
+class Aligner:
+    def __init__(self, head: CTCHead, tokenizer, opts: AlignOptions | None = None):
+        self.head = head
+        self.tokenizer = tokenizer
+        self.opts = opts or AlignOptions()
+        if self.opts.end_rule not in END_RULES:
+            raise ValueError(f"end_rule must be one of {list(END_RULES)}")
+
+    @classmethod
+    def from_transcriber(
+        cls, transcriber, opts: AlignOptions | None = None, model: str | None = None
+    ) -> Aligner:
+        head = CTCHead.from_pretrained(model or transcriber.model.name_or_path, device=transcriber.device)
+        return cls(head, transcriber.tokenizer, opts)
+
+    def align_tokens(
+        self,
+        token_ids: Sequence[int],
+        states: torch.Tensor,
+        chunk_start: float,
+        regions: Sequence[tuple[float, float]] = (),
+        audio: np.ndarray | None = None,
+    ) -> list[WordSegment] | None:
+        """Word timings (global seconds) for one chunk's tokens, or None if CTC alignment fails.
+        `regions` are the chunk's speech regions in global seconds."""
+        token_ids = list(token_ids)
+        if not token_ids or states is None:
+            return None
+        em = self.head.emissions(states, [BLANK, *token_ids])
+        same = [False] + [a == b for a, b in pairwise(token_ids)]
+        path = ctc_viterbi(em, len(token_ids), same)
+        if path is None:
+            return None
+        spans = token_spans(path, len(token_ids))
+        probs = [float(np.exp(em[a : b + 1, k + 1]).mean()) for k, (a, b) in enumerate(spans)]
+        tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+        words = group_words(token_ids, spans, probs, tokens, self._decode)
+        if not words:
+            return None
+        o = self.opts
+        loudness = None
+        if audio is not None and (o.refine_ends or o.refine_starts):
+            loudness = LoudnessRefinement(
+                audio, chunk_start, o.silence_db, o.min_silence, starts=o.refine_starts, ends=o.refine_ends
+            )
+        starts, ends = word_times(
+            words, len(em), chunk_start, regions, o.grid, o.end_rule, o.start_shift, loudness
+        )
+        return [
+            WordSegment(w.text, round(float(s), 3), round(float(e), 3), round(w.score, 3))
+            for w, s, e in zip(words, starts, ends)
+        ]
+
+    def align(self, result: TranscriptResult, audio: np.ndarray | None = None) -> TranscriptResult:
+        """Fill in words for a result from `RumbleTranscriber.transcribe` (needs keep_encoder_states=True).
+        Pass the 16 kHz `audio` that was transcribed to enable the loudness refinement of word ends.
+        Segments are re-cut at sentence ends when `split_sentences` is on."""
+        items = result.metadata.get("chunk_transcripts")
+        if items is None:
+            raise ValueError("result has no chunk_transcripts; transcribe with keep_encoder_states=True")
+        if any(it.text and it.encoder_states is None for it in items):
+            raise ValueError(
+                "chunk_transcripts have no encoder states; transcribe with keep_encoder_states=True"
+            )
+        segments: list[Segment] = []
+        n_fallback = 0
+        for it in items:
+            if not it.text:
+                continue
+            regions = [(r.start / SAMPLE_RATE, r.end / SAMPLE_RATE) for r in it.chunk.regions] or [
+                (it.chunk.start_s, it.chunk.end_s)
+            ]
+            chunk_audio = None if audio is None else it.chunk.slice(audio)
+            words = self.align_tokens(it.token_ids, it.encoder_states, it.chunk.start_s, regions, chunk_audio)
+            if words is None:
+                n_fallback += 1
+                words = proportional_words(it.text, regions)
+            clamp_to_chunk(words, it.chunk.start_s, it.chunk.end_s)
+            seg = Segment(words[0].start, words[-1].end, it.text, words, language=it.language)
+            segments.extend(split_sentences(seg) if self.opts.split_sentences else [seg])
+        result.segments = segments
+        result.metadata["alignment"] = {
+            **vars(self.opts),
+            "audio_refinement": audio is not None,
+            "fallback_chunks": n_fallback,
+        }
+        return result
+
+    def _decode(self, ids: list[int]) -> str:
+        return self.tokenizer.decode(ids, clean_up_tokenization_spaces=False)
+
+
+def clamp_to_chunk(words: list[WordSegment], start: float, end: float) -> None:
+    """Keep word times inside the chunk's real audio. The silence appended before encoding
+    (transcriber.END_PAD) can otherwise put the last word's end a few ms past the end."""
+    for w in words:
+        w.end = round(min(w.end, end), 3)
+        w.start = round(min(max(w.start, start), max(w.end - 0.01, start)), 3)
+
+
+def proportional_words(text: str, regions: Sequence[tuple[float, float]]) -> list[WordSegment]:
+    """Spread words over the speech regions in proportion to their length (score 0: not aligned)."""
+    words = text.split()
+    if not words:
+        return []
+    total = sum(e - s for s, e in regions)
+    weights = np.array([len(w) + 1 for w in words], dtype=float)
+    cum = np.concatenate(([0.0], np.cumsum(weights) / weights.sum() * total))
+
+    def at(x: float, start: bool) -> float:
+        """Speech-time offset -> wall time. A start exactly on a region boundary goes to the next region."""
+        for s, e in regions:
+            if x < e - s or (not start and x <= e - s):
+                return s + x
+            x -= e - s
+        return regions[-1][1]
+
+    return [
+        WordSegment(w, round(float(at(cum[i], True)), 3), round(float(at(cum[i + 1], False)), 3), 0.0)
+        for i, w in enumerate(words)
+    ]
+
+
+_SENTENCE_END = re.compile(r"[.!?。？！]['\")\]]*$")
+# Words ending in "." that rarely end a sentence (English and Dutch titles and common abbreviations).
+_ABBREVIATIONS = {
+    "mr.", "mrs.", "ms.", "dr.", "prof.", "st.", "jr.", "sr.", "vs.", "etc.", "e.g.", "i.e.", "no.",
+    "dhr.", "mevr.", "mw.", "bijv.", "o.a.", "z.g.a.n.", "nr.", "ca.",
+}  # fmt: skip
+
+
+def split_sentences(seg: Segment) -> list[Segment]:
+    """Cut a segment after words that end a sentence."""
+    if not seg.words:
+        return [seg]
+    out, cur = [], []
+    for w in seg.words:
+        cur.append(w)
+        if _SENTENCE_END.search(w.word) and w.word.lower() not in _ABBREVIATIONS:
+            out.append(cur)
+            cur = []
+    if cur:
+        out.append(cur)
+    return [
+        Segment(ws[0].start, ws[-1].end, " ".join(w.word for w in ws), ws, seg.speaker, seg.language)
+        for ws in out
+    ]

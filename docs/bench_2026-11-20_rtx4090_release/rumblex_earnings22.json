@@ -1,0 +1,55 @@
+{
+ "system": "rumblex",
+ "settings": {
+  "model": "Reson8/Rumble-2-Flash",
+  "device": "cuda:0",
+  "compute_type": "bfloat16",
+  "batch_size": 32,
+  "dtype": "torch.bfloat16",
+  "digits": false,
+  "max_chunk_s": 20.0,
+  "language": "English"
+ },
+ "environment": {
+  "python": "3.11.13",
+  "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+  "date": "2026-11-20",
+  "torch": "2.14.1+cu126",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "rumblex_commit": "a4b1461"
+ },
+ "data": {
+  "dataset": "earnings22",
+  "split": "test",
+  "n": 500,
+  "seed": 0,
+  "wer_normalizer": "whisper-english"
+ },
+ "load_seconds": 3.18,
+ "accuracy": {
+  "utterances": 500,
+  "audio_seconds": 3431.9,
+  "wer": 0.0928,
+  "sub": 351,
+  "del": 231,
+  "ins": 219,
+  "ref_words": 8629,
+  "timing": {
+   "n_ref": 0,
+   "n_hyp": 8654,
+   "n_matched": 0
+  },
+  "rtfx_per_utterance": 50.5
+ },
+ "speed": {
+  "audio_seconds": 1800.0,
+  "total_seconds": 4.18,
+  "rtfx": 430.3,
+  "stages": {
+   "transcribe": 3.76,
+   "align": 0.42
+  },
+  "words": 4158,
+  "peak_gpu_mb": 9030
+ }
+}

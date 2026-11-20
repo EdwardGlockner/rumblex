@@ -1,0 +1,53 @@
+{
+ "system": "whisperx",
+ "settings": {
+  "model": "large-v3",
+  "device": "cuda",
+  "compute_type": "float16",
+  "batch_size": 16,
+  "whisperx": "3.8.6",
+  "language": "Dutch"
+ },
+ "environment": {
+  "python": "3.11.13",
+  "platform": "Linux-6.8.0-149-generic-x86_64-with-glibc2.39",
+  "date": "2026-11-20",
+  "torch": "2.8.0+cu128",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "rumblex_commit": "b00a9da"
+ },
+ "data": {
+  "dataset": "fleurs_nl",
+  "split": "test",
+  "n": 364,
+  "seed": 0,
+  "wer_normalizer": "whisper-basic"
+ },
+ "load_seconds": 17.42,
+ "accuracy": {
+  "utterances": 364,
+  "audio_seconds": 3487.4,
+  "wer": 0.0705,
+  "sub": 319,
+  "del": 65,
+  "ins": 198,
+  "ref_words": 8256,
+  "timing": {
+   "n_ref": 0,
+   "n_hyp": 8316,
+   "n_matched": 0
+  },
+  "rtfx_per_utterance": 20.1
+ },
+ "speed": {
+  "audio_seconds": 1200.0,
+  "total_seconds": 21.47,
+  "rtfx": 55.9,
+  "stages": {
+   "transcribe": 10.89,
+   "align": 10.57
+  },
+  "words": 2592,
+  "peak_gpu_mb": 12518
+ }
+}
