@@ -35,3 +35,4 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
 | `demo.gif` | The README's terminal demo: the captured output of one CLI run on an RTX 4090 (bf16, commit `da3aea8`), replayed with the waiting shortened | `scripts/render_demo_gif.py` |
+| `words.gif`, `words_gif.json` | The README's word-timing animation: 28–42 s of `words_gif.json`, the JSON a CPU run of the 0.1.0 package wrote for a 60 s two-speaker clip with `--diarize`, played back in real time | `scripts/render_words_gif.py` |

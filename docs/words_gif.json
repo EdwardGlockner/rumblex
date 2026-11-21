@@ -1,0 +1,1711 @@
+{
+  "language": "English",
+  "segments": [
+    {
+      "start": 0.11,
+      "end": 4.59,
+      "text": "Debate is heating up over whether or not the Fearless Girl statue should stay on Wall Street.",
+      "words": [
+        {
+          "word": "Debate",
+          "start": 0.11,
+          "end": 0.43,
+          "score": 0.353,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "is",
+          "start": 0.43,
+          "end": 0.59,
+          "score": 0.996,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "heating",
+          "start": 0.59,
+          "end": 0.75,
+          "score": 0.87,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "up",
+          "start": 0.75,
+          "end": 0.91,
+          "score": 0.985,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "over",
+          "start": 0.91,
+          "end": 1.11,
+          "score": 0.981,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "whether",
+          "start": 1.11,
+          "end": 1.35,
+          "score": 0.962,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "or",
+          "start": 1.35,
+          "end": 1.43,
+          "score": 0.991,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "not",
+          "start": 1.43,
+          "end": 1.59,
+          "score": 0.995,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 1.59,
+          "end": 1.822,
+          "score": 0.988,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Fearless",
+          "start": 1.83,
+          "end": 2.282,
+          "score": 0.355,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Girl",
+          "start": 2.35,
+          "end": 2.59,
+          "score": 0.138,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "statue",
+          "start": 2.59,
+          "end": 2.99,
+          "score": 0.087,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "should",
+          "start": 2.99,
+          "end": 3.272,
+          "score": 0.926,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "stay",
+          "start": 3.35,
+          "end": 3.59,
+          "score": 0.998,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "on",
+          "start": 3.59,
+          "end": 3.91,
+          "score": 0.893,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Wall",
+          "start": 3.91,
+          "end": 4.19,
+          "score": 0.935,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Street.",
+          "start": 4.19,
+          "end": 4.59,
+          "score": 0.917,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 4.59,
+      "end": 10.59,
+      "text": "The statue was put up to highlight International Women's Day, and it immediately became a tourist draw and an internet sensation.",
+      "words": [
+        {
+          "word": "The",
+          "start": 4.59,
+          "end": 4.75,
+          "score": 0.38,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "statue",
+          "start": 4.75,
+          "end": 5.03,
+          "score": 0.21,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "was",
+          "start": 5.03,
+          "end": 5.19,
+          "score": 0.945,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "put",
+          "start": 5.19,
+          "end": 5.27,
+          "score": 0.99,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "up",
+          "start": 5.27,
+          "end": 5.43,
+          "score": 0.991,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 5.43,
+          "end": 5.75,
+          "score": 0.987,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "highlight",
+          "start": 5.75,
+          "end": 6.03,
+          "score": 0.987,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "International",
+          "start": 6.03,
+          "end": 6.59,
+          "score": 0.392,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Women's",
+          "start": 6.59,
+          "end": 6.91,
+          "score": 0.613,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Day,",
+          "start": 6.91,
+          "end": 7.27,
+          "score": 0.738,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "and",
+          "start": 7.27,
+          "end": 7.35,
+          "score": 0.944,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "it",
+          "start": 7.35,
+          "end": 7.59,
+          "score": 0.826,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "immediately",
+          "start": 7.59,
+          "end": 7.99,
+          "score": 0.987,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "became",
+          "start": 7.99,
+          "end": 8.19,
+          "score": 0.853,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "a",
+          "start": 8.19,
+          "end": 8.27,
+          "score": 0.784,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "tourist",
+          "start": 8.27,
+          "end": 8.67,
+          "score": 0.064,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "draw",
+          "start": 8.67,
+          "end": 8.91,
+          "score": 0.032,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "and",
+          "start": 8.91,
+          "end": 9.03,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "an",
+          "start": 9.03,
+          "end": 9.35,
+          "score": 0.724,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "internet",
+          "start": 9.35,
+          "end": 9.742,
+          "score": 0.928,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "sensation.",
+          "start": 9.99,
+          "end": 10.59,
+          "score": 0.828,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 10.59,
+      "end": 14.67,
+      "text": "The Fearless Girl is right across from the iconic Wall Street charging bull.",
+      "words": [
+        {
+          "word": "The",
+          "start": 10.59,
+          "end": 10.75,
+          "score": 0.26,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Fearless",
+          "start": 10.75,
+          "end": 11.19,
+          "score": 0.494,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Girl",
+          "start": 11.19,
+          "end": 11.43,
+          "score": 0.078,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "is",
+          "start": 11.43,
+          "end": 11.75,
+          "score": 0.908,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "right",
+          "start": 11.75,
+          "end": 11.99,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "across",
+          "start": 11.99,
+          "end": 12.19,
+          "score": 0.843,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "from",
+          "start": 12.19,
+          "end": 12.35,
+          "score": 0.599,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 12.35,
+          "end": 12.59,
+          "score": 0.969,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "iconic",
+          "start": 12.59,
+          "end": 13.03,
+          "score": 0.998,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Wall",
+          "start": 13.03,
+          "end": 13.35,
+          "score": 0.978,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Street",
+          "start": 13.35,
+          "end": 13.892,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "charging",
+          "start": 13.99,
+          "end": 14.43,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "bull.",
+          "start": 14.43,
+          "end": 14.67,
+          "score": 0.644,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 14.67,
+      "end": 19.984,
+      "text": "So originally, this was put up only until April 2nd, but just yesterday, the mayor's office said we're actually going to let this.",
+      "words": [
+        {
+          "word": "So",
+          "start": 14.67,
+          "end": 14.91,
+          "score": 0.949,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "originally,",
+          "start": 14.91,
+          "end": 15.19,
+          "score": 0.58,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this",
+          "start": 15.19,
+          "end": 15.27,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "was",
+          "start": 15.27,
+          "end": 15.51,
+          "score": 0.905,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "put",
+          "start": 15.51,
+          "end": 15.59,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "up",
+          "start": 15.59,
+          "end": 16.27,
+          "score": 0.75,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "only",
+          "start": 16.27,
+          "end": 16.67,
+          "score": 0.947,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "until",
+          "start": 16.67,
+          "end": 16.99,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "April",
+          "start": 16.99,
+          "end": 17.11,
+          "score": 0.987,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "2nd,",
+          "start": 17.11,
+          "end": 17.51,
+          "score": 0.196,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "but",
+          "start": 17.51,
+          "end": 17.67,
+          "score": 0.925,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "just",
+          "start": 17.67,
+          "end": 17.91,
+          "score": 0.964,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "yesterday,",
+          "start": 17.91,
+          "end": 18.27,
+          "score": 0.677,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 18.27,
+          "end": 18.35,
+          "score": 0.98,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "mayor's",
+          "start": 18.35,
+          "end": 18.75,
+          "score": 0.773,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "office",
+          "start": 18.75,
+          "end": 18.91,
+          "score": 0.912,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "said",
+          "start": 18.91,
+          "end": 19.19,
+          "score": 0.918,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "we're",
+          "start": 19.19,
+          "end": 19.35,
+          "score": 0.862,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "actually",
+          "start": 19.35,
+          "end": 19.51,
+          "score": 0.991,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "going",
+          "start": 19.51,
+          "end": 19.59,
+          "score": 0.952,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 19.59,
+          "end": 19.67,
+          "score": 0.438,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "let",
+          "start": 19.67,
+          "end": 19.83,
+          "score": 0.986,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this.",
+          "start": 19.83,
+          "end": 19.984,
+          "score": 0.888,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 20.082,
+      "end": 22.482,
+      "text": "State until February of 2018.",
+      "words": [
+        {
+          "word": "State",
+          "start": 20.082,
+          "end": 20.402,
+          "score": 0.043,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "until",
+          "start": 20.402,
+          "end": 20.674,
+          "score": 0.906,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "February",
+          "start": 20.882,
+          "end": 21.322,
+          "score": 0.918,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 21.322,
+          "end": 21.482,
+          "score": 0.996,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "2018.",
+          "start": 21.482,
+          "end": 22.482,
+          "score": 0.84,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 22.482,
+      "end": 28.104,
+      "text": "So this was kind of meant to it went in this location specifically because they want to encourage more.",
+      "words": [
+        {
+          "word": "So",
+          "start": 22.482,
+          "end": 22.802,
+          "score": 0.943,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this",
+          "start": 22.802,
+          "end": 22.922,
+          "score": 0.99,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "was",
+          "start": 22.922,
+          "end": 23.082,
+          "score": 0.858,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "kind",
+          "start": 23.082,
+          "end": 23.242,
+          "score": 0.891,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 23.242,
+          "end": 23.402,
+          "score": 0.995,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "meant",
+          "start": 23.402,
+          "end": 23.642,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 23.642,
+          "end": 23.904,
+          "score": 0.24,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "it",
+          "start": 23.922,
+          "end": 24.082,
+          "score": 0.764,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "went",
+          "start": 24.082,
+          "end": 24.322,
+          "score": 0.911,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "in",
+          "start": 24.322,
+          "end": 24.482,
+          "score": 0.974,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this",
+          "start": 24.482,
+          "end": 24.802,
+          "score": 0.997,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "location",
+          "start": 24.802,
+          "end": 25.424,
+          "score": 0.968,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "specifically",
+          "start": 25.882,
+          "end": 26.322,
+          "score": 0.982,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "because",
+          "start": 26.322,
+          "end": 26.482,
+          "score": 0.998,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "they",
+          "start": 26.482,
+          "end": 26.642,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "want",
+          "start": 26.642,
+          "end": 26.802,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 26.802,
+          "end": 27.082,
+          "score": 0.997,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "encourage",
+          "start": 27.082,
+          "end": 27.642,
+          "score": 0.972,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "more.",
+          "start": 27.642,
+          "end": 28.104,
+          "score": 0.864,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 28.274,
+      "end": 31.514,
+      "text": "People, more firms on Wall Street to hire more women.",
+      "words": [
+        {
+          "word": "People,",
+          "start": 28.274,
+          "end": 28.674,
+          "score": 0.26,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "more",
+          "start": 28.674,
+          "end": 28.834,
+          "score": 0.975,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "firms",
+          "start": 28.834,
+          "end": 29.074,
+          "score": 0.73,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "on",
+          "start": 29.074,
+          "end": 29.194,
+          "score": 0.977,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Wall",
+          "start": 29.194,
+          "end": 29.434,
+          "score": 0.863,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Street",
+          "start": 29.434,
+          "end": 29.666,
+          "score": 0.996,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 29.674,
+          "end": 29.994,
+          "score": 0.983,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "hire",
+          "start": 29.994,
+          "end": 30.434,
+          "score": 0.926,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "more",
+          "start": 30.434,
+          "end": 30.914,
+          "score": 0.984,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "women.",
+          "start": 30.914,
+          "end": 31.514,
+          "score": 0.808,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 31.514,
+      "end": 34.346,
+      "text": "So that's kind of where this got started, Susan Elizabeth.",
+      "words": [
+        {
+          "word": "So",
+          "start": 31.514,
+          "end": 31.674,
+          "score": 0.851,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "that's",
+          "start": 31.674,
+          "end": 31.834,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "kind",
+          "start": 31.834,
+          "end": 31.994,
+          "score": 0.886,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 31.994,
+          "end": 32.154,
+          "score": 0.999,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "where",
+          "start": 32.154,
+          "end": 32.354,
+          "score": 0.987,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this",
+          "start": 32.354,
+          "end": 32.514,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "got",
+          "start": 32.514,
+          "end": 32.834,
+          "score": 0.942,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "started,",
+          "start": 32.834,
+          "end": 33.154,
+          "score": 0.562,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Susan",
+          "start": 33.154,
+          "end": 33.434,
+          "score": 0.974,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Elizabeth.",
+          "start": 33.434,
+          "end": 34.346,
+          "score": 0.838,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 34.754,
+      "end": 36.674,
+      "text": "And I know there's been a lot of talk about it.",
+      "words": [
+        {
+          "word": "And",
+          "start": 34.754,
+          "end": 34.914,
+          "score": 0.754,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "I",
+          "start": 34.914,
+          "end": 35.074,
+          "score": 0.963,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "know",
+          "start": 35.074,
+          "end": 35.274,
+          "score": 0.952,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "there's",
+          "start": 35.274,
+          "end": 35.514,
+          "score": 0.923,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "been",
+          "start": 35.514,
+          "end": 35.594,
+          "score": 0.997,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "a",
+          "start": 35.594,
+          "end": 35.754,
+          "score": 0.749,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "lot",
+          "start": 35.754,
+          "end": 35.914,
+          "score": 0.946,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "of",
+          "start": 35.914,
+          "end": 36.074,
+          "score": 0.759,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "talk",
+          "start": 36.074,
+          "end": 36.434,
+          "score": 0.894,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "about",
+          "start": 36.434,
+          "end": 36.514,
+          "score": 0.996,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "it.",
+          "start": 36.514,
+          "end": 36.674,
+          "score": 0.017,
+          "speaker": "SPEAKER_00"
+        }
+      ],
+      "speaker": "SPEAKER_00",
+      "language": "English"
+    },
+    {
+      "start": 36.674,
+      "end": 39.326,
+      "text": "I mean, it's stirred up a huge conversation.",
+      "words": [
+        {
+          "word": "I",
+          "start": 36.674,
+          "end": 36.754,
+          "score": 0.98,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "mean,",
+          "start": 36.754,
+          "end": 36.914,
+          "score": 0.897,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "it's",
+          "start": 36.914,
+          "end": 37.274,
+          "score": 0.934,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "stirred",
+          "start": 37.274,
+          "end": 37.514,
+          "score": 0.953,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "up",
+          "start": 37.514,
+          "end": 37.754,
+          "score": 0.992,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "a",
+          "start": 37.754,
+          "end": 37.914,
+          "score": 0.858,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "huge",
+          "start": 37.914,
+          "end": 38.514,
+          "score": 0.827,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "conversation.",
+          "start": 38.514,
+          "end": 39.326,
+          "score": 0.662,
+          "speaker": "SPEAKER_00"
+        }
+      ],
+      "speaker": "SPEAKER_00",
+      "language": "English"
+    },
+    {
+      "start": 39.674,
+      "end": 40.994,
+      "text": "People are getting behind it.",
+      "words": [
+        {
+          "word": "People",
+          "start": 39.674,
+          "end": 39.834,
+          "score": 0.135,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "are",
+          "start": 39.834,
+          "end": 39.994,
+          "score": 0.863,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "getting",
+          "start": 39.994,
+          "end": 40.354,
+          "score": 0.998,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "behind",
+          "start": 40.354,
+          "end": 40.674,
+          "score": 0.75,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "it.",
+          "start": 40.674,
+          "end": 40.994,
+          "score": 0.62,
+          "speaker": "SPEAKER_00"
+        }
+      ],
+      "speaker": "SPEAKER_00",
+      "language": "English"
+    },
+    {
+      "start": 40.994,
+      "end": 42.326,
+      "text": "I think it should be permanent.",
+      "words": [
+        {
+          "word": "I",
+          "start": 40.994,
+          "end": 41.154,
+          "score": 0.771,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "think",
+          "start": 41.154,
+          "end": 41.274,
+          "score": 0.904,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "it",
+          "start": 41.274,
+          "end": 41.434,
+          "score": 0.997,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "should",
+          "start": 41.434,
+          "end": 41.666,
+          "score": 0.955,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "be",
+          "start": 41.674,
+          "end": 41.836,
+          "score": 0.997,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "permanent.",
+          "start": 41.994,
+          "end": 42.326,
+          "score": 0.938,
+          "speaker": "SPEAKER_00"
+        }
+      ],
+      "speaker": "SPEAKER_00",
+      "language": "English"
+    },
+    {
+      "start": 42.514,
+      "end": 43.834,
+      "text": "The bull placement,",
+      "words": [
+        {
+          "word": "The",
+          "start": 42.514,
+          "end": 42.796,
+          "score": 0.587,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "bull",
+          "start": 42.834,
+          "end": 43.274,
+          "score": 0.017,
+          "speaker": "SPEAKER_00"
+        },
+        {
+          "word": "placement,",
+          "start": 43.274,
+          "end": 43.834,
+          "score": 0.636,
+          "speaker": "SPEAKER_00"
+        }
+      ],
+      "speaker": "SPEAKER_00",
+      "language": "English"
+    },
+    {
+      "start": 43.834,
+      "end": 48.096,
+      "text": "because they're they're staring each other down now, and I didn't know much about the history of the bull, but it was actually in the wake of the",
+      "words": [
+        {
+          "word": "because",
+          "start": 43.834,
+          "end": 44.074,
+          "score": 0.973,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "they're",
+          "start": 44.074,
+          "end": 44.354,
+          "score": 0.709,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "they're",
+          "start": 44.354,
+          "end": 44.594,
+          "score": 0.868,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "staring",
+          "start": 44.594,
+          "end": 44.834,
+          "score": 0.943,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "each",
+          "start": 44.834,
+          "end": 44.914,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "other",
+          "start": 44.914,
+          "end": 45.194,
+          "score": 0.857,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "down",
+          "start": 45.194,
+          "end": 45.434,
+          "score": 0.979,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "now,",
+          "start": 45.434,
+          "end": 45.594,
+          "score": 0.521,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "and",
+          "start": 45.594,
+          "end": 45.674,
+          "score": 0.473,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "I",
+          "start": 45.674,
+          "end": 45.754,
+          "score": 0.976,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "didn't",
+          "start": 45.754,
+          "end": 45.914,
+          "score": 0.513,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "know",
+          "start": 45.914,
+          "end": 46.074,
+          "score": 0.003,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "much",
+          "start": 46.074,
+          "end": 46.194,
+          "score": 0.993,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "about",
+          "start": 46.194,
+          "end": 46.274,
+          "score": 0.996,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 46.274,
+          "end": 46.434,
+          "score": 0.998,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "history",
+          "start": 46.434,
+          "end": 46.674,
+          "score": 0.992,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 46.674,
+          "end": 46.834,
+          "score": 0.989,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 46.834,
+          "end": 46.914,
+          "score": 0.946,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "bull,",
+          "start": 46.914,
+          "end": 47.074,
+          "score": 0.539,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "but",
+          "start": 47.074,
+          "end": 47.154,
+          "score": 0.925,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "it",
+          "start": 47.154,
+          "end": 47.194,
+          "score": 0.963,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "was",
+          "start": 47.194,
+          "end": 47.354,
+          "score": 0.989,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "actually",
+          "start": 47.354,
+          "end": 47.594,
+          "score": 0.997,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "in",
+          "start": 47.594,
+          "end": 47.674,
+          "score": 0.997,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 47.674,
+          "end": 47.754,
+          "score": 0.99,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "wake",
+          "start": 47.754,
+          "end": 47.914,
+          "score": 0.809,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 47.914,
+          "end": 47.994,
+          "score": 0.927,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 47.994,
+          "end": 48.096,
+          "score": 0.635,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 48.21,
+      "end": 50.61,
+      "text": "Stock market crash that happened in 1987.",
+      "words": [
+        {
+          "word": "Stock",
+          "start": 48.21,
+          "end": 48.45,
+          "score": 0.033,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "market",
+          "start": 48.45,
+          "end": 48.642,
+          "score": 0.888,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "crash",
+          "start": 48.69,
+          "end": 49.05,
+          "score": 0.642,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "that",
+          "start": 49.05,
+          "end": 49.29,
+          "score": 0.768,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "happened",
+          "start": 49.29,
+          "end": 49.61,
+          "score": 0.968,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "in",
+          "start": 49.61,
+          "end": 49.69,
+          "score": 0.993,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "1987.",
+          "start": 49.69,
+          "end": 50.61,
+          "score": 0.862,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 50.61,
+      "end": 55.012,
+      "text": "It was supposed to be a symbol of Americans' financial resilience and kind of that can-do spirit.",
+      "words": [
+        {
+          "word": "It",
+          "start": 50.61,
+          "end": 50.69,
+          "score": 0.876,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "was",
+          "start": 50.69,
+          "end": 50.85,
+          "score": 0.907,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "supposed",
+          "start": 50.85,
+          "end": 51.01,
+          "score": 0.991,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "to",
+          "start": 51.01,
+          "end": 51.05,
+          "score": 0.945,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "be",
+          "start": 51.05,
+          "end": 51.13,
+          "score": 0.996,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "a",
+          "start": 51.13,
+          "end": 51.21,
+          "score": 0.859,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "symbol",
+          "start": 51.21,
+          "end": 51.61,
+          "score": 0.834,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 51.61,
+          "end": 51.85,
+          "score": 0.964,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "Americans'",
+          "start": 51.85,
+          "end": 52.37,
+          "score": 0.327,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "financial",
+          "start": 52.37,
+          "end": 52.85,
+          "score": 0.943,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "resilience",
+          "start": 52.85,
+          "end": 53.13,
+          "score": 0.966,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "and",
+          "start": 53.13,
+          "end": 53.29,
+          "score": 0.948,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "kind",
+          "start": 53.29,
+          "end": 53.37,
+          "score": 0.997,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 53.37,
+          "end": 53.45,
+          "score": 0.989,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "that",
+          "start": 53.45,
+          "end": 53.762,
+          "score": 0.862,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "can-do",
+          "start": 53.77,
+          "end": 54.272,
+          "score": 0.387,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "spirit.",
+          "start": 54.29,
+          "end": 55.012,
+          "score": 0.629,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    },
+    {
+      "start": 55.37,
+      "end": 59.952,
+      "text": "And the sculptor of the bowl is not happy about this because he says his",
+      "words": [
+        {
+          "word": "And",
+          "start": 55.37,
+          "end": 55.69,
+          "score": 0.149,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 55.69,
+          "end": 56.21,
+          "score": 0.953,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "sculptor",
+          "start": 56.21,
+          "end": 56.842,
+          "score": 0.165,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "of",
+          "start": 56.85,
+          "end": 57.01,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "the",
+          "start": 57.01,
+          "end": 57.13,
+          "score": 0.986,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "bowl",
+          "start": 57.13,
+          "end": 57.45,
+          "score": 0.935,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "is",
+          "start": 57.45,
+          "end": 57.85,
+          "score": 0.877,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "not",
+          "start": 57.85,
+          "end": 58.37,
+          "score": 0.991,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "happy",
+          "start": 58.37,
+          "end": 58.77,
+          "score": 0.99,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "about",
+          "start": 58.77,
+          "end": 59.01,
+          "score": 0.999,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "this",
+          "start": 59.01,
+          "end": 59.37,
+          "score": 0.788,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "because",
+          "start": 59.37,
+          "end": 59.53,
+          "score": 0.979,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "he",
+          "start": 59.53,
+          "end": 59.69,
+          "score": 0.847,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "says",
+          "start": 59.69,
+          "end": 59.85,
+          "score": 0.994,
+          "speaker": "SPEAKER_01"
+        },
+        {
+          "word": "his",
+          "start": 59.85,
+          "end": 59.952,
+          "score": 0.042,
+          "speaker": "SPEAKER_01"
+        }
+      ],
+      "speaker": "SPEAKER_01",
+      "language": "English"
+    }
+  ],
+  "metadata": {
+    "model": "Reson8/Rumble-2-Flash",
+    "duration": 60.0,
+    "chunks": 4,
+    "alignment": {
+      "end_rule": "next_start",
+      "grid": "block",
+      "start_shift": -0.022,
+      "split_sentences": true,
+      "refine_ends": true,
+      "refine_starts": false,
+      "silence_db": 25.0,
+      "min_silence": 0.03,
+      "audio_refinement": true,
+      "fallback_chunks": 0
+    },
+    "speakers": [
+      "SPEAKER_00",
+      "SPEAKER_01"
+    ],
+    "timings": {
+      "decode_s": 0.066,
+      "transcribe_s": 40.273,
+      "align_s": 1.914,
+      "diarize_s": 110.95
+    }
+  }
+}

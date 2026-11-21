@@ -27,6 +27,10 @@ English and Dutch.
 - Optional speaker labels via pyannote, per word. Segments are split where the speaker changes.
 - Writes JSON, SRT, VTT (optionally with per-word karaoke tags), TSV and TXT.
 
+![word timestamps and speaker labels played back over the audio](docs/words.gif)
+
+Word times and speaker labels from one run, played back in real time over the audio's waveform.
+
 ## Install
 
 ```bash

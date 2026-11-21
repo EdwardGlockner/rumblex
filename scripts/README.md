@@ -18,6 +18,7 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `benchmark.py` | rumblex vs rumblex+vLLM vs WhisperX: WER, word timing error, long-file speed, peak GPU memory | `docs/bench_2026-11-20_rtx4090*/` |
 | `diagnose_wer.py` | One eval set through pipeline variants (VAD on/off, language forced/detected), saving every transcript | `docs/bench_2026-11-20_rtx4090_diagnose/` |
 | `render_demo_gif.py` | Turns the captured output of a real CLI run and the subtitles it wrote into a terminal GIF | `docs/demo.gif` |
+| `render_words_gif.py` | Plays back a rumblex JSON result: words light up at their times, coloured by speaker, over the audio's waveform | `docs/words.gif` |
 
 The `runpod_*.sh` scripts run those benchmarks on a rented Linux GPU in one go; see
 `docs/runpod_session.md`.
