@@ -22,7 +22,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | | what | produced by |
 |---|---|---|
 | [model_inspection.md](model_inspection.md) | What is in the Rumble-2-Flash checkpoint: CTC head, frame rate, options, tokenizer, single-clip timings | `scripts/inspect_rumble_ctc.py` |
-| [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift and loudness refinement were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py` |
+| [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement and blank penalty were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
 | [bench_2026-11-20_rtx4090_tune](bench_2026-11-20_rtx4090_tune/README.md) | Batch size, chunk length and vLLM settings; found VAD to be the bottleneck | `scripts/runpod_tune.sh` |
 | [bench_2026-11-20_rtx4090_eval](bench_2026-11-20_rtx4090_eval/README.md) | rumblex vs WhisperX on LibriSpeech, AMI, Earnings-22, FLEURS Dutch | `scripts/runpod_eval.sh` |
@@ -35,5 +35,6 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `inspection_cpu.json`, `inspection_gpu_fp32.json` | Raw output behind `model_inspection.md` | `scripts/inspect_rumble_ctc.py` |
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
+| `alignment_smoothing_sweep.json` | Raw output of the logit temperature and blank penalty sweep in `alignment_eval.md` | `scripts/sweep_smoothing.py` |
 | `demo.gif` | The README's terminal demo: the captured output of one CLI run on an RTX 4090 (bf16, commit `da3aea8`), replayed with the waiting shortened | `scripts/render_demo_gif.py` |
 | `words.gif`, `words_gif.json` | The README's word-timing animation: 28–42 s of `words_gif.json`, the JSON a CPU run of the 0.1.0 package wrote for a 60 s two-speaker clip with `--diarize`, played back in real time | `scripts/render_words_gif.py` |

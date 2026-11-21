@@ -378,7 +378,11 @@ def refine_starts(
 class AlignOptions:
     end_rule: str = "next_start"  # chosen on dev_clean, see docs/alignment_eval.md
     grid: str = "block"
-    start_shift: float = -0.022  # added to every start; median start error on dev_clean (block grid)
+    start_shift: float = -0.010  # added to every start; median start error on dev_clean (block grid)
+    # Subtracted from the blank's log-prob before Viterbi, so tokens hold more frames. Chosen on dev_clean
+    # (docs/alignment_eval.md); it mostly helps word starts. Scaling the logits (temperature) can't do this:
+    # it scales every path's score alike, so the best path stays the same.
+    blank_penalty: float = 5.0
     split_sentences: bool = True
     # Loudness refinement, used when the audio is passed to align() (see LoudnessRefinement).
     refine_ends: bool = True
@@ -417,7 +421,12 @@ class Aligner:
             return None
         em = self.head.emissions(states, [BLANK, *token_ids])
         same = [False] + [a == b for a, b in pairwise(token_ids)]
-        path = ctc_viterbi(em, len(token_ids), same)
+        o = self.opts
+        vit = em
+        if o.blank_penalty:
+            vit = em.copy()
+            vit[:, 0] -= o.blank_penalty
+        path = ctc_viterbi(vit, len(token_ids), same)
         if path is None:
             return None
         spans = token_spans(path, len(token_ids))
@@ -426,7 +435,6 @@ class Aligner:
         words = group_words(token_ids, spans, probs, tokens, self._decode)
         if not words:
             return None
-        o = self.opts
         loudness = None
         if audio is not None and (o.refine_ends or o.refine_starts):
             loudness = LoudnessRefinement(

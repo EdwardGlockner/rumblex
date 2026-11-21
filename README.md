@@ -147,6 +147,11 @@ aligner works at 20 ms, and that shows in the word ends. rumblex moves a word's 
 audio goes quiet, which brought its end error down from 75 to 57 ms in development. The reference is
 another forced aligner, not human labels.
 
+Since 0.1.0, a blank penalty before the Viterbi search has lowered the start error from 57.0 to 52.2 ms on
+the same 200 utterances (states collected on CPU), with ends unchanged
+([docs/alignment_eval.md](docs/alignment_eval.md#blank-penalty-added-2026-11-21)). The table above is from
+the 0.1.0 run.
+
 ## How it works
 
 1. ffmpeg decodes the audio to 16 kHz mono.

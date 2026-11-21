@@ -133,7 +133,9 @@ class FakeTokenizer:
 
 
 def test_align_tokens_and_sentence_split():
-    al = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(end_rule="next_start", start_shift=0.0))
+    al = Aligner(
+        FakeHead(), FakeTokenizer(), AlignOptions(end_rule="next_start", start_shift=0.0, blank_penalty=0.0)
+    )
     words = al.align_tokens([7, 8, 9, 10, 11], torch.zeros(20, 4), chunk_start=10.0)
     assert [w.word for w in words] == ["The", "cat.", "It", "sat"]
     # token k spikes at frame 3k+1; start = frame centre - 0.04. Frame 13 opens block 1 at exactly 1.00 s
@@ -242,7 +244,7 @@ def test_align_tokens_uses_audio_when_given():
                 em[f, k + 1], em[f, 0] = np.log(0.98), np.log(0.01)
             return em
 
-    al = Aligner(Head(), FakeTokenizer(), AlignOptions(start_shift=0.0))
+    al = Aligner(Head(), FakeTokenizer(), AlignOptions(start_shift=0.0, blank_penalty=0.0))
     without = al.align_tokens([7, 8], torch.zeros(26, 4), 0.0)
     with_audio = al.align_tokens([7, 8], torch.zeros(26, 4), 0.0, audio=_tone_gap_tone())
     assert without[0].end == pytest.approx(without[1].start)  # next_start: runs over the pause
@@ -260,7 +262,7 @@ def _items(states):
 
 
 def test_align_needs_encoder_states():
-    al = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(start_shift=0.0))
+    al = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(start_shift=0.0, blank_penalty=0.0))
     with pytest.raises(ValueError, match="keep_encoder_states=True"):
         al.align(_items(None))
     res = al.align(_items(torch.zeros(3, 4)))  # states too short to align: proportional fallback still works
@@ -304,3 +306,24 @@ def test_ctc_head_from_local_folder(tmp_path, monkeypatch):
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", no_download)
     head = CTCHead.from_pretrained(str(tmp_path))
     assert head.weight.shape == (NUM_CLASSES, 2)
+
+
+def test_blank_penalty_widens_token_spans():
+    class Head:  # token 0 clearly at frame 2, token 1 at frame 6; frames 3 and 7 lean blank only slightly
+        def emissions(self, states, classes):
+            em = np.full((10, 3), np.log(0.01))
+            em[:, 0] = np.log(0.98)
+            em[2, 1] = em[6, 2] = np.log(0.98)
+            em[2, 0] = em[6, 0] = np.log(0.01)
+            em[3, 0], em[3, 1] = np.log(0.6), np.log(0.4)
+            em[7, 0], em[7, 2] = np.log(0.6), np.log(0.4)
+            return em
+
+    tok = [7, 8]
+    plain = Aligner(Head(), FakeTokenizer(), AlignOptions(start_shift=0.0, blank_penalty=0.0))
+    penal = Aligner(Head(), FakeTokenizer(), AlignOptions(start_shift=0.0, blank_penalty=1.0))
+    a = plain.align_tokens(tok, torch.zeros(10, 4), 0.0)
+    b = penal.align_tokens(tok, torch.zeros(10, 4), 0.0)
+    assert [w.start for w in a] == [w.start for w in b]  # the spikes still start the words
+    assert b[1].end > a[1].end  # the last word now holds frame 7 too
+    assert b[1].score < a[1].score  # scores still come from the unpenalised log-probs

@@ -21,7 +21,7 @@ further down:
 - Selection: settings were picked on `dev_clean` and then reported once on `test_clean`. The start
   shift is the median signed start error on dev (−22 ms).
 
-## Result (shipped defaults: block grid, `next_start` ends, −22 ms start shift)
+## Result (0.1.0 defaults: block grid, `next_start` ends, −22 ms start shift)
 
 | split | words timed | start MAE | start median | starts ≤ 50 ms | starts ≤ 100 ms | end MAE | end median | ends ≤ 50 ms | ends ≤ 100 ms |
 |---|---|---|---|---|---|---|---|---|---|
@@ -70,6 +70,30 @@ well never lowered that sum on dev, so it is off by default. Same states as abov
 
 The refinement needs the audio. It runs when the audio is passed to `Aligner.align(result, audio)`, which
 the CLI, `rumblex.transcribe()` and the benchmark all do. Starts are unchanged.
+
+## Blank penalty (added 2026-11-21)
+
+Suggested in a Reddit thread: smooth the CTC logits before Viterbi so that tokens hold more frames. Dividing
+the logits by a temperature cannot change a Viterbi path, because it scales every path's score alike (the
+log-softmax normaliser is the same for every state within a frame). The sweep confirms it: T from 1 to 8 gave
+identical times. What does move the path is lowering the blank's score: `blank_penalty` is subtracted from
+the blank's log-prob before Viterbi. Word scores still use the unpenalised log-probs.
+
+Swept on `dev_clean` over penalties {0.5, 1, 2, 3, 5, 8}, with the start shift recalibrated on dev for each
+(median signed start error), and chosen by start MAE + end MAE with the shipped end rule: penalty 5, start
+shift −10 ms. Reported once on `test_clean`. Script `scripts/sweep_smoothing.py`, output
+[alignment_smoothing_sweep.json](alignment_smoothing_sweep.json). The dev states are the ones above; the
+`test_clean` states were collected again with the same script on CPU (float32), since the GPU copies were no
+longer around. On them the old default gives the same 57.0 / 57.1 ms as the table above.
+
+| test_clean | start MAE | start median | starts ≤ 50 ms | end MAE | end median | ends ≤ 100 ms |
+|---|---|---|---|---|---|---|
+| penalty 0, shift −22 ms (previous default) | 57.0 ms | 42 ms | 57.9% | 57.1 ms | 40 ms | 85.8% |
+| penalty 5, shift −10 ms (new default) | 52.2 ms | 36 ms | 64.6% | 57.2 ms | 38 ms | 84.5% |
+
+On the path, blank frames drop from 65% to 49% and a token holds 1.9 frames instead of 1.3. Starts improve;
+ends with the shipped rule stay the same, since that rule mostly takes them from the next word's start and
+the audio. Ends taken straight from the last CTC frame (`spike`) improve from 115 to 101 ms, still far behind.
 
 ## Transcription quality on the same data
 
