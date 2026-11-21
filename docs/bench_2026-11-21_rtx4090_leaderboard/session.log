@@ -1,0 +1,6 @@
+[16:03:31] env
+[16:09:33] ok: rumblex_fleurs_nl
+[16:09:52] FAILED: whisperx_fleurs_nl
+[16:09:54] done: results.tar.gz
+[16:18:14] ok: whisperx_fleurs_nl (rerun, HF_HUB_ENABLE_HF_TRANSFER=0)
+[16:19:05] rescored both; done

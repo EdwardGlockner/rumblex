@@ -13,6 +13,7 @@ alignments, AMI, Earnings-22 and FLEURS are public.
 | `runpod_dutch.sh` | FLEURS Dutch with digits on, plus the GPU VAD check | 9 min |
 | `runpod_diagnose.sh` | FLEURS Dutch through VAD/language variants, transformers bf16/fp32 and vLLM, saving transcripts | 13 min |
 | `runpod_release.sh` | rumblex 0.1.0 vs WhisperX on LibriSpeech, AMI, Earnings-22 and FLEURS Dutch (+ vLLM on LibriSpeech): the README's numbers | 18 min |
+| `runpod_leaderboard.sh` | FLEURS Dutch for rumblex and WhisperX with every transcript saved, rescored with the Open ASR Leaderboard's scoring | 16 min |
 
 Times are from the session logs in `docs/bench_*` (RTX 4090, from environment setup to the last result).
 

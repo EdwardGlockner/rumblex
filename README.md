@@ -125,11 +125,12 @@ VAD, the gap may be smaller. These are samples of a few hundred utterances per s
 depend on the host CPU.
 
 The [model card](https://huggingface.co/Reson8/Rumble-2-Flash) reports 6.05% on FLEURS Dutch under the
-Open ASR Leaderboard's scoring. The gap is mostly scoring: an earlier diagnostic run (vLLM vs
-transformers, bf16 vs float32, with and without VAD) gave 9.2–9.6% with Whisper's basic normalizer, and
-the same transcripts rescored with the leaderboard's normaliser and alignment give 6.2–6.4%
-([docs/bench_2026-11-20_rtx4090_diagnose](docs/bench_2026-11-20_rtx4090_diagnose/README.md)). WhisperX
-has not been rescored that way, so the table above uses Whisper's normalizer for both.
+Open ASR Leaderboard's scoring. The gap is the scoring: rescored with the leaderboard's normaliser and
+alignment, the same FLEURS Dutch run gives 6.24% for rumblex and 4.43% for WhisperX large-v3, so both
+gain and WhisperX stays ahead
+([docs/bench_2026-11-21_rtx4090_leaderboard](docs/bench_2026-11-21_rtx4090_leaderboard/README.md)).
+Pipeline choices (vLLM vs transformers, bf16 vs float32, with and without VAD) moved rumblex by less than
+half a point ([docs/bench_2026-11-20_rtx4090_diagnose](docs/bench_2026-11-20_rtx4090_diagnose/README.md)).
 
 ### Timestamp accuracy
 

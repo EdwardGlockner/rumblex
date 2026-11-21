@@ -5,6 +5,7 @@
 #
 #   bash scripts/runpod_leaderboard.sh        # from the repo root on the pod
 set -euo pipefail
+export HF_HUB_ENABLE_HF_TRANSFER=0  # some pod images turn it on without installing hf_transfer
 mkdir -p results logs
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a logs/session.log; }
 run() { local name=$1; shift; if "$@" > "logs/$name.log" 2>&1; then log "ok: $name"; else log "FAILED: $name"; tail -20 "logs/$name.log"; fi; }

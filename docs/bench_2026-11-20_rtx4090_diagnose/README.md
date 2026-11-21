@@ -62,4 +62,5 @@ The model card's 6.05% is within 0.13–0.34 points of these. The references her
 leaderboard scores against its own copy (hf-audio/open-asr-leaderboard-multilingual-datasets), which was
 not checked against them. The transcripts come from commit `546bf10`, not the 0.1.0 release run (which
 did not save transcripts); v0.1.0 corresponds to the "no VAD + forced" column. WhisperX's transcripts
-were not saved, so its 7.05% has not been rescored and the two numbers should not be compared.
+were not saved here; a later run saved both systems' transcripts and rescored them the same way: rumblex
+6.24%, WhisperX 4.43% ([bench_2026-11-21_rtx4090_leaderboard](../bench_2026-11-21_rtx4090_leaderboard/README.md)).
