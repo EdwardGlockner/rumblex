@@ -17,6 +17,7 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `profile_speed.py` | Where the time goes: VAD vs transcription vs alignment over batch size and chunk length | `docs/bench_2026-11-20_rtx4090_tune/` |
 | `benchmark.py` | rumblex vs rumblex+vLLM vs WhisperX: WER, word timing error, long-file speed, peak GPU memory | `docs/bench_2026-11-20_rtx4090*/` |
 | `diagnose_wer.py` | One eval set through pipeline variants (VAD on/off, language forced/detected), saving every transcript | `docs/bench_2026-11-20_rtx4090_diagnose/` |
+| `rescore_leaderboard.py` | Rescores `diagnose_wer.py` transcripts with the Open ASR Leaderboard's normaliser and alignment (CPU only) | `docs/bench_2026-11-20_rtx4090_diagnose/leaderboard_rescore.json` |
 | `render_demo_gif.py` | Turns the captured output of a real CLI run and the subtitles it wrote into a terminal GIF | `docs/demo.gif` |
 | `render_words_gif.py` | Plays back a rumblex JSON result: words light up at their times, coloured by speaker, over the audio's waveform | `docs/words.gif` |
 

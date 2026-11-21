@@ -37,10 +37,29 @@ different commits on different pods. Since then, v0.1.0 passes audio of up to 20
   "angèle", "zagrosgebergte" → "gebergte"). Word forms ("uitstierven" → "uitsterven", "ingehuldigd" →
   "ingelicht"). Function words inserted, deleted or swapped ("de", "een").
 - The Rumble-2-Flash model card reports 6.05% on FLEURS Dutch under the Open ASR Leaderboard's
-  setup. Its normalisation and scoring are not reproduced here, so the two numbers are not
-  comparable, and the gap is not explained by anything in rumblex's pipeline.
+  setup. Most of the gap is scoring, not the pipeline: see the rescoring below.
 - WhisperX large-v3, scored the same way on the same references, measured 7.05%
   ([Dutch re-run](../bench_2026-11-20_rtx4090_dutch/README.md)).
 
 The counts come from `diag_transformers_bf16.json`, variant `whole_forced`: both sides through the
 Whisper basic normalizer, aligned word by word with `jiwer.process_words`.
+
+## Rescored with the Open ASR Leaderboard's scoring (2026-11-21)
+
+The same saved transcripts, scored on CPU with the leaderboard's own code
+([huggingface/open_asr_leaderboard](https://github.com/huggingface/open_asr_leaderboard) at `c469619`):
+its multilingual normaliser (diacritics kept, digits written out in Dutch with num2words on both sides)
+and its alignment, which counts a compound split on one side and joined on the other as correct.
+Script: `scripts/rescore_leaderboard.py`; output: `leaderboard_rescore.json`.
+
+| WER, leaderboard scoring | VAD + language forced | no VAD + forced | VAD + detected | no VAD + detected |
+|---|---|---|---|---|
+| transformers, bf16 | 6.25% | 6.18% | 6.39% | 6.20% |
+| transformers, float32 | 6.33% | 6.20% | 6.33% | 6.20% |
+| vLLM 0.34.0 (bf16) | 6.28% | 6.19% | 6.31% | 6.24% |
+
+The model card's 6.05% is within 0.13–0.34 points of these. The references here are google/fleurs; the
+leaderboard scores against its own copy (hf-audio/open-asr-leaderboard-multilingual-datasets), which was
+not checked against them. The transcripts come from commit `546bf10`, not the 0.1.0 release run (which
+did not save transcripts); v0.1.0 corresponds to the "no VAD + forced" column. WhisperX's transcripts
+were not saved, so its 7.05% has not been rescored and the two numbers should not be compared.

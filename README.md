@@ -125,10 +125,11 @@ VAD, the gap may be smaller. These are samples of a few hundred utterances per s
 depend on the host CPU.
 
 The [model card](https://huggingface.co/Reson8/Rumble-2-Flash) reports 6.05% on FLEURS Dutch under the
-Open ASR Leaderboard's scoring, which we did not reproduce. An earlier diagnostic run (vLLM vs
-transformers, bf16 vs float32, with and without VAD) gave 9.2–9.6% every time, so none of those pipeline
-choices explains the gap. Part of it is that FLEURS mixes digits and spelled-out numbers in its
-references ([docs/bench_2026-11-20_rtx4090_diagnose](docs/bench_2026-11-20_rtx4090_diagnose/README.md)).
+Open ASR Leaderboard's scoring. The gap is mostly scoring: an earlier diagnostic run (vLLM vs
+transformers, bf16 vs float32, with and without VAD) gave 9.2–9.6% with Whisper's basic normalizer, and
+the same transcripts rescored with the leaderboard's normaliser and alignment give 6.2–6.4%
+([docs/bench_2026-11-20_rtx4090_diagnose](docs/bench_2026-11-20_rtx4090_diagnose/README.md)). WhisperX
+has not been rescored that way, so the table above uses Whisper's normalizer for both.
 
 ### Timestamp accuracy
 

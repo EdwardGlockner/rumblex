@@ -27,7 +27,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [bench_2026-11-20_rtx4090_tune](bench_2026-11-20_rtx4090_tune/README.md) | Batch size, chunk length and vLLM settings; found VAD to be the bottleneck | `scripts/runpod_tune.sh` |
 | [bench_2026-11-20_rtx4090_eval](bench_2026-11-20_rtx4090_eval/README.md) | rumblex vs WhisperX on LibriSpeech, AMI, Earnings-22, FLEURS Dutch | `scripts/runpod_eval.sh` |
 | [bench_2026-11-20_rtx4090_dutch](bench_2026-11-20_rtx4090_dutch/README.md) | FLEURS Dutch re-run with digits on; batched VAD on GPU vs CPU | `scripts/runpod_dutch.sh` |
-| [bench_2026-11-20_rtx4090_diagnose](bench_2026-11-20_rtx4090_diagnose/README.md) | Where the Dutch WER gap comes from: pipeline variants and error analysis | `scripts/runpod_diagnose.sh` |
+| [bench_2026-11-20_rtx4090_diagnose](bench_2026-11-20_rtx4090_diagnose/README.md) | Where the Dutch WER gap comes from: pipeline variants, error analysis, leaderboard rescoring | `scripts/runpod_diagnose.sh`, `scripts/rescore_leaderboard.py` |
 | [bench_2026-11-20_rtx4090_release](bench_2026-11-20_rtx4090_release/README.md) | rumblex 0.1.0 vs WhisperX on LibriSpeech, AMI, Earnings-22, FLEURS Dutch: the README's numbers | `scripts/runpod_release.sh` |
 | [runpod_session.md](runpod_session.md) | How to run the benchmark scripts on a rented GPU | |
 | `transcriber_check_gpu_fp32.json` | Batch 8 vs batch 1 give identical output; captured encoder states match the reference | `scripts/check_transcriber.py` |

@@ -1,0 +1,153 @@
+{
+  "leaderboard_commit": "c4696193a333f7948cb113dc93bb54f661bd9a0b",
+  "language": "nl",
+  "files": {
+    "diag_transformers_bf16.json": {
+      "normalizer": "whisper-basic",
+      "variants": {
+        "vad_forced": {
+          "saved_wer": 0.0944,
+          "leaderboard": {
+            "sub": 396,
+            "del": 49,
+            "ins": 78,
+            "total": 523,
+            "ref_len": 8371,
+            "wer": 0.0625
+          }
+        },
+        "whole_forced": {
+          "saved_wer": 0.0917,
+          "leaderboard": {
+            "sub": 399,
+            "del": 47,
+            "ins": 72,
+            "total": 518,
+            "ref_len": 8381,
+            "wer": 0.0618
+          }
+        },
+        "vad_auto": {
+          "saved_wer": 0.0956,
+          "leaderboard": {
+            "sub": 403,
+            "del": 54,
+            "ins": 78,
+            "total": 535,
+            "ref_len": 8372,
+            "wer": 0.0639
+          }
+        },
+        "whole_auto": {
+          "saved_wer": 0.0924,
+          "leaderboard": {
+            "sub": 401,
+            "del": 49,
+            "ins": 70,
+            "total": 520,
+            "ref_len": 8381,
+            "wer": 0.062
+          }
+        }
+      }
+    },
+    "diag_transformers_fp32.json": {
+      "normalizer": "whisper-basic",
+      "variants": {
+        "vad_forced": {
+          "saved_wer": 0.095,
+          "leaderboard": {
+            "sub": 399,
+            "del": 54,
+            "ins": 77,
+            "total": 530,
+            "ref_len": 8371,
+            "wer": 0.0633
+          }
+        },
+        "whole_forced": {
+          "saved_wer": 0.0919,
+          "leaderboard": {
+            "sub": 397,
+            "del": 51,
+            "ins": 72,
+            "total": 520,
+            "ref_len": 8381,
+            "wer": 0.062
+          }
+        },
+        "vad_auto": {
+          "saved_wer": 0.095,
+          "leaderboard": {
+            "sub": 399,
+            "del": 54,
+            "ins": 77,
+            "total": 530,
+            "ref_len": 8371,
+            "wer": 0.0633
+          }
+        },
+        "whole_auto": {
+          "saved_wer": 0.0919,
+          "leaderboard": {
+            "sub": 397,
+            "del": 51,
+            "ins": 72,
+            "total": 520,
+            "ref_len": 8381,
+            "wer": 0.062
+          }
+        }
+      }
+    },
+    "diag_vllm.json": {
+      "normalizer": "whisper-basic",
+      "variants": {
+        "vad_forced": {
+          "saved_wer": 0.0947,
+          "leaderboard": {
+            "sub": 397,
+            "del": 52,
+            "ins": 77,
+            "total": 526,
+            "ref_len": 8372,
+            "wer": 0.0628
+          }
+        },
+        "whole_forced": {
+          "saved_wer": 0.0923,
+          "leaderboard": {
+            "sub": 398,
+            "del": 51,
+            "ins": 70,
+            "total": 519,
+            "ref_len": 8380,
+            "wer": 0.0619
+          }
+        },
+        "vad_auto": {
+          "saved_wer": 0.0948,
+          "leaderboard": {
+            "sub": 396,
+            "del": 53,
+            "ins": 79,
+            "total": 528,
+            "ref_len": 8372,
+            "wer": 0.0631
+          }
+        },
+        "whole_auto": {
+          "saved_wer": 0.0921,
+          "leaderboard": {
+            "sub": 400,
+            "del": 53,
+            "ins": 70,
+            "total": 523,
+            "ref_len": 8381,
+            "wer": 0.0624
+          }
+        }
+      }
+    }
+  }
+}
