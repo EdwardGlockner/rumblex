@@ -125,7 +125,9 @@ def cmd_run(args) -> None:
     }
     print(f"[{system.name}] accuracy on {len(utts)} utterances", file=sys.stderr, flush=True)
     if not args.speed_only:
-        result["accuracy"] = run_accuracy(system, utts, args.language, norm)
+        result["accuracy"] = run_accuracy(
+            system, utts, args.language, norm, keep_transcripts=args.save_transcripts
+        )
     print(f"[{system.name}] speed on {len(long_audio) / 16000:.0f} s", file=sys.stderr, flush=True)
     result["speed"] = run_speed(system, long_audio, args.language)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -169,6 +171,10 @@ def main() -> None:
     r.add_argument("--long-utts", type=int, default=None, help="limit utterances read for the long file")
     r.add_argument("--max-chunk", type=float, default=20.0, help="rumblex: max seconds per model input")
     r.add_argument("--speed-only", action="store_true", help="skip the per-utterance accuracy pass")
+    r.add_argument(
+        "--save-transcripts", action="store_true",
+        help="also write every reference and transcript (accuracy.ids/refs/hyps), for rescoring",
+    )  # fmt: skip
     r.add_argument(
         "--digits", action=argparse.BooleanOptionalAction, default=False,
         help="rumblex: numbers as digits (model default). Off by default here because LibriSpeech spells numbers "

@@ -1,6 +1,6 @@
 """Rescore saved transcripts with the Open ASR Leaderboard's normalisation and alignment.
 
-Reads the `diag_*.json` files written by `diagnose_wer.py` (references plus every variant's transcripts) and
+Reads the `diag_*.json` files written by `diagnose_wer.py`, or `benchmark.py run --save-transcripts` output, and
 scores each variant with the leaderboard's own code: its multilingual normaliser (diacritics kept, numbers
 written out with num2words for the given language) and its word alignment, which counts a compound written
 split on one side and joined on the other as correct. No GPU or model is needed.
@@ -61,6 +61,13 @@ def main() -> None:
     result = {"leaderboard_commit": commit, "language": args.language, "files": {}}
     for path in args.files:
         data = json.loads(path.read_text(encoding="utf-8"))
+        if "variants" not in data:  # benchmark.py output, run with --save-transcripts
+            acc = data["accuracy"]
+            data = {
+                "normalizer": data["data"]["wer_normalizer"],
+                "refs": acc["refs"],
+                "variants": {data["system"]: {"wer": acc["wer"], "hyps": acc["hyps"]}},
+            }
         rows = {}
         for name, variant in data["variants"].items():
             rows[name] = {"saved_wer": variant["wer"], "leaderboard": score(

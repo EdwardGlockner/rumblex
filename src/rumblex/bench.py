@@ -489,8 +489,10 @@ def run_accuracy(
     utts: Sequence[Utterance],
     language: str | None,
     norm: Callable[[str], str] = normalize_text,
+    keep_transcripts: bool = False,
 ) -> dict:
-    """One run per utterance: WER over all of them, and word timing errors against the references."""
+    """One run per utterance: WER over all of them, and word timing errors against the references.
+    With `keep_transcripts`, the raw references and transcripts are returned too, for rescoring later."""
     hyps, score, secs = [], TimingScore(), 0.0
     for u in utts:
         out = system.run(u.audio, language)
@@ -498,13 +500,17 @@ def run_accuracy(
         hyps.append(out.text)
         score.add(score_timings(u.words, out.words))
     audio_s = sum(len(u.audio) for u in utts) / SAMPLE_RATE
-    return {
+    refs = [u.transcript for u in utts]
+    result = {
         "utterances": len(utts),
         "audio_seconds": round(audio_s, 1),
-        **wer([u.transcript for u in utts], hyps, norm),
+        **wer(refs, hyps, norm),
         "timing": score.summary(),
         "rtfx_per_utterance": round(audio_s / secs, 1) if secs else None,
     }
+    if keep_transcripts:
+        result.update(ids=[u.id for u in utts], refs=refs, hyps=hyps)
+    return result
 
 
 def run_speed(system: System, audio: np.ndarray, language: str | None) -> dict:
