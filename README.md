@@ -134,23 +134,24 @@ half a point ([docs/bench_2026-11-20_rtx4090_diagnose](docs/bench_2026-11-20_rtx
 
 ### Timestamp accuracy
 
-Measured on the 200 LibriSpeech utterances in the same run, against Montreal Forced Aligner reference
-alignments. The settings were chosen on `dev_clean` ([docs/alignment_eval.md](docs/alignment_eval.md)).
+Measured on the same 200 LibriSpeech utterances, against Montreal Forced Aligner reference alignments, in
+a later session on the same kind of pod with the current aligner
+([docs/bench_2026-11-22_rtx4090_timing](docs/bench_2026-11-22_rtx4090_timing/README.md)). The settings were
+chosen on `dev_clean` ([docs/alignment_eval.md](docs/alignment_eval.md)).
 
 | mean absolute error | rumblex | WhisperX |
 |---|---|---|
-| word start | 58 ms | 75 ms |
-| word end | 57 ms | 34 ms |
+| word start | 53 ms | 75 ms |
+| word end | 58 ms | 34 ms |
 
 The Rumble encoder produces 13 frames per second (80 ms apart within each second), while WhisperX's
 aligner works at 20 ms, and that shows in the word ends. rumblex moves a word's end back to where the
 audio goes quiet, which brought its end error down from 75 to 57 ms in development. The reference is
 another forced aligner, not human labels.
 
-Since 0.1.0, a blank penalty before the Viterbi search has lowered the start error from 57.0 to 52.2 ms on
-the same 200 utterances (states collected on CPU), with ends unchanged
-([docs/alignment_eval.md](docs/alignment_eval.md#blank-penalty-added-2026-11-21)). The table above is from
-the 0.1.0 run.
+Since 0.1.0, a blank penalty before the Viterbi search lets tokens hold more frames, which brought the
+start error down from 58 to 53 ms with ends unchanged
+([docs/alignment_eval.md](docs/alignment_eval.md#blank-penalty-added-2026-11-21)).
 
 ## How it works
 
@@ -172,7 +173,7 @@ Model details measured for this project: [docs/model_inspection.md](docs/model_i
 ## Limitations
 
 - Word timing resolution is limited by the encoder's frame rate (13 per second). Word ends in particular
-  are less precise than WhisperX's 20 ms aligner (57 vs 34 ms mean error on LibriSpeech).
+  are less precise than WhisperX's 20 ms aligner (58 vs 34 ms mean error on LibriSpeech).
 - Each chunk is decoded on its own, so a sentence that runs across a chunk boundary in long audio can be
   broken there, sometimes with a capital letter mid-sentence.
 - Words are split at spaces, so languages written without spaces (Chinese, Japanese) get one "word" per

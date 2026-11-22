@@ -4,7 +4,8 @@
 
 - Word starts: a blank penalty before the Viterbi search (`AlignOptions.blank_penalty`, default 5) with the
   start shift recalibrated to −10 ms. Start error on LibriSpeech test_clean went from 57.0 to 52.2 ms; ends
-  are unchanged (`docs/alignment_eval.md`).
+  are unchanged (`docs/alignment_eval.md`). On an RTX 4090 in bf16: 57.6 to 52.6 ms
+  (`docs/bench_2026-11-22_rtx4090_timing`).
 
 ## 0.1.0 (2026-11-21)
 

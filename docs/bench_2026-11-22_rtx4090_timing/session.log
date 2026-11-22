@@ -1,0 +1,4 @@
+[00:05:16] env
+[00:07:35] dataset: librispeech
+[00:08:54] ok: rumblex_librispeech
+[00:11:06] ok: whisperx_librispeech
