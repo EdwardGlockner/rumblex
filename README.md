@@ -1,5 +1,7 @@
 # rumblex
 
+[![Open in Spaces](https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg)](https://huggingface.co/spaces/edwardgl/rumblex)
+
 Transcription with word-level timestamps, speaker labels and subtitles, built on
 [Reson8/Rumble-2-Flash](https://huggingface.co/Reson8/Rumble-2-Flash).
 
@@ -76,6 +78,8 @@ rumblex.write_result(result, "meeting.mp4", "out/", ["srt", "json"])
 
 More in [examples/quickstart.py](examples/quickstart.py) and
 [examples/batch_subtitles.py](examples/batch_subtitles.py), which writes subtitles for a folder of files.
+To try it without installing anything, the [demo Space](https://huggingface.co/spaces/edwardgl/rumblex)
+transcribes a file or a microphone recording and plays it back with each word highlighted as it is spoken.
 
 ### Faster decoding with vLLM
 
