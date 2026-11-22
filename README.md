@@ -9,8 +9,8 @@ Rumble-2-Flash has a CTC head next to its decoder. rumblex uses it for word time
 the text and the CTC head aligns it to the audio, reusing the encoder pass that already ran. So alignment
 is one linear layer and a Viterbi search, not a second model.
 
-The model is a 0.5B fine-tune of Qwen3-ASR-0.6B. Its card lists 45 languages; I've only benchmarked English
-and Dutch. You can try it in the browser with the [demo Space](https://huggingface.co/spaces/edwardgl/rumblex).
+The model is a 0.5B fine-tune of Qwen3-ASR-0.6B. Its card lists 45 languages; I've benchmarked 13 of
+them (below). You can try it in the browser with the [demo Space](https://huggingface.co/spaces/edwardgl/rumblex).
 
 ![rumblex transcribing two files and writing subtitles](docs/demo.gif)
 
@@ -98,9 +98,31 @@ WhisperX). It wins WER on meetings and calls, mostly through fewer deleted words
 English and Dutch. rumblex passes clips up to 20 s whole while WhisperX runs VAD on everything, which may
 flatter rumblex on these short clips. A few hundred utterances per set, so treat it as rough.
 
-The model card's 6.05% on FLEURS Dutch uses the Open ASR Leaderboard's scoring. Rescored that way, this
-run gives 6.24% for rumblex and 4.43% for WhisperX
-([run](docs/bench_2026-11-21_rtx4090_leaderboard/README.md)).
+### Languages
+
+FLEURS (read speech), 350 utterances per language, same settings as above on another RTX 4090 pod
+([run](docs/bench_2026-11-22_rtx4090_languages/README.md)). WER is scored with the Open ASR Leaderboard's
+normaliser, as on the model card; the run also has it with Whisper's normalisers. Speed is the ratio of the
+two systems on a 20-minute file per language, since that pod was slower overall than the one above.
+
+| language | rumblex WER | WhisperX WER | rumblex faster by |
+|---|---|---|---|
+| German | 5.0% | 3.3% | 3.7× |
+| Spanish | 3.1% | 3.4% | 3.2× |
+| French | 5.5% | 5.6% | 3.1× |
+| Italian | 2.3% | 1.8% | 3.2× |
+| Portuguese | 4.0% | 3.3% | 3.0× |
+| Dutch | 6.2% | 4.5% | 3.1× |
+| Swedish | 10.8% | 5.8% | 3.7× |
+| Polish | 7.0% | 4.1% | 3.1× |
+| Russian | 6.7% | 4.6% | 2.7× |
+| Turkish | 6.3% | 3.8% | 3.4× |
+| Arabic | 19.1% | 14.7% | 3.4× |
+| Hindi | 12.6% | 26.5% | 1.9× |
+
+WhisperX large-v3 has the lower WER in most of these; rumblex is level on Spanish and French and well ahead
+on Hindi. English FLEURS (Whisper's normaliser) was 6.3% vs 5.2%. Word timestamps came from the CTC head in
+all but 1 of 4,288 chunks outside Hindi; for Hindi see Limitations.
 
 ### Timestamp accuracy
 
@@ -133,7 +155,11 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 - Timing resolution is limited to 13 frames/s; word ends are less precise than WhisperX's.
 - Chunks are decoded independently, so a sentence crossing a chunk boundary can be broken there.
 - Words split at spaces, so Chinese and Japanese get one "word" per chunk.
-- WhisperX large-v3 had lower WER on clean English and Dutch. Only English and Dutch are measured.
+- WhisperX large-v3 had lower WER on clean English and on FLEURS in most languages measured (13 so far,
+  all read speech except the English meeting and call sets).
+- Hindi word times are less reliable: Hindi text runs to about 10 tokens per second of audio against the
+  encoder's 13 frames, so in fast speech the CTC path doesn't fit and 30 of 360 chunks fell back to
+  proportional times.
 - vLLM needs Linux and a GPU vLLM supports.
 
 ## Development

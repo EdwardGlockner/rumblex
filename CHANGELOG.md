@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Benchmarks: FLEURS in 13 languages for rumblex and WhisperX (`scripts/runpod_languages.sh`,
+  `docs/bench_2026-11-22_rtx4090_languages`), with CTC alignment coverage per language. `rumblex.bench`
+  has `fleurs_<code>` sets for them.
+
 ## 0.1.1 (2026-11-22)
 
 - Word starts: a blank penalty before the Viterbi search (`AlignOptions.blank_penalty`, default 5) with the
