@@ -17,12 +17,15 @@ command -v uv >/dev/null || { curl -LsSf https://astral.sh/uv/install.sh | sh; e
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee results/gpu.txt
 git rev-parse --short HEAD | tee results/commit.txt
 
-log "env"
-uv venv -q -p 3.11 .venv && uv pip install -q -p .venv -e ".[dev]" whisper-normalizer regex kaldialign num2words
-uv venv -q -p 3.11 .venv-wx && { uv pip install -q -p .venv-wx whisperx==3.8.6 whisper-normalizer jiwer pyarrow soundfile huggingface_hub \
-  && uv pip install -q -p .venv-wx --no-deps -e . ; } || log "FAILED: whisperx install"
+export UV_HTTP_TIMEOUT=120  # a stalled download fails and is retried instead of hanging
+if [ -z "${SKIP_ENV:-}" ]; then  # SKIP_ENV=1 reuses .venv and .venv-wx from an earlier start
+  log "env"
+  uv venv -q -p 3.11 .venv && uv pip install -q -p .venv -e ".[dev]" whisper-normalizer regex kaldialign num2words
+  uv venv -q -p 3.11 .venv-wx && { uv pip install -q -p .venv-wx whisperx==3.8.6 whisper-normalizer jiwer pyarrow soundfile huggingface_hub \
+    && uv pip install -q -p .venv-wx --no-deps -e . ; } || log "FAILED: whisperx install"
+fi
 { for v in .venv .venv-wx; do echo "## $v"; uv pip list -p $v 2>/dev/null | grep -iE '^(torch|transformers|whisperx|ctranslate2|faster-whisper) '; done; } > results/envs.txt
-git clone -q https://github.com/huggingface/open_asr_leaderboard /tmp/open_asr_leaderboard
+[ -d /tmp/open_asr_leaderboard ] || git clone -q https://github.com/huggingface/open_asr_leaderboard /tmp/open_asr_leaderboard
 
 for lang in $LANGS; do
   B="scripts/benchmark.py run --dataset fleurs_$lang --n $N --long-seconds 300 --save-transcripts"
