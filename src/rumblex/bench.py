@@ -213,15 +213,29 @@ EVAL_SETS = {
     # name: (repo, revision, parquet prefix, id column, text column, language)
     "ami": (ESB_REPO, ESB_REVISION, "ami/test-", "id", "text", "English"),  # meetings, CC-BY-4.0
     "earnings22": (ESB_REPO, ESB_REVISION, "earnings22/test-", "id", "text", "English"),  # CC-BY-SA-4.0
-    "fleurs_nl": (
-        FLEURS_REPO,
-        FLEURS_REVISION,
-        "parquet-data/nl_nl/test-",
-        "id",
-        "raw_transcription",
-        "Dutch",
-    ),
 }
+# FLEURS test sets, as `fleurs_<code>`: languages the model's processor has a name for (Rumble-2-Flash is
+# prompted with "language <Name>") and WhisperX 3.8.6 has a default aligner for.
+FLEURS_LANGUAGES = {
+    # code: (FLEURS config, language name)
+    "en": ("en_us", "English"),
+    "de": ("de_de", "German"),
+    "es": ("es_419", "Spanish"),
+    "fr": ("fr_fr", "French"),
+    "it": ("it_it", "Italian"),
+    "pt": ("pt_br", "Portuguese"),
+    "nl": ("nl_nl", "Dutch"),
+    "sv": ("sv_se", "Swedish"),
+    "pl": ("pl_pl", "Polish"),
+    "ru": ("ru_ru", "Russian"),
+    "tr": ("tr_tr", "Turkish"),
+    "ar": ("ar_eg", "Arabic"),
+    "hi": ("hi_in", "Hindi"),
+}
+for _code, (_cfg, _name) in FLEURS_LANGUAGES.items():
+    EVAL_SETS[f"fleurs_{_code}"] = (
+        FLEURS_REPO, FLEURS_REVISION, f"parquet-data/{_cfg}/test-", "id", "raw_transcription", _name
+    )  # fmt: skip
 
 
 def load_eval_set(name: str, n: int, seed: int = 0) -> tuple[list[Utterance], str]:
@@ -290,6 +304,13 @@ class System:
     def info(self) -> dict:
         return {}
 
+    def reset_stats(self) -> None:
+        pass
+
+    def stats(self) -> dict:
+        """Counters gathered since `reset_stats`, saved next to the accuracy results."""
+        return {}
+
 
 class RumbleXSystem(System):
     name = "rumblex"
@@ -326,9 +347,34 @@ class RumbleXSystem(System):
         t1 = _now()
         self.al.align(res, audio)
         t2 = _now()
+        self._count(res)
         words = [TimedWord(w.word, w.start, w.end) for s in res.segments for w in s.words]
         text = " ".join(s.text for s in res.segments)
         return SystemOutput(text, words, {"transcribe": t1 - t0, "align": t2 - t1})
+
+    def reset_stats(self) -> None:
+        self._stats = {"chunks": 0, "fallback_chunks": 0, "words": 0, "score_sum": 0.0}
+
+    def _count(self, res) -> None:
+        st = getattr(self, "_stats", None)
+        if st is None:
+            return
+        st["chunks"] += sum(1 for it in res.metadata["chunk_transcripts"] if it.text)
+        st["fallback_chunks"] += res.metadata["alignment"]["fallback_chunks"]
+        for seg in res.segments:
+            st["words"] += len(seg.words)
+            st["score_sum"] += sum(w.score or 0.0 for w in seg.words)
+
+    def stats(self) -> dict:
+        st = getattr(self, "_stats", None)
+        if not st:
+            return {}
+        return {
+            "chunks": st["chunks"],
+            "fallback_chunks": st["fallback_chunks"],
+            "words": st["words"],
+            "mean_word_score": round(st["score_sum"] / st["words"], 4) if st["words"] else None,
+        }
 
     def info(self) -> dict:
         return {
@@ -424,7 +470,7 @@ class WhisperXSystem(System):
         return {**self.kw, "whisperx": md.version("whisperx")}
 
 
-_ISO = {"english": "en", "dutch": "nl", "german": "de", "french": "fr", "spanish": "es"}
+_ISO = {name.lower(): code for code, (_, name) in FLEURS_LANGUAGES.items()}
 
 
 def _iso(language: str | None) -> str | None:
@@ -494,6 +540,7 @@ def run_accuracy(
     """One run per utterance: WER over all of them, and word timing errors against the references.
     With `keep_transcripts`, the raw references and transcripts are returned too, for rescoring later."""
     hyps, score, secs = [], TimingScore(), 0.0
+    system.reset_stats()
     for u in utts:
         out = system.run(u.audio, language)
         secs += sum(out.timings.values())
@@ -508,6 +555,8 @@ def run_accuracy(
         "timing": score.summary(),
         "rtfx_per_utterance": round(audio_s / secs, 1) if secs else None,
     }
+    if stats := system.stats():
+        result["alignment"] = stats
     if keep_transcripts:
         result.update(ids=[u.id for u in utts], refs=refs, hyps=hyps)
     return result

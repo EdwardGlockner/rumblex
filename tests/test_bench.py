@@ -74,3 +74,33 @@ def test_librispeech_rows_are_sane():
         assert [normalize_word(w.word) for w in u.words] == u.transcript.lower().split()
         assert all(0 <= w.start < w.end <= dur + 0.05 for w in u.words)
         assert all(a.start <= b.start for a, b in zip(u.words, u.words[1:]))
+
+
+def test_fleurs_sets_use_the_model_language_names():
+    from rumblex.bench import EVAL_SETS, FLEURS_LANGUAGES, _iso
+
+    assert EVAL_SETS["fleurs_nl"][2] == "parquet-data/nl_nl/test-"  # unchanged from earlier runs
+    for code, (cfg, name) in FLEURS_LANGUAGES.items():
+        assert EVAL_SETS[f"fleurs_{code}"][2] == f"parquet-data/{cfg}/test-"
+        assert EVAL_SETS[f"fleurs_{code}"][5] == name
+        assert _iso(name) == code
+
+
+def test_rumblex_stats_count_chunks_and_fallbacks():
+    from types import SimpleNamespace
+
+    from rumblex.bench import RumbleXSystem
+    from rumblex.types import Segment, WordSegment
+
+    sys_ = RumbleXSystem()
+    assert sys_.stats() == {}
+    sys_.reset_stats()
+    res = SimpleNamespace(
+        metadata={
+            "chunk_transcripts": [SimpleNamespace(text="a b"), SimpleNamespace(text="")],
+            "alignment": {"fallback_chunks": 1},
+        },
+        segments=[Segment(0, 1, "a b", [WordSegment("a", 0, 0.5, 0.5), WordSegment("b", 0.5, 1, 1.0)])],
+    )
+    sys_._count(res)
+    assert sys_.stats() == {"chunks": 1, "fallback_chunks": 1, "words": 2, "mean_word_score": 0.75}

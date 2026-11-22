@@ -24,6 +24,7 @@ import time
 from pathlib import Path
 
 from rumblex.bench import (
+    EVAL_SETS,
     RumbleXSystem,
     RumbleXVLLMSystem,
     WhisperXSystem,
@@ -161,9 +162,7 @@ def main() -> None:
     r.add_argument("--vllm-url", default="http://localhost:8000/v1")
     r.add_argument("--vllm-concurrency", type=int, default=32)
     r.add_argument("--language", default=None, help="default: the dataset's language")
-    r.add_argument(
-        "--dataset", default="librispeech", choices=["librispeech", "ami", "earnings22", "fleurs_nl"]
-    )
+    r.add_argument("--dataset", default="librispeech", choices=["librispeech", *sorted(EVAL_SETS)])
     r.add_argument("--split", default="test_clean")
     r.add_argument("--n", type=int, default=200)
     r.add_argument("--seed", type=int, default=0)
