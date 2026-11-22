@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # FLEURS test sets in 13 languages, rumblex vs WhisperX large-v3, with release settings (runpod_release.sh):
 # WER with Whisper's normalisers, transcripts saved and rescored with the Open ASR Leaderboard's scoring,
-# rumblex's alignment counters (fallback chunks, mean word score), and speed on a 5-minute file per language.
+# rumblex's alignment counters (fallback chunks, mean word score), and speed on a 20-minute file per language.
 #
 #   bash scripts/runpod_languages.sh          # from the repo root on the pod
 #   LANGS="sv de" N=50 bash scripts/runpod_languages.sh   # a subset, e.g. to check the setup
@@ -28,7 +28,7 @@ fi
 [ -d /tmp/open_asr_leaderboard ] || git clone -q https://github.com/huggingface/open_asr_leaderboard /tmp/open_asr_leaderboard
 
 for lang in $LANGS; do
-  B="scripts/benchmark.py run --dataset fleurs_$lang --n $N --long-seconds 300 --save-transcripts"
+  B="scripts/benchmark.py run --dataset fleurs_$lang --n $N --long-seconds 1200 --save-transcripts"
   run "rumblex_fleurs_$lang" .venv/bin/python $B --system rumblex --device cuda:0 --compute-type bfloat16 \
     --batch-size 32 --max-chunk 20 --digits --out "results/rumblex_fleurs_$lang.json"
   run "whisperx_fleurs_$lang" .venv-wx/bin/python $B --system whisperx --device cuda --compute-type float16 \
