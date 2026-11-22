@@ -1,0 +1,38 @@
+{
+  "leaderboard_commit": "c4696193a333f7948cb113dc93bb54f661bd9a0b",
+  "language": "hi",
+  "files": {
+    "rumblex_fleurs_hi.json": {
+      "normalizer": "whisper-basic",
+      "variants": {
+        "rumblex": {
+          "saved_wer": 0.099,
+          "leaderboard": {
+            "sub": 941,
+            "del": 66,
+            "ins": 88,
+            "total": 1095,
+            "ref_len": 8723,
+            "wer": 0.1255
+          }
+        }
+      }
+    },
+    "whisperx_fleurs_hi.json": {
+      "normalizer": "whisper-basic",
+      "variants": {
+        "whisperx": {
+          "saved_wer": 0.1901,
+          "leaderboard": {
+            "sub": 1993,
+            "del": 169,
+            "ins": 157,
+            "total": 2319,
+            "ref_len": 8742,
+            "wer": 0.2653
+          }
+        }
+      }
+    }
+  }
+}
