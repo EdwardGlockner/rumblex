@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-11-22)
 
 - Word starts: a blank penalty before the Viterbi search (`AlignOptions.blank_penalty`, default 5) with the
   start shift recalibrated to −10 ms. Start error on LibriSpeech test_clean went from 57.0 to 52.2 ms; ends
