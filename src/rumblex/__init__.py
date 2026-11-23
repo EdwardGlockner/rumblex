@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from rumblex.audio import AudioInput
     from rumblex.transcriber import RumbleTranscriber
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __all__ = ["Segment", "TranscriptResult", "WordSegment", "align", "load_model", "transcribe", "write_result"]
 
 

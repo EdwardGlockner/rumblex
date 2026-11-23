@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rumblex"
-version = "0.1.1"
+version = "0.2.0"
 description = "Transcription with word timestamps, speaker labels and subtitles on Reson8/Rumble-2-Flash"
 dynamic = ["readme"]
 license = "Apache-2.0"

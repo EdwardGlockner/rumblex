@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-23)
 
 - `rumblex.align` and `--text`: word times for a transcript you already have, without decoding. Accuracy
   on LibriSpeech in `docs/align_text_eval.md` (`scripts/eval_align_text.py`).
