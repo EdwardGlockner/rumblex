@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 (2026-11-23)
 
 - Word times: starts move to a loudness dip within 20 ms of the CTC start, and the last word of a chunk can
   end inside its last CTC frame. On LibriSpeech test_clean (CPU) start error went from 52.2 to 49.5 ms and
