@@ -2,7 +2,8 @@
 
 Chunks are sorted by length and run through `model.generate()` in batches. A forward hook on the audio
 encoder's `ln_post` captures the encoder states of each batch (the encoder runs once per generate call),
-so the CTC aligner can reuse them instead of encoding the audio a second time.
+so the CTC aligner can reuse them instead of encoding the audio a second time. A logits processor keeps
+the decoder's log-prob of every generated token, which becomes each word's `probability`.
 """
 
 from __future__ import annotations
@@ -64,6 +65,7 @@ class ChunkTranscript:
     language: str | None
     token_ids: list[int]  # text tokens only (after <asr_text>, no specials): the CTC alignment targets
     encoder_states: torch.Tensor | None = None  # [frames, 896] ln_post output on CPU, ~13 frames/s
+    token_logprobs: list[float] | None = None  # decoder log-prob of each of token_ids when it was generated
 
 
 def default_dtype(device: str | torch.device) -> torch.dtype:
@@ -129,15 +131,42 @@ def parse_generated(
     prompt, so the row is just the text. `language None` is the model's answer for empty audio.
     """
     ids = list(ids)
-    if EOS_ID in ids:
-        ids = ids[: ids.index(EOS_ID)]
+    pos = text_positions(ids)
     language = forced_language
-    if ASR_TEXT_ID in ids:
-        k = ids.index(ASR_TEXT_ID)
-        prefix, ids = ids[:k], ids[k + 1 :]
-        if forced_language is None:
-            language = language_from_prefix(decode(prefix))
-    return [i for i in ids if i < FIRST_SPECIAL_ID], language
+    if forced_language is None:
+        end = ids.index(EOS_ID) if EOS_ID in ids else len(ids)
+        if ASR_TEXT_ID in ids[:end]:
+            language = language_from_prefix(decode(ids[: ids.index(ASR_TEXT_ID)]))
+    return [ids[p] for p in pos], language
+
+
+def text_positions(ids: Sequence[int]) -> list[int]:
+    """Positions in a generated row of the text tokens `parse_generated` returns: after `<asr_text>` (if
+    any), before `<|im_end|>`, specials dropped."""
+    ids = list(ids)
+    end = ids.index(EOS_ID) if EOS_ID in ids else len(ids)
+    start = ids.index(ASR_TEXT_ID, 0, end) + 1 if ASR_TEXT_ID in ids[:end] else 0
+    return [p for p in range(start, end) if ids[p] < FIRST_SPECIAL_ID]
+
+
+class _TokenLogprobs:
+    """Logits processor keeping, per step, each row's log-prob of its most likely token. Decoding is greedy
+    with no score processors in the checkpoint's generation config, so that is the token generate() picks
+    (`_run_batch` checks this against the generated ids)."""
+
+    def __init__(self) -> None:
+        self.steps: list[tuple[torch.Tensor, torch.Tensor]] = []
+
+    def __call__(self, input_ids: torch.Tensor, scores: torch.Tensor) -> torch.Tensor:
+        lp, tok = scores.float().log_softmax(-1).max(-1)
+        self.steps.append((tok, lp))
+        return scores
+
+    def rows(self) -> tuple[list[list[int]], np.ndarray]:
+        if not self.steps:
+            return [], np.zeros((0, 0), np.float32)
+        toks = torch.stack([t for t, _ in self.steps], 1).tolist()
+        return toks, torch.stack([lp for _, lp in self.steps], 1).cpu().numpy()
 
 
 def language_from_prefix(prefix_text: str) -> str | None:
@@ -322,11 +351,16 @@ class RumbleTranscriber:
         inputs = inputs.to(self.device, dtype=self.dtype)
         forced = language_name(language)
 
+        from transformers import LogitsProcessorList
+
         captured: list[torch.Tensor] = []
+        rec = _TokenLogprobs()
         hook = self.audio_tower.ln_post.register_forward_hook(lambda m, i, o: captured.append(o.detach()))
         try:
             max_new = int(max(c.duration for c in batch) * MAX_TOKENS_PER_SECOND) + MAX_TOKENS_OVERHEAD
-            out = self.model.generate(**inputs, max_new_tokens=max_new, do_sample=False)
+            out = self.model.generate(
+                **inputs, max_new_tokens=max_new, do_sample=False, logits_processor=LogitsProcessorList([rec])
+            )
         finally:
             hook.remove()
         if len(captured) != 1:
@@ -340,9 +374,16 @@ class RumbleTranscriber:
                 f"{truncated} chunk(s) hit the {max_new}-token cap; their text may be cut short",
                 stacklevel=3,
             )
+        picked, logprobs = rec.rows()
         results = []
-        for chunk, row, st in zip(batch, gen, states):
+        for b, (chunk, row, st) in enumerate(zip(batch, gen, states)):
             text_ids, lang = parse_generated(row, self._decode_special, forced)
+            pos = text_positions(row)
+            lps = None
+            # a row that already stopped keeps getting scored while others decode, but its pad tokens aren't
+            # text positions, so only the positions of text tokens are compared
+            if picked and len(picked[b]) == len(row) and all(picked[b][p] == row[p] for p in pos):
+                lps = [float(logprobs[b, p]) for p in pos]
             text = self.tokenizer.decode(text_ids, clean_up_tokenization_spaces=False).strip()
             results.append(
                 ChunkTranscript(
@@ -351,6 +392,7 @@ class RumbleTranscriber:
                     language=lang,
                     token_ids=text_ids,
                     encoder_states=None if st is None else st.float().cpu(),
+                    token_logprobs=lps,
                 )
             )
         return results

@@ -159,6 +159,13 @@ def test_align_tokens_and_sentence_split():
     segs = split_sentences(Segment(words[0].start, words[-1].end, "The cat. It sat", words))
     assert [s.text for s in segs] == ["The cat.", "It sat"]
     assert al.align_tokens([7] * 30, torch.zeros(5, 4), 0.0) is None  # can't fit
+    assert all(w.probability is None for w in words)  # no decoder log-probs given
+    lps = [-0.1, -0.3, -2.0, -0.2, 0.0]
+    words = al.align_tokens([7, 8, 9, 10, 11], torch.zeros(20, 4), chunk_start=10.0, token_logprobs=lps)
+    # "cat." averages its two tokens, punctuation included
+    assert [w.probability for w in words] == pytest.approx(np.round(np.exp([-0.1, -1.15, -0.2, 0.0]), 3))
+    with pytest.raises(ValueError, match="one value per token"):
+        al.align_tokens([7, 8], torch.zeros(20, 4), 0.0, token_logprobs=[-0.1])
 
 
 def test_proportional_words_skip_gaps():

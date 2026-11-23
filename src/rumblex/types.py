@@ -11,8 +11,9 @@ class WordSegment:
     word: str
     start: float
     end: float
-    score: float
+    score: float  # CTC: the lowest over the word's tokens of each token's peak probability
     speaker: str | None = None
+    probability: float | None = None  # decoder: exp of the mean log-prob of the word's tokens
 
 
 @dataclass

@@ -199,6 +199,7 @@ class AlignedWord:
     first: int  # first frame of its first token
     last: int  # last frame of its last token
     score: float
+    probability: float | None = None  # exp of the mean decoder log-prob of its tokens
 
 
 def group_words(
@@ -207,10 +208,18 @@ def group_words(
     token_probs: Sequence[float],
     tokens: Sequence[str],
     decode: Callable[[list[int]], str],
+    token_logprobs: Sequence[float] | None = None,
 ) -> list[AlignedWord]:
     """Group BPE tokens into words at the leading-space marker (`Ġ`); a word's score is its lowest token
-    prob. Punctuation-only groups (e.g. a lone ` -`) are attached to the previous word, or before the
-    first word (an opening quote)."""
+    prob, its probability (with `token_logprobs`) exp of its tokens' mean log-prob. Punctuation-only
+    groups (e.g. a lone ` -`) are attached to the previous word, or before the first word (an opening
+    quote), and don't change its scores."""
+
+    def probability(g: list[int]) -> float | None:
+        if token_logprobs is None:
+            return None
+        return float(np.exp(np.mean([token_logprobs[k] for k in g])))
+
     groups: list[list[int]] = []
     for k, tok in enumerate(tokens):
         if not groups or tok.startswith("Ġ"):
@@ -232,11 +241,11 @@ def group_words(
             continue
         if lead and not words:
             text = decode([token_ids[k] for k in lead]).strip() + text
-        words.append(AlignedWord(text, spans[g[0]][0], spans[g[-1]][1], score))
+        words.append(AlignedWord(text, spans[g[0]][0], spans[g[-1]][1], score, probability(g)))
     if lead and not words:  # nothing but punctuation: keep it as one word
         text = decode([token_ids[k] for k in lead]).strip()
         score = float(min(token_probs[k] for k in lead))
-        words.append(AlignedWord(text, spans[lead[0]][0], spans[lead[-1]][1], score))
+        words.append(AlignedWord(text, spans[lead[0]][0], spans[lead[-1]][1], score, probability(lead)))
     return words
 
 
@@ -456,10 +465,14 @@ class Aligner:
         chunk_start: float,
         regions: Sequence[tuple[float, float]] = (),
         audio: np.ndarray | None = None,
+        token_logprobs: Sequence[float] | None = None,
     ) -> list[WordSegment] | None:
         """Word timings (global seconds) for one chunk's tokens, or None if CTC alignment fails.
-        `regions` are the chunk's speech regions in global seconds."""
+        `regions` are the chunk's speech regions in global seconds. With the decoder's `token_logprobs`
+        (one per token) words also get a `probability`."""
         token_ids = list(token_ids)
+        if token_logprobs is not None and len(token_logprobs) != len(token_ids):
+            raise ValueError("token_logprobs must have one value per token")
         if not token_ids or states is None:
             return None
         em = self.head.emissions(states, [BLANK, *token_ids])
@@ -477,7 +490,7 @@ class Aligner:
         # (best of the CTC-only word scores in docs/confidence_eval.md)
         probs = [float(np.exp(em[a : b + 1, k + 1]).max()) for k, (a, b) in enumerate(spans)]
         tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
-        words = group_words(token_ids, spans, probs, tokens, self._decode)
+        words = group_words(token_ids, spans, probs, tokens, self._decode, token_logprobs)
         if not words:
             return None
         loudness = None
@@ -489,7 +502,13 @@ class Aligner:
             words, len(em), chunk_start, regions, o.grid, o.end_rule, o.start_shift, loudness
         )
         return [
-            WordSegment(w.text, round(float(s), 3), round(float(e), 3), round(w.score, 3))
+            WordSegment(
+                w.text,
+                round(float(s), 3),
+                round(float(e), 3),
+                round(w.score, 3),
+                probability=None if w.probability is None else round(w.probability, 3),
+            )
             for w, s, e in zip(words, starts, ends)
         ]
 
@@ -513,7 +532,9 @@ class Aligner:
                 (it.chunk.start_s, it.chunk.end_s)
             ]
             chunk_audio = None if audio is None else it.chunk.slice(audio)
-            words = self.align_tokens(it.token_ids, it.encoder_states, it.chunk.start_s, regions, chunk_audio)
+            words = self.align_tokens(
+                it.token_ids, it.encoder_states, it.chunk.start_s, regions, chunk_audio, it.token_logprobs
+            )
             if words is None:
                 n_fallback += 1
                 words = proportional_words(it.text, regions)

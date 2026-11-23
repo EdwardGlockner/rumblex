@@ -46,7 +46,8 @@ AUC is the chance that a random wrong word scores lower than a random right one 
 
 The decoder's mean token probability is best on both dev sets, and the order holds on test. Among
 CTC-only scores, `ctc_peak_min` beats 0.2.0's `ctc_mean` by 0.02 to 0.04 everywhere. Adding the CTC score
-to the decoder score this way doesn't help.
+to the decoder score this way doesn't help. Following this, rumblex now writes `dec_mean` as each word's
+`probability` and `ctc_peak_min` as its `score`.
 
 Flagging words below a threshold chosen on dev (both sets pooled) to flag 10% of dev words:
 

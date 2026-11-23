@@ -9,11 +9,13 @@ from rumblex.transcriber import (
     EOS_ID,
     FIRST_SPECIAL_ID,
     ChunkTranscript,
+    _TokenLogprobs,
     language_from_prefix,
     majority_language,
     make_batches,
     parse_generated,
     split_packed,
+    text_positions,
 )
 from rumblex.vad import SpeechChunk
 
@@ -209,3 +211,27 @@ def test_quiet_loading_restores_transformers_logging():
         assert not hf_logging.is_progress_bar_enabled()
         assert hf_logging.get_verbosity() == hf_logging.ERROR
     assert (hf_logging.get_verbosity(), hf_logging.is_progress_bar_enabled()) == before
+
+
+def test_text_positions_match_parse_generated():
+    rows = [
+        [*LANG_EN, ASR_TEXT_ID, 500, 501, 502, EOS_ID, PAD],
+        [500, 501, EOS_ID],
+        [*LANG_EN, ASR_TEXT_ID, 500, PAD + 70, 501, EOS_ID, 502],
+        [*LANG_EN, ASR_TEXT_ID, 500, 500, 500],
+        [10, 12, ASR_TEXT_ID, EOS_ID],
+    ]
+    for row in rows:
+        ids, _ = parse_generated(row, fake_decode)
+        assert [row[p] for p in text_positions(row)] == ids
+
+
+def test_token_logprobs_recorder_keeps_the_greedy_token():
+    rec = _TokenLogprobs()
+    scores = torch.tensor([[0.0, 2.0, 0.0], [3.0, 0.0, 0.0]])
+    assert rec(None, scores) is scores
+    rec(None, torch.tensor([[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]]))
+    toks, lps = rec.rows()
+    assert toks == [[1, 2], [0, 0]]
+    assert lps[0, 0] == pytest.approx(float(torch.log_softmax(scores[0], -1)[1]))
+    assert lps[1, 1] == pytest.approx(float(torch.log(torch.tensor(1 / 3))))

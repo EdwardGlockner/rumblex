@@ -38,6 +38,7 @@ from rumblex.transcriber import (
     prepare_clip,
     quiet_loading,
     resolve_dtype,
+    text_positions,
 )
 from rumblex.vad import SpeechChunk
 
@@ -75,6 +76,18 @@ def parse_completion(
             lang = language_from_prefix(_strip_special(prefix))
     text = _strip_special(text).strip()
     return ([i for i in encode(" " + text) if i < FIRST_SPECIAL_ID] if text else []), lang
+
+
+def completion_logprobs(choice) -> list[float] | None:
+    """Decoder log-prob of each text token `parse_completion` returns, from the server's `logprobs` and
+    `token_ids`. None when either is missing or they don't line up (the text-only fallback)."""
+    ids = getattr(choice, "token_ids", None)
+    if ids is None and isinstance(getattr(choice, "model_extra", None), dict):
+        ids = choice.model_extra.get("token_ids")
+    content = getattr(getattr(choice, "logprobs", None), "content", None)
+    if not ids or not content or len(content) != len(ids):
+        return None
+    return [float(content[p].logprob) for p in text_positions(list(ids))]
 
 
 def _strip_special(s: str) -> str:
@@ -193,6 +206,7 @@ class VLLMTranscriber:
                 model=self.model_id,
                 messages=msgs,
                 temperature=0,
+                logprobs=True,
                 max_tokens=int(chunks[i].duration * MAX_TOKENS_PER_SECOND) + MAX_TOKENS_OVERHEAD,
                 extra_body={
                     "chat_template_kwargs": kwargs,
@@ -200,12 +214,14 @@ class VLLMTranscriber:
                     "return_token_ids": True,
                 },
             )
-            return parse_completion(
-                r.choices[0],
+            c = r.choices[0]
+            ids, lang = parse_completion(
+                c,
                 lambda t: self.tokenizer.encode(t, add_special_tokens=False),
                 lambda ids: self.tokenizer.decode(ids, skip_special_tokens=True),
                 forced,
             )
+            return ids, lang, completion_logprobs(c)
 
         def encode_all() -> dict[int, torch.Tensor]:
             states: dict[int, torch.Tensor] = {}
@@ -219,9 +235,9 @@ class VLLMTranscriber:
         # The local encoder pass runs while the server decodes: one thread for it, the rest wait on HTTP.
         with ThreadPoolExecutor(1) as enc_pool, ThreadPoolExecutor(self.concurrency) as pool:
             enc_future = enc_pool.submit(encode_all) if keep_encoder_states else None
-            for i, (ids, lang) in enumerate(pool.map(one, range(len(chunks)))):
+            for i, (ids, lang, lps) in enumerate(pool.map(one, range(len(chunks)))):
                 text = self.tokenizer.decode(ids, clean_up_tokenization_spaces=False).strip()
-                results[i] = ChunkTranscript(chunks[i], text, lang, ids)
+                results[i] = ChunkTranscript(chunks[i], text, lang, ids, token_logprobs=lps)
                 if progress:
                     progress(i + 1, len(chunks))
             if enc_future is not None:

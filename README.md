@@ -22,6 +22,10 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
 - Batched transcription; a chunk's output doesn't depend on what it's batched with. Exposes the model's
   `language`, `prompt` (hotwords), `digits`, `filler` and `verbatim` options.
 - Word timestamps from the CTC head. If alignment fails on a chunk, its words get proportional times.
+- Two per-word confidences: `probability`, the decoder's (exp of the mean log-prob of the word's tokens),
+  and `score`, the CTC head's (the lowest of its tokens' peak probabilities). `probability` is the better
+  of the two at telling wrong words from right ones ([eval](docs/confidence_eval.md)); it is empty for
+  `--text` and for words with proportional times.
 - Alignment of a transcript you already have (`--text`, `rumblex.align`): no decoding, only the encoder
   and the CTC head.
 - Optional per-word speaker labels via pyannote.
