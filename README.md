@@ -30,6 +30,7 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
   and the CTC head.
 - Optional per-word speaker labels via pyannote.
 - JSON, SRT, VTT (optionally with karaoke tags), TSV and TXT.
+- An OpenAI-compatible server (`rumblex serve`).
 
 ![word timestamps and speaker labels played back over the audio](docs/words.gif)
 
@@ -38,6 +39,7 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
 ```bash
 pip install rumblex
 pip install "rumblex[diarize]"   # with speaker labels
+pip install "rumblex[server]"    # for rumblex serve
 ```
 
 Needs Python 3.11 or 3.12 and ffmpeg on `PATH`. On Windows, PyPI's torch is CPU-only, so for a GPU install
@@ -88,6 +90,31 @@ to 601× real time with the same WER
 [pyannote/speaker-diarization-community-1](https://huggingface.co/pyannote/speaker-diarization-community-1)
 and run `hf auth login`. rumblex turns off pyannote's telemetry unless you set
 `PYANNOTE_METRICS_ENABLED=true`.
+
+**Server.** `rumblex serve` answers OpenAI's transcription API, so the `openai` client and tools built on it
+can use rumblex by changing the base URL (`pip install "rumblex[server]"`):
+
+```bash
+rumblex serve                                        # port 9000; add --diarize for speaker labels
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:9000/v1", api_key="unused")
+result = client.audio.transcriptions.create(
+    model="rumble-2-flash",
+    file=open("meeting.mp3", "rb"),
+    response_format="verbose_json",
+    timestamp_granularities=["word"],
+)
+print(result.words[0].word, result.words[0].start, result.words[0].probability)
+```
+
+It supports the `json`, `text`, `srt`, `vtt` and `verbose_json` formats, and `diarized_json` with
+`--diarize`. Words in `verbose_json` also have rumblex's `probability` and `score`. The server listens on
+127.0.0.1 unless you pass `--host`; set `--api_key` (or `RUMBLEX_API_KEY`) before exposing it. Requests run
+one at a time. `model` and `temperature` are accepted and ignored.
 
 ## Compared with WhisperX
 

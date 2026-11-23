@@ -38,8 +38,10 @@ dependencies = [
 [project.optional-dependencies]
 diarize = ["pyannote.audio>=4.1,<5"]
 vllm = ["openai"]  # the client side; vLLM itself runs wherever the server is
+server = ["fastapi>=0.115", "uvicorn>=0.30", "python-multipart>=0.0.9"]  # rumblex serve
 # ruff is pinned: its default rule set changes between releases.
-dev = ["pytest", "ruff==0.17.6", "jiwer", "pyarrow", "whisper-normalizer"]
+dev = ["pytest", "ruff==0.17.6", "jiwer", "pyarrow", "whisper-normalizer",
+       "fastapi>=0.115", "python-multipart>=0.0.9", "httpx", "openai"]
 
 [project.urls]
 Homepage = "https://github.com/EdwardGlockner/rumblex"

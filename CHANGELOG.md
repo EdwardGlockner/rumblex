@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `rumblex serve`: an OpenAI-compatible transcription server (`POST /v1/audio/transcriptions`) with the
+  `json`, `text`, `srt`, `vtt`, `verbose_json` and (with `--diarize`) `diarized_json` formats. Words in
+  `verbose_json` carry `probability` and `score`. Optional `--api_key`; needs the `server` extra. Tested
+  with the official `openai` client.
+
 ## 0.3.0 (2026-11-23)
 
 - Words have a `probability`: the decoder's, exp of the mean log-prob of the word's tokens, taken during

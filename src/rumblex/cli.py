@@ -1,4 +1,5 @@
-"""Command line: `rumblex audio.mp4 --output_format srt json`.
+"""Command line: `rumblex audio.mp4 --output_format srt json`, and `rumblex serve` for an OpenAI-compatible
+transcription server (rumblex.server).
 
 Flags follow WhisperX where the meaning is the same (--model, --device, --batch_size, --compute_type,
 --language, --output_dir, --output_format, --max_line_width, --max_line_count, --highlight_words,
@@ -31,11 +32,7 @@ def _positive(cast):
     return parse
 
 
-def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="rumblex", description="Transcribe audio/video with word timestamps.")
-    p.add_argument("audio", nargs="+", help="audio or video files (anything ffmpeg reads)")
-    p.add_argument("--version", action="version", version=f"rumblex {__version__}")
-
+def _add_model_args(p: argparse.ArgumentParser) -> None:
     m = p.add_argument_group("model")
     m.add_argument("--model", default="Reson8/Rumble-2-Flash",
                    help="Hugging Face repo id or local folder (default: %(default)s)")  # fmt: skip
@@ -48,6 +45,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--vllm_url", default=None,
         help="decode on a running vLLM server, e.g. http://localhost:8000/v1 (needs the [vllm] extra)",
     )  # fmt: skip
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="rumblex",
+        description="Transcribe audio/video with word timestamps.",
+        epilog="rumblex serve --help: run an OpenAI-compatible transcription server instead.",
+    )
+    p.add_argument("audio", nargs="+", help="audio or video files (anything ffmpeg reads)")
+    p.add_argument("--version", action="version", version=f"rumblex {__version__}")
+
+    _add_model_args(p)
 
     t = p.add_argument_group("transcription")
     t.add_argument("--language", default=None, help="force a language (name or ISO code); default: detect")
@@ -179,7 +188,85 @@ def _check_args(args) -> str | None:
     return None
 
 
+def build_serve_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="rumblex serve",
+        description="OpenAI-compatible transcription server: POST /v1/audio/transcriptions "
+        "(needs the [server] extra). One request runs on the model at a time.",
+    )
+    p.add_argument("--version", action="version", version=f"rumblex {__version__}")
+    s = p.add_argument_group("server")
+    s.add_argument("--host", default="127.0.0.1",
+                   help="address to listen on; 0.0.0.0 for all interfaces (default: %(default)s)")  # fmt: skip
+    s.add_argument("--port", type=_positive(int), default=9000,
+                   help="default: %(default)s (vLLM's default is 8000)")  # fmt: skip
+    s.add_argument("--api_key", default=os.environ.get("RUMBLEX_API_KEY"),
+                   help="require this key as a bearer token (default: $RUMBLEX_API_KEY, else none)")  # fmt: skip
+    _add_model_args(p)
+    t = p.add_argument_group("transcription")
+    t.add_argument("--chunk_size", type=_positive(float), default=20.0,
+                   help="max seconds of audio per model input (default: %(default)s)")  # fmt: skip
+    t.add_argument("--no_align", action="store_true", help="skip word timestamps (segment times only)")
+    t.add_argument("--diarize", action="store_true",
+                   help="label speakers in every response; enables diarized_json (needs the [diarize] extra)")  # fmt: skip
+    t.add_argument(
+        "--diarize_model", default="pyannote/speaker-diarization-community-1", help=argparse.SUPPRESS
+    )
+    p.set_defaults(end_rule="next_start")
+    return p
+
+
+def serve_main(
+    argv: Sequence[str], load_pipeline: Callable = _load_pipeline, run: Callable | None = None
+) -> int:
+    """`rumblex serve`. `run` (tests) replaces starting uvicorn; it gets the Pipeline and the server args."""
+    args = build_serve_parser().parse_args(argv)
+    if (
+        args.vllm_url
+        and args.vllm_url.rstrip("/").endswith(f":{args.port}/v1")
+        and args.host in ("127.0.0.1", "localhost", "0.0.0.0")
+    ):
+        print(f"error: port {args.port} is the vLLM server's; pick another with --port", file=sys.stderr)
+        return 2
+    missing = [m for m in ("fastapi", "uvicorn", "multipart") if not _importable(m)]
+    if missing and run is None:
+        print(
+            f'error: rumblex serve needs {", ".join(missing)}: pip install "rumblex[server]"', file=sys.stderr
+        )
+        return 2
+    from rumblex.server import Pipeline, serve
+
+    _quiet_libraries()
+    print(f"loading {args.model}", file=sys.stderr)
+    try:
+        tr, al, dz = load_pipeline(args)
+    except Exception as e:  # noqa: BLE001 - a message and a hint, not a traceback
+        print(f"error: could not load the model: {type(e).__name__}: {e}", file=sys.stderr)
+        hint = _load_error_hint(e)
+        if hint:
+            print(hint, file=sys.stderr)
+        return 2
+    pipeline = Pipeline(tr, al, dz, chunk_size=args.chunk_size)
+    if run is not None:
+        run(pipeline, args)
+        return 0
+    if args.host not in ("127.0.0.1", "localhost", "::1") and not args.api_key:
+        print(f"warning: listening on {args.host} without --api_key; anyone who can reach it can use it",
+              file=sys.stderr)  # fmt: skip
+    serve(pipeline, host=args.host, port=args.port, model_name=args.model, api_key=args.api_key)
+    return 0
+
+
+def _importable(name: str) -> bool:
+    import importlib.util
+
+    return importlib.util.find_spec(name) is not None
+
+
 def main(argv: Sequence[str] | None = None, load_pipeline: Callable = _load_pipeline) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv[:1] == ["serve"]:
+        return serve_main(argv[1:], load_pipeline)
     args = build_parser().parse_args(argv)
     # Imported here, not at the top: they pull in torch, which would make --help and --version slow.
     from rich.console import Console
