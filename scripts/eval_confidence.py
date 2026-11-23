@@ -8,7 +8,8 @@ anyway), with "ok" taken as "okay"; dotted letters ("D. V. D.", "U.S.") are join
 reference contains a digit are left out, since the model was run with digits off and would be counted
 wrong on every number. Words left empty by the normalisation (a lone dash) are not scored.
 
-Scores per word, each from the tokens of that word (punctuation attached to a word doesn't count):
+Scores per word, each from the tokens of that word (a punctuation-only token group such as " -" joins
+the previous word's text but not its score):
   ctc_mean       mean over tokens of the token's mean CTC probability over its frames (rumblex 0.2.0's `score`)
   ctc_min        the same, lowest token instead of the mean
   ctc_peak_min   lowest token of each token's highest CTC probability over its frames

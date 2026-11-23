@@ -208,8 +208,9 @@ def group_words(
     tokens: Sequence[str],
     decode: Callable[[list[int]], str],
 ) -> list[AlignedWord]:
-    """Group BPE tokens into words at the leading-space marker (`Ġ`). Punctuation-only groups
-    (e.g. a lone ` -`) are attached to the previous word, or before the first word (an opening quote)."""
+    """Group BPE tokens into words at the leading-space marker (`Ġ`); a word's score is its lowest token
+    prob. Punctuation-only groups (e.g. a lone ` -`) are attached to the previous word, or before the
+    first word (an opening quote)."""
     groups: list[list[int]] = []
     for k, tok in enumerate(tokens):
         if not groups or tok.startswith("Ġ"):
@@ -222,7 +223,7 @@ def group_words(
         text = decode([token_ids[k] for k in g]).strip()
         if not text:
             continue
-        score = float(np.mean([token_probs[k] for k in g]))
+        score = float(min(token_probs[k] for k in g))
         if not _HAS_ALNUM.search(text):
             if words:
                 words[-1].text += text
@@ -234,7 +235,7 @@ def group_words(
         words.append(AlignedWord(text, spans[g[0]][0], spans[g[-1]][1], score))
     if lead and not words:  # nothing but punctuation: keep it as one word
         text = decode([token_ids[k] for k in lead]).strip()
-        score = float(np.mean([token_probs[k] for k in lead]))
+        score = float(min(token_probs[k] for k in lead))
         words.append(AlignedWord(text, spans[lead[0]][0], spans[lead[-1]][1], score))
     return words
 
@@ -472,7 +473,9 @@ class Aligner:
         if path is None:
             return None
         spans = token_spans(path, len(token_ids))
-        probs = [float(np.exp(em[a : b + 1, k + 1]).mean()) for k, (a, b) in enumerate(spans)]
+        # a token's highest CTC probability on its frames; a word scores its weakest token
+        # (best of the CTC-only word scores in docs/confidence_eval.md)
+        probs = [float(np.exp(em[a : b + 1, k + 1]).max()) for k, (a, b) in enumerate(spans)]
         tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
         words = group_words(token_ids, spans, probs, tokens, self._decode)
         if not words:

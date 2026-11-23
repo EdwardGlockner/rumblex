@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Word `score` is now the lowest over the word's tokens of each token's peak CTC probability, instead of
+  the mean of mean probabilities. It separates wrong words from right ones better: AUC 0.856 vs 0.825 on
+  AMI and 0.829 vs 0.795 on Earnings-22 (test halves, `docs/confidence_eval.md`,
+  `scripts/eval_confidence.py`). Word times are unchanged.
+
 ## 0.2.0 (2026-11-23)
 
 - `rumblex.align` and `--text`: word times for a transcript you already have, without decoding. Accuracy

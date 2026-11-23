@@ -109,7 +109,8 @@ def test_group_words():
         ids, spans, [0.9, 0.5, 0.8, 0.6, 0.7, 1.0], tokens, lambda xs: "".join(texts[i] for i in xs)
     )
     assert [(w.text, w.first, w.last) for w in words] == [("Hello,", 0, 1), ("world-", 3, 4), ("ok", 8, 8)]
-    assert words[0].score == pytest.approx(0.7)
+    # lowest token; a punctuation-only group (" -") joins the word's text but not its score
+    assert [w.score for w in words] == pytest.approx([0.5, 0.6, 1.0])
 
 
 def test_end_rules():
@@ -340,4 +341,4 @@ def test_blank_penalty_widens_token_spans():
     b = penal.align_tokens(tok, torch.zeros(10, 4), 0.0)
     assert [w.start for w in a] == [w.start for w in b]  # the spikes still start the words
     assert b[1].end > a[1].end  # the last word now holds frame 7 too
-    assert b[1].score < a[1].score  # scores still come from the unpenalised log-probs
+    assert a[1].score == b[1].score == pytest.approx(0.98)  # scores come from the unpenalised log-probs
