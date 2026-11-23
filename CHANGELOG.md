@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 (2026-11-23)
 
 - `rumblex serve`: an OpenAI-compatible transcription server (`POST /v1/audio/transcriptions`) with the
   `json`, `text`, `srt`, `vtt`, `verbose_json` and (with `--diarize`) `diarized_json` formats. Words in
