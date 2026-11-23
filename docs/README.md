@@ -24,6 +24,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [model_inspection.md](model_inspection.md) | What is in the Rumble-2-Flash checkpoint: CTC head, frame rate, options, tokenizer, single-clip timings | `scripts/inspect_rumble_ctc.py` |
 | [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement and blank penalty were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py` |
 | [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file | `scripts/eval_align_text.py` |
+| [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
 | [bench_2026-11-20_rtx4090_tune](bench_2026-11-20_rtx4090_tune/README.md) | Batch size, chunk length and vLLM settings; found VAD to be the bottleneck | `scripts/runpod_tune.sh` |
 | [bench_2026-11-20_rtx4090_eval](bench_2026-11-20_rtx4090_eval/README.md) | rumblex vs WhisperX on LibriSpeech, AMI, Earnings-22, FLEURS Dutch | `scripts/runpod_eval.sh` |
@@ -37,6 +38,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `transcriber_check_gpu_fp32.json` | Batch 8 vs batch 1 give identical output; captured encoder states match the reference | `scripts/check_transcriber.py` |
 | `inspection_cpu.json`, `inspection_gpu_fp32.json` | Raw output behind `model_inspection.md` | `scripts/inspect_rumble_ctc.py` |
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
+| `confidence_eval.json` | Raw output behind `confidence_eval.md`, with calibration bins for every score | `scripts/eval_confidence.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
 | `alignment_smoothing_sweep.json` | Raw output of the logit temperature and blank penalty sweep in `alignment_eval.md` | `scripts/sweep_smoothing.py` |

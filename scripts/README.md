@@ -15,6 +15,8 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `eval_alignment.py` | Scores frame grids, end rules and start shift on the saved states; dev chooses, test reports. Writes `eval_alignment.json` into the `--states` folder | `docs/alignment_eval.md`, `docs/alignment_eval.json` |
 | `sweep_energy.py` | Sweeps the loudness refinement of word ends and starts on the saved states | `docs/alignment_energy_sweep.json` |
 | `sweep_smoothing.py` | Sweeps logit temperature and a blank penalty before Viterbi on the saved states | `docs/alignment_smoothing_sweep.json` |
+| `collect_confidence_states.py` | Transcribes AMI and Earnings-22 and saves encoder states, token ids and decoder token log-probs, so word scores can be compared on CPU | input for the next one |
+| `eval_confidence.py` | Labels transcribed words right or wrong against the reference and scores CTC and decoder word scores: AUC, dev-chosen thresholds, calibration (CPU only) | `docs/confidence_eval.md`, `docs/confidence_eval.json` |
 | `profile_speed.py` | Where the time goes: VAD vs transcription vs alignment over batch size and chunk length | `docs/bench_2026-11-20_rtx4090_tune/` |
 | `benchmark.py` | rumblex vs rumblex+vLLM vs WhisperX: WER, word timing error, long-file speed, peak GPU memory | `docs/bench_2026-11-20_rtx4090*/` |
 | `diagnose_wer.py` | One eval set through pipeline variants (VAD on/off, language forced/detected), saving every transcript | `docs/bench_2026-11-20_rtx4090_diagnose/` |
