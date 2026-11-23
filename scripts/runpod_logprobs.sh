@@ -5,6 +5,8 @@
 #   bash scripts/runpod_logprobs.sh        # from the repo root on the pod
 set -euo pipefail
 export HF_HUB_ENABLE_HF_TRANSFER=0  # the PyTorch image sets it without installing hf_transfer
+# the image keeps these caches on /workspace, which may be a small volume; the container disk has room
+export UV_CACHE_DIR=/root/.cache/uv HF_HOME=/root/.cache/huggingface
 mkdir -p results logs
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a logs/session.log; }
 run() { local name=$1; shift; if "$@" > "logs/$name.log" 2>&1; then log "ok: $name"; else log "FAILED: $name"; tail -20 "logs/$name.log"; fi; }
@@ -14,8 +16,10 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee resul
 git rev-parse --short HEAD | tee results/commit.txt
 
 log "env"
-uv venv -q -p 3.11 .venv && uv pip install -q -p .venv -e ".[dev,vllm]" whisper-normalizer
-uv venv -q -p 3.11 .venv-vllm && uv pip install -q -p .venv-vllm "vllm[audio]==0.34.0" || log "FAILED: vllm install"
+# an environment that is already there (a resumed session) is kept
+[ -x .venv/bin/python ] || { uv venv -q -p 3.11 .venv && uv pip install -q -p .venv -e ".[dev,vllm]" whisper-normalizer; }
+[ -x .venv-vllm/bin/vllm ] || { rm -rf .venv-vllm && uv venv -q -p 3.11 .venv-vllm   && uv pip install -q -p .venv-vllm "vllm[audio]==0.34.0"; } || log "FAILED: vllm install"
+[ -x .venv-vllm/bin/vllm ] || { log "no vllm; stopping"; exit 1; }
 { for v in .venv .venv-vllm; do echo "## $v"; uv pip list -p $v 2>/dev/null | grep -iE '^(torch|transformers|vllm|openai) '; done; } > results/envs.txt
 
 log "start: vllm server"
