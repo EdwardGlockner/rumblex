@@ -4,8 +4,9 @@ How accurate the word times from `rumblex.align` (CLI: `--text`) are. It takes a
 have, runs only the encoder and the CTC head, and gives every word of that text a time.
 
 Measured 2026-11-23 on CPU, float32, with `scripts/eval_align_text.py`; the raw output is
-[align_text_eval.json](align_text_eval.json). The JSON doesn't record the commit; it is the commit that
-added this file.
+[align_text_eval.json](align_text_eval.json). Run again the same day after starts were moved to loudness
+dips ([alignment_eval.md](alignment_eval.md)); the numbers here are from that second run. The JSON doesn't
+record the commit; it is the commit that last changed this file.
 
 ## Setup
 
@@ -31,13 +32,13 @@ scored, and one utterance (`61-70970-0004`) where MFA splits a word in two is al
 
 | | words | start MAE | start median | starts ≤ 50 ms | starts ≤ 100 ms | end MAE | end median | ends ≤ 100 ms | gross |
 |---|---|---|---|---|---|---|---|---|---|
-| align, per utterance | 4,043 | 51.9 ms | 40 ms | 63.8% | 87.1% | 68.4 ms | 40 ms | 80.8% | 0 |
-| align, long file | 4,043 | 53.2 ms | 37 ms | 62.8% | 86.9% | 66.2 ms | 40 ms | 81.8% | 1 |
-| transcribe + align | 3,945 | 52.7 ms | 38 ms | 64.1% | 87.3% | 58.0 ms | 40 ms | 84.2% | 0 |
-| align, same 3,945 words | 3,945 | 51.9 ms | 40 ms | 63.8% | 87.0% | 68.4 ms | 40 ms | 80.9% | 0 |
+| align, per utterance | 4,043 | 49.5 ms | 34 ms | 67.3% | 87.7% | 67.3 ms | 36 ms | 80.9% | 0 |
+| align, long file | 4,043 | 50.2 ms | 31 ms | 67.8% | 87.2% | 64.5 ms | 36 ms | 81.8% | 1 |
+| transcribe + align | 3,945 | 50.6 ms | 34 ms | 67.3% | 87.6% | 54.6 ms | 34 ms | 85.4% | 0 |
+| align, same 3,945 words | 3,945 | 49.5 ms | 34 ms | 67.2% | 87.5% | 67.2 ms | 36 ms | 80.9% | 0 |
 
-Starts are as good as with transcribe + align. Ends are about 10 ms worse on average: the mean signed
-end error is −23.2 ms against +5.7 ms for transcribe + align on the same words, so ends come out early.
+Starts are as good as with transcribe + align. Ends are about 13 ms worse on average: the mean signed
+end error is −21.9 ms against +3.6 ms for transcribe + align on the same words, so ends come out early.
 
 The cause is the missing punctuation. The model writes punctuation, and in the CTC path a punctuation
 mark sits right after the word it follows. Without those tokens, the word before them ends sooner. In a quick check (not saved here), aligning the model's own
@@ -45,11 +46,11 @@ transcript with its punctuation gave the same times as transcribe + align, and t
 punctuation removed gave early ends; casing made no difference. Letting the Viterbi search insert
 optional punctuation tokens should fix this, and isn't done yet.
 
-The one gross word in the long file is "whenever" (`3570-5694-0021`), placed 1.35 s early. Its onset was
+The one gross word in the long file is "whenever" (`3570-5694-0021`), placed 1.32 s early. Its onset was
 clipped by the VAD, so the aligner had no audio for it where it was said.
 
 ## Time
 
-On the CPU used here, aligning the 200 utterances one by one took 303.6 s against 1,060.3 s for
-transcribing and aligning them, and the 28.6 min long file took 360.6 s. This is one run on a machine
+On the CPU used here, aligning the 200 utterances one by one took 318.9 s against 1,102.2 s for
+transcribing and aligning them, and the 28.6 min long file took 365.8 s. This is one run on a machine
 that wasn't kept idle, so take these as rough.

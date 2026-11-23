@@ -198,8 +198,8 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 - Hindi word times are less reliable: Hindi text runs to about 10 tokens per second of audio against the
   encoder's 13 frames, so in fast speech the CTC path doesn't fit and 30 of 360 chunks fell back to
   proportional times.
-- With `--text`, text without punctuation gets word ends about 10 ms earlier on average than the
-  model's own punctuated output ([docs/align_text_eval.md](docs/align_text_eval.md)).
+- With `--text`, text without punctuation gets word ends that are early, about 13 ms less accurate on
+  average than with the model's own punctuated output ([docs/align_text_eval.md](docs/align_text_eval.md)).
 - vLLM needs Linux and a GPU vLLM supports.
 
 ## Development
