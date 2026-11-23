@@ -1,0 +1,4 @@
+[14:08:08] env
+[14:09:21] start: vllm server
+[14:12:24] FAILED: check_logprobs
+[14:12:24] done: results.tar.gz

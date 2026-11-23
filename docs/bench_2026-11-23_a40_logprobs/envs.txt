@@ -1,0 +1,9 @@
+## .venv
+openai                   3.57.0
+torch                    2.14.1+cu126
+transformers             5.24.0
+## .venv-vllm
+openai                                   3.57.0
+torch                                    2.14.0
+transformers                             5.22.2
+vllm                                     0.34.0

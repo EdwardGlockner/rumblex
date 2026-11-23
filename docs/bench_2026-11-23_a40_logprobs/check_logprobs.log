@@ -1,0 +1,12 @@
+ami {'utterances': 25, 'chunks': 23, 'vllm_missing': 0, 'hf_missing': 0, 'same_tokens': 23, 'token_lp_abs_diff': {'n': 209, 'mean': 0.00768, 'p99': 0.07114, 'max': 0.22855}, 'word_prob_abs_diff': {'n': 165, 'mean': 0.00547, 'p99': 0.05561, 'max': 0.09741}}
+earnings22 {'utterances': 25, 'chunks': 27, 'vllm_missing': 0, 'hf_missing': 0, 'same_tokens': 26, 'token_lp_abs_diff': {'n': 495, 'mean': 0.00223, 'p99': 0.05276, 'max': 0.10574}, 'word_prob_abs_diff': {'n': 408, 'mean': 0.00097, 'p99': 0.02001, 'max': 0.028}}
+Traceback (most recent call last):
+  File "/root/rumblex/scripts/check_logprobs_vllm.py", line 102, in <module>
+    main()
+  File "/root/rumblex/scripts/check_logprobs_vllm.py", line 89, in main
+    for f in sorted(Path(args.samples).iterdir()):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/pathlib.py", line 931, in iterdir
+    for name in os.listdir(self):
+                ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'samples'

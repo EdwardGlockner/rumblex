@@ -10,6 +10,7 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `inspect_rumble_ctc.py` | First look at the checkpoint and its CTC head: frame rate, vocab mapping, peakiness, reuse of `generate()` states, a rough Viterbi alignment | `docs/model_inspection.md`, `docs/inspection_*.json` |
 | `check_transcriber.py` | Batch 8 vs batch 1 must give identical output; captured encoder states vs the checkpoint's reference encoder pass | `docs/transcriber_check_gpu_fp32.json` |
 | `check_encoder_runner.py` | The vLLM backend's local encoder gives the same states as the transformers backend | (log only) |
+| `check_logprobs_vllm.py` | The vLLM backend's decoder log-probs: none missing, and the same as the transformers backend's on the same chunks | `docs/bench_2026-11-23_a40_logprobs/` |
 | `check_vad_gpu.py` | Batched Silero VAD on GPU and CPU vs the sequential pass: time and speech/non-speech agreement | `docs/bench_2026-11-20_rtx4090_dutch/vad_gpu.json` |
 | `collect_alignment_states.py` | Transcribes LibriSpeech dev/test (and FLEURS Dutch) and saves encoder states, so alignment variants can be scored on CPU | input for the next two |
 | `eval_alignment.py` | Scores frame grids, end rules and start shift on the saved states; dev chooses, test reports. Writes `eval_alignment.json` into the `--states` folder | `docs/alignment_eval.md`, `docs/alignment_eval.json` |

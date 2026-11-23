@@ -16,6 +16,7 @@ alignments, AMI, Earnings-22 and FLEURS are public.
 | `runpod_leaderboard.sh` | FLEURS Dutch for rumblex and WhisperX with every transcript saved, rescored with the Open ASR Leaderboard's scoring | 16 min |
 | `runpod_timing.sh` | LibriSpeech (WER, word timings, 1 h speed) for rumblex and WhisperX, to re-measure timings after an aligner change | 6 min |
 | `runpod_languages.sh` | FLEURS in 13 languages (350 utt. each, WER under Whisper's and the leaderboard's scoring, 20 min speed file) for rumblex and WhisperX; `LANGS`, `N`, `SKIP_ENV` to narrow or resume it | 2 h 40 min, plus setup |
+| `runpod_logprobs.sh` | decoder log-probs through vLLM vs the transformers backend on 50 AMI/Earnings-22 utterances | 4 min on an A40 |
 
 Times are from the session logs in `docs/bench_*` (RTX 4090, from environment setup to the last result).
 

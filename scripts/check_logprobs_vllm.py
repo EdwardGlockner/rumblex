@@ -4,7 +4,8 @@ Transcribes the same chunks (AMI and Earnings-22 utterances, chunked as `rumblex
 English forced, digits off) with both backends and reports, per set: chunks whose vLLM log-probs are
 missing (the server's `logprobs` didn't line up with its `token_ids`), chunks where both backends
 produced the same tokens, and on those the token log-prob and word probability differences. Then runs
-the whole pipeline on the repo's samples through vLLM and counts words without a `probability`.
+the whole pipeline on the files in `--samples` through vLLM, if that folder exists (`samples/` is
+git-ignored, so not on a fresh clone), and counts words without a `probability`.
 Needs a running server (`vllm serve Reson8/Rumble-2-Flash`) and a GPU for the transformers backend.
 
     python scripts/check_logprobs_vllm.py --url http://localhost:8000/v1 --out results/logprobs_vllm.json
@@ -86,7 +87,10 @@ def main() -> None:
         "sets": {name: compare(name, args.n, hf, vl) for name in ("ami", "earnings22")},
         "samples": {},
     }
-    for f in sorted(Path(args.samples).iterdir()):
+    out = Path(args.out)
+    out.write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")  # the sets, in case samples fail
+    samples = Path(args.samples)
+    for f in sorted(samples.iterdir()) if samples.is_dir() else []:  # samples/ is git-ignored
         res = rumblex.transcribe(str(f), vl)
         words = [w for s in res.segments for w in s.words]
         report["samples"][f.name] = {
@@ -95,7 +99,7 @@ def main() -> None:
             "fallback_chunks": res.metadata.get("alignment", {}).get("fallback_chunks"),
         }
         print(f.name, report["samples"][f.name], flush=True)
-    Path(args.out).write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
+    out.write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
