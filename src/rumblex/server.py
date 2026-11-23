@@ -2,19 +2,20 @@
 
 `POST /v1/audio/transcriptions` takes the multipart form of OpenAI's audio API (file, model, language,
 prompt, response_format, temperature, timestamp_granularities[]) and answers in its formats: json, text,
-srt, vtt, verbose_json, and diarized_json when the server runs with diarization. So the official `openai`
+srt, vtt, verbose_json, and diarized_json when the server runs with diarization. The official `openai`
 client, or anything else written against that API, works by pointing its base URL here.
 
-Differences from OpenAI's API:
-- `model` is accepted but not used: the server transcribes with the model it was started with.
-- Decoding is greedy, so `temperature` is ignored. `stream` is not supported.
-- In verbose_json, words also carry rumblex's `score` and `probability` (and `speaker` with diarization),
-  segments carry `speaker`. `avg_logprob` is the mean over the segment's words of each word's mean token
-  log-prob; `no_speech_prob` is always 0 (the VAD drops non-speech before decoding); `seek` is 0.
-- Extra form fields `digits`, `filler` and `verbatim` set the model's options, as on the command line.
+`model` is accepted but the server uses the model it was started with; `temperature` is ignored (decoding
+is greedy) and `stream` isn't supported. In verbose_json, words also carry rumblex's `score` and
+`probability`, and words and segments carry `speaker` with diarization. A segment's `avg_logprob` is the
+mean of its words' mean token log-probs, `no_speech_prob` is 0 (the VAD drops non-speech before decoding)
+and `seek` is 0. The form fields `digits`, `filler` and `verbatim` set the model's options as on the
+command line.
 
-Requests run on the model one at a time, in a worker thread, so the server stays responsive meanwhile.
+Requests run on the model one at a time, in a worker thread, so the server keeps answering meanwhile.
 """
+
+# No `from __future__ import annotations`: FastAPI reads the handler's annotations at runtime.
 
 import io
 import math
@@ -163,9 +164,9 @@ def _flag(form, name: str, default: bool) -> bool:
     if v is None or v == "":
         return default
     s = str(v).strip().lower()
-    if s in ("1", "true", "yes", "on"):
+    if s in ("true", "1"):
         return True
-    if s in ("0", "false", "no", "off"):
+    if s in ("false", "0"):
         return False
     raise RequestError(f"{name} must be true or false, got {v!r}", name)
 
@@ -239,7 +240,7 @@ def create_app(pipeline: Pipeline, *, model_name: str, api_key: str | None = Non
     async def transcriptions(request: Request):
         try:
             form = await request.form()
-        except Exception:  # noqa: BLE001 - anything unparseable is the client's problem
+        except Exception:  # noqa: BLE001 - not a form body
             return error(400, "expected a multipart/form-data body")
         upload = form.get("file")
         if not isinstance(upload, UploadFile):

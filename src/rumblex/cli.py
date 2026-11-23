@@ -208,7 +208,7 @@ def build_serve_parser() -> argparse.ArgumentParser:
                    help="max seconds of audio per model input (default: %(default)s)")  # fmt: skip
     t.add_argument("--no_align", action="store_true", help="skip word timestamps (segment times only)")
     t.add_argument("--diarize", action="store_true",
-                   help="label speakers in every response; enables diarized_json (needs the [diarize] extra)")  # fmt: skip
+                   help="label speakers; enables diarized_json (needs the [diarize] extra)")  # fmt: skip
     t.add_argument(
         "--diarize_model", default="pyannote/speaker-diarization-community-1", help=argparse.SUPPRESS
     )
