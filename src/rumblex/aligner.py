@@ -94,15 +94,32 @@ class CTCHead:
             out.append(logits[:, idx] - torch.logsumexp(logits, dim=-1, keepdim=True))
         return torch.cat(out).cpu().numpy() if out else np.zeros((0, len(idx)), np.float32)
 
+    @torch.inference_mode()
+    def log_probs(self, states: torch.Tensor) -> torch.Tensor:
+        """Log-probs over the whole vocabulary [frames, 99,631] (on the head's device)."""
+        h = states.to(self.device, torch.float32)
+        out = [
+            torch.log_softmax(torch.nn.functional.linear(h[i : i + 512], self.weight, self.bias), dim=-1)
+            for i in range(0, h.shape[0], 512)
+        ]
+        return torch.cat(out) if out else torch.zeros((0, self.weight.shape[0]), device=self.device)
 
-def ctc_viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> np.ndarray | None:
-    """CTC forced alignment, vectorised over states.
+    @torch.inference_mode()
+    def greedy(self, states: torch.Tensor) -> list[int]:
+        """Greedy CTC decoding: the best class per frame, repeats merged, blanks dropped. Rougher than the
+        decoder's text, but enough to tell which part of a given transcript a chunk holds."""
+        h = states.to(self.device, torch.float32)
+        best = [
+            torch.nn.functional.linear(h[i : i + 512], self.weight, self.bias).argmax(-1)
+            for i in range(0, h.shape[0], 512)
+        ]
+        ids = torch.cat(best).tolist() if best else []
+        return [t for k, t in enumerate(ids) if t != BLANK and (k == 0 or t != ids[k - 1])]
 
-    `em`: [T, 1 + n_tokens] log-probs, column 0 = blank, column k+1 = target token k.
-    `same_as_prev[k]`: token k equals token k-1 (then a blank must separate them).
-    Returns the state path [T] over the 2n+1 extended states (even = blank, 2k+1 = token k),
-    or None if the tokens can't fit in T frames.
-    """
+
+def _viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]):
+    """Viterbi over the 2n+1 extended CTC states: (best final state, its log-prob, back pointers), or None
+    if the tokens can't fit in the frames. See `ctc_viterbi`."""
     T, L = em.shape[0], n_tokens
     S = 2 * L + 1
     if T == 0 or L + sum(same_as_prev) > T:
@@ -129,11 +146,36 @@ def ctc_viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> 
     s = S - 1 if S == 1 or dp[S - 1] >= dp[S - 2] else S - 2
     if not np.isfinite(dp[s]):
         return None
+    return s, float(dp[s]), back
+
+
+def ctc_viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> np.ndarray | None:
+    """CTC forced alignment, vectorised over states.
+
+    `em`: [T, 1 + n_tokens] log-probs, column 0 = blank, column k+1 = target token k.
+    `same_as_prev[k]`: token k equals token k-1 (then a blank must separate them).
+    Returns the state path [T] over the 2n+1 extended states (even = blank, 2k+1 = token k),
+    or None if the tokens can't fit in T frames.
+    """
+    best = _viterbi(em, n_tokens, same_as_prev)
+    if best is None:
+        return None
+    s, _, back = best
+    T = em.shape[0]
     path = np.empty(T, dtype=np.int64)
     for t in range(T - 1, -1, -1):
         path[t] = s
         s -= int(back[t, s])  # int(): numpy 2 would make s an int8 and overflow past 127 states
     return path
+
+
+def ctc_score(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> float:
+    """Log-prob of the best CTC alignment of the tokens (`em` and arguments as for `ctc_viterbi`); -inf if
+    they can't fit. With no tokens it is the log-prob of all blanks."""
+    if n_tokens == 0:
+        return float(em[:, 0].sum())
+    best = _viterbi(em, n_tokens, same_as_prev)
+    return -np.inf if best is None else best[1]
 
 
 def token_spans(path: np.ndarray, n_tokens: int) -> list[tuple[int, int]]:

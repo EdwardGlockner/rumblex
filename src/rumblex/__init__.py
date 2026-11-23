@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from rumblex.transcriber import RumbleTranscriber
 
 __version__ = "0.1.1"
-__all__ = ["Segment", "TranscriptResult", "WordSegment", "load_model", "transcribe", "write_result"]
+__all__ = ["Segment", "TranscriptResult", "WordSegment", "align", "load_model", "transcribe", "write_result"]
 
 
 def load_model(
@@ -61,6 +61,28 @@ def transcribe(
         _aligner_for(model).align(result, wav)
     result.metadata.pop("chunk_transcripts", None)
     return result
+
+
+def align(
+    audio: AudioInput,
+    text: str,
+    model: RumbleTranscriber | None = None,
+    *,
+    sr: int | None = None,
+    **kwargs,
+) -> TranscriptResult:
+    """Word timestamps for a transcript you already have, without transcribing: the audio is encoded and
+    `text` is force-aligned to it with the CTC head. Works on long files; the text doesn't need line breaks
+    or timings. kwargs: language (recorded only), max_chunk_s, chunks, progress.
+
+    Words the audio doesn't contain still get times, squeezed in where the text puts them, so the text should
+    match the audio. Without `model`, a new model is loaded on every call."""
+    from rumblex.audio import load_audio
+    from rumblex.textalign import align_text
+
+    model = model or load_model()
+    wav = load_audio(audio, sr=sr)
+    return align_text(model, _aligner_for(model), wav, text, **kwargs)
 
 
 def _aligner_for(model: RumbleTranscriber):

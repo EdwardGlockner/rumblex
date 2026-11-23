@@ -1,0 +1,90 @@
+{
+ "device": "cpu",
+ "compute_type": "float32",
+ "utterances": 200,
+ "not_scored": [
+  "61-70970-0004"
+ ],
+ "unk_words_not_scored": 14,
+ "per_utterance": {
+  "words": 4043,
+  "start_mae_ms": 51.9,
+  "start_median_ae_ms": 40.0,
+  "start_mean_signed_ms": 21.9,
+  "starts_within_50ms": 0.6376,
+  "starts_within_100ms": 0.8711,
+  "end_mae_ms": 68.4,
+  "end_median_ae_ms": 40.0,
+  "end_mean_signed_ms": -23.1,
+  "ends_within_100ms": 0.8083,
+  "gross_over_1s": 0,
+  "seconds": 303.6
+ },
+ "transcribe_align": {
+  "words": 3945,
+  "start_mae_ms": 52.7,
+  "start_median_ae_ms": 38.0,
+  "start_mean_signed_ms": 18.2,
+  "starts_within_50ms": 0.6413,
+  "starts_within_100ms": 0.873,
+  "end_mae_ms": 58.0,
+  "end_median_ae_ms": 40.0,
+  "end_mean_signed_ms": 5.7,
+  "ends_within_100ms": 0.8416,
+  "gross_over_1s": 0,
+  "seconds": 1060.3
+ },
+ "same_words": {
+  "align": {
+   "words": 3945,
+   "start_mae_ms": 51.9,
+   "start_median_ae_ms": 40.0,
+   "start_mean_signed_ms": 21.7,
+   "starts_within_50ms": 0.6378,
+   "starts_within_100ms": 0.8702,
+   "end_mae_ms": 68.4,
+   "end_median_ae_ms": 40.0,
+   "end_mean_signed_ms": -23.2,
+   "ends_within_100ms": 0.8089,
+   "gross_over_1s": 0
+  },
+  "transcribe_align": {
+   "words": 3945,
+   "start_mae_ms": 52.7,
+   "start_median_ae_ms": 38.0,
+   "start_mean_signed_ms": 18.2,
+   "starts_within_50ms": 0.6413,
+   "starts_within_100ms": 0.873,
+   "end_mae_ms": 58.0,
+   "end_median_ae_ms": 40.0,
+   "end_mean_signed_ms": 5.7,
+   "ends_within_100ms": 0.8416,
+   "gross_over_1s": 0
+  }
+ },
+ "long_file": {
+  "words": 4043,
+  "start_mae_ms": 53.2,
+  "start_median_ae_ms": 36.9,
+  "start_mean_signed_ms": 22.3,
+  "starts_within_50ms": 0.6282,
+  "starts_within_100ms": 0.8694,
+  "end_mae_ms": 66.2,
+  "end_median_ae_ms": 40.1,
+  "end_mean_signed_ms": -18.9,
+  "ends_within_100ms": 0.8175,
+  "gross_over_1s": 1,
+  "audio_seconds": 1714.8,
+  "chunks": 102,
+  "fallback_chunks": 0,
+  "seconds": 360.6,
+  "gross_words": [
+   {
+    "utterance": "3570-5694-0021",
+    "word": "whenever",
+    "ref_start": 537.24,
+    "start": 535.89
+   }
+  ]
+ }
+}

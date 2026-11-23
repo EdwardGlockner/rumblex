@@ -9,6 +9,7 @@ from rumblex.aligner import (
     END_RULES,
     Aligner,
     AlignOptions,
+    ctc_score,
     ctc_viterbi,
     frame_times,
     group_words,
@@ -75,6 +76,19 @@ def test_viterbi_finds_spikes_and_rejects_impossible():
     # "a a" needs a blank between: 2 tokens + 1 blank > 2 frames
     assert ctc_viterbi(em[:2, :3], 2, [False, True]) is None
     assert ctc_viterbi(em[:0], 1, [False]) is None
+
+
+def test_ctc_score():
+    T, L = 12, 3
+    em = np.full((T, L + 2), np.log(0.01))
+    em[:, 0] = np.log(0.96)
+    for k, f in enumerate([2, 6, 9]):
+        em[f, k + 1], em[f, 0] = np.log(0.96), np.log(0.01)
+    right = ctc_score(em[:, :4], 3, [False] * 3)
+    wrong = ctc_score(em[:, [0, 4, 4, 4]], 3, [False, True, True])  # a token that never spikes
+    assert np.isfinite(right) and right > wrong
+    assert ctc_score(em, 0, []) == pytest.approx(em[:, 0].sum())
+    assert ctc_score(em[:2, :3], 2, [False, True]) == -np.inf
 
 
 def test_frame_times():

@@ -22,6 +22,8 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
 - Batched transcription; a chunk's output doesn't depend on what it's batched with. Exposes the model's
   `language`, `prompt` (hotwords), `digits`, `filler` and `verbatim` options.
 - Word timestamps from the CTC head. If alignment fails on a chunk, its words get proportional times.
+- Alignment of a transcript you already have (`--text`, `rumblex.align`): no decoding, only the encoder
+  and the CTC head.
 - Optional per-word speaker labels via pyannote.
 - JSON, SRT, VTT (optionally with karaoke tags), TSV and TXT.
 
@@ -49,6 +51,7 @@ rumblex meeting.mp4                                   # all formats into the cur
 rumblex talk.wav -f srt vtt --max_line_width 42
 rumblex interview.m4a --language Dutch --diarize -f srt txt
 rumblex call.wav --prompt "Kubernetes, metoprolol"   # hotwords
+rumblex lecture.mp3 --text lecture.txt               # word times for your own transcript
 ```
 
 ```python
@@ -59,6 +62,9 @@ result = rumblex.transcribe("meeting.mp4", model)
 for seg in result.segments:
     print(seg.start, seg.end, seg.text)
 rumblex.write_result(result, "meeting.mp4", "out/", ["srt", "json"])
+
+text = open("lecture.txt", encoding="utf-8").read()
+result = rumblex.align("lecture.mp3", text, model)  # no transcribing
 ```
 
 More in [examples/](examples/).
@@ -160,6 +166,8 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 - Hindi word times are less reliable: Hindi text runs to about 10 tokens per second of audio against the
   encoder's 13 frames, so in fast speech the CTC path doesn't fit and 30 of 360 chunks fell back to
   proportional times.
+- With `--text`, text without punctuation gets word ends about 10 ms earlier on average than the
+  model's own punctuated output ([docs/align_text_eval.md](docs/align_text_eval.md)).
 - vLLM needs Linux and a GPU vLLM supports.
 
 ## Development

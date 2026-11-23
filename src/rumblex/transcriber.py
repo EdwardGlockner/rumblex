@@ -161,6 +161,26 @@ def make_batches(durations: Sequence[float], batch_size: int) -> list[list[int]]
     return [order[i : i + batch_size] for i in range(0, len(order), batch_size)]
 
 
+def speech_chunks(wav: np.ndarray, max_chunk_s: float = 20.0, device=None) -> list[SpeechChunk]:
+    """Chunks for 16 kHz `wav`: the whole clip if it is no longer than `max_chunk_s`, VAD otherwise."""
+    if 0 < len(wav) <= max_chunk_s * SAMPLE_RATE:
+        return [SpeechChunk(0, len(wav), (SpeechRegion(0, len(wav)),))]
+    return vad_chunks(wav, max_chunk_s=max_chunk_s, device=device)
+
+
+def encode_clips(processor, tower, audio_token_id: int, clips, device, dtype) -> list[torch.Tensor]:
+    """The audio tower's `ln_post` states [frames, 896] (float32, CPU) for prepared clips (`prepare_clip`),
+    the same states the decoder sees during generate()."""
+    inputs = processor.apply_transcription_request(audio=list(clips))
+    zero_feature_padding(inputs)
+    frames = (inputs["input_ids"] == audio_token_id).sum(-1).tolist()
+    out = tower(
+        input_features=inputs["input_features"].to(device, dtype),
+        input_features_mask=inputs["input_features_mask"].to(device),
+    ).last_hidden_state
+    return [s.float().cpu() for s in split_packed(out, frames)]
+
+
 def majority_language(items: Sequence[ChunkTranscript]) -> str | None:
     """Language covering the most speech time."""
     votes: Counter[str] = Counter()
@@ -214,10 +234,7 @@ class RumbleTranscriber:
         """
         wav = load_audio(audio, sr=sr)
         if chunks is None:
-            if 0 < len(wav) <= max_chunk_s * SAMPLE_RATE:
-                chunks = [SpeechChunk(0, len(wav), (SpeechRegion(0, len(wav)),))]
-            else:
-                chunks = vad_chunks(wav, max_chunk_s=max_chunk_s, device=self.device)
+            chunks = speech_chunks(wav, max_chunk_s, self.device)
         items = self.transcribe_chunks(wav, chunks, **kwargs)
         language = majority_language(items)  # a forced language comes back resolved ("nl" -> "Dutch")
         segments = [
@@ -269,6 +286,29 @@ class RumbleTranscriber:
             if progress:
                 progress(done, len(chunks))
         return results  # type: ignore[return-value]
+
+    @torch.inference_mode()
+    def encode(
+        self,
+        audio: np.ndarray,
+        chunks: Sequence[SpeechChunk],
+        progress: Callable[[int, int], None] | None = None,
+    ) -> list[torch.Tensor]:
+        """Encoder states for each chunk, without decoding (for aligning text you already have)."""
+        out: list[torch.Tensor | None] = [None] * len(chunks)
+        done = 0
+        for idx in make_batches([c.duration for c in chunks], self.batch_size):
+            clips = [prepare_clip(chunks[i].slice(audio)) for i in idx]
+            states = encode_clips(
+                self.processor, self.audio_tower, self.model.config.audio_token_id, clips, self.device,
+                self.dtype,
+            )  # fmt: skip
+            for i, st in zip(idx, states):
+                out[i] = st
+            done += len(idx)
+            if progress:
+                progress(done, len(chunks))
+        return out  # type: ignore[return-value]
 
     def _run_batch(self, audio, batch, language, prompt, options, keep_states):
         clips = [prepare_clip(c.slice(audio)) for c in batch]

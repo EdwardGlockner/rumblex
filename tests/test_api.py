@@ -40,3 +40,16 @@ def test_transcribe_without_alignment_and_resampling():
     m = FakeModel()
     rumblex.transcribe(np.zeros(8000, np.float32), m, align=False, sr=8000)
     assert m.calls[0][:2] == (16000, False)  # resampled to 16 kHz, no encoder states kept
+
+
+def test_align_uses_the_shared_aligner(monkeypatch):
+    import rumblex.textalign as T
+
+    calls = []
+    monkeypatch.setattr(
+        T, "align_text", lambda m, al, wav, text, **kw: calls.append((len(wav), text, kw)) or "ok"
+    )
+    m = FakeModel()
+    m._rumblex_aligner = "aligner"
+    assert rumblex.align(np.zeros(8000, np.float32), "hi there", m, language="English") == "ok"
+    assert calls == [(8000, "hi there", {"language": "English"})]

@@ -225,3 +225,47 @@ def test_cli_import_does_not_load_torch():
     code = "import sys, rumblex.cli; print('torch' in sys.modules)"
     out = subprocess.run([sys.executable, "-c", code], check=False, capture_output=True, text=True)
     assert out.stdout.strip() == "False", out.stderr
+
+
+def test_text_option_checks(tmp_path, capsys):
+    a, b = _wav(tmp_path / "a.wav"), _wav(tmp_path / "b.wav")
+    text = tmp_path / "a.txt"
+    text.write_text("hello world", encoding="utf-8")
+    never = lambda args: pytest.fail("the model must not load")
+    assert main([str(a), str(b), "--text", str(text)], load_pipeline=never) == 2
+    assert main([str(a), "--text", str(tmp_path / "missing.txt")], load_pipeline=never) == 2
+    assert main([str(a), "--text", str(text), "--no_align"], load_pipeline=never) == 2
+    assert main([str(a), "--text", str(text), "--vllm_url", "http://x/v1"], load_pipeline=never) == 2
+    assert "one audio file" in capsys.readouterr().err
+
+
+def test_text_option_aligns_instead_of_transcribing(tmp_path):
+    from rumblex.vad import SpeechChunk
+
+    audio = _wav(tmp_path / "talk.wav")
+    text = tmp_path / "talk.txt"
+    text.write_text("﻿Hello   world.\n", encoding="utf-8")  # BOM and odd spacing are fine
+
+    class TextTr(FakeTr):
+        tokenizer = SimpleNamespace(encode=lambda t, add_special_tokens=False: list(range(len(t.split()))))
+
+        def transcribe(self, audio, **kw):
+            pytest.fail("--text must not transcribe")
+
+        def encode(self, audio, chunks, progress=None):
+            assert all(isinstance(c, SpeechChunk) for c in chunks)
+            return [np.zeros((26, 4), np.float32) for _ in chunks]
+
+    class TextAligner:
+        def align(self, result, audio=None):
+            it = result.metadata["chunk_transcripts"][0]
+            words = [WordSegment(w, 0.1 * i, 0.1 * i + 0.1, 1.0) for i, w in enumerate(it.text.split())]
+            result.segments = [Segment(0.0, 1.0, it.text, words)]
+            return result
+
+    rc = main([str(audio), "--text", str(text), "-o", str(tmp_path / "out"), "-f", "json", "-q"],
+              load_pipeline=lambda args: (TextTr(), TextAligner(), None))  # fmt: skip
+    assert rc == 0
+    d = json.loads((tmp_path / "out" / "talk.json").read_text(encoding="utf-8"))
+    assert [w["word"] for w in d["segments"][0]["words"]] == ["Hello", "world."]
+    assert d["metadata"]["aligned_text"] and "transcribe_s" not in d["metadata"]["timings"]

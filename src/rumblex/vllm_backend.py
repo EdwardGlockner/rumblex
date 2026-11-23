@@ -31,14 +31,13 @@ from rumblex.transcriber import (
     ChunkTranscript,
     RumbleTranscriber,
     default_dtype,
+    encode_clips,
     language_from_prefix,
     language_name,
     parse_generated,
     prepare_clip,
     quiet_loading,
     resolve_dtype,
-    split_packed,
-    zero_feature_padding,
 )
 from rumblex.vad import SpeechChunk
 
@@ -104,14 +103,7 @@ class EncoderRunner:
     @torch.inference_mode()
     def states(self, clips: Sequence[np.ndarray]) -> list[torch.Tensor]:
         """[frames, 896] float32 CPU states per prepared clip (see `prepare_clip`)."""
-        inputs = self.processor.apply_transcription_request(audio=list(clips))
-        zero_feature_padding(inputs)
-        frames = (inputs["input_ids"] == self.audio_token_id).sum(-1).tolist()
-        out = self.tower(
-            input_features=inputs["input_features"].to(self.device, self.dtype),
-            input_features_mask=inputs["input_features_mask"].to(self.device),
-        ).last_hidden_state
-        return [s.float().cpu() for s in split_packed(out, frames)]
+        return encode_clips(self.processor, self.tower, self.audio_token_id, clips, self.device, self.dtype)
 
 
 class VLLMTranscriber:
@@ -158,6 +150,17 @@ class VLLMTranscriber:
         if self._encoder is None:
             self._encoder = EncoderRunner(self.model_id, self.device, self.dtype)
         return self._encoder
+
+    def encode(self, audio: np.ndarray, chunks: Sequence[SpeechChunk], progress=None) -> list[torch.Tensor]:
+        """Encoder states for each chunk from the local encoder, without decoding."""
+        out = []
+        for b in range(0, len(chunks), self.batch_size):
+            out += self.encoder.states(
+                [prepare_clip(c.slice(audio)) for c in chunks[b : b + self.batch_size]]
+            )
+            if progress:
+                progress(len(out), len(chunks))
+        return out
 
     def transcribe_chunks(
         self,

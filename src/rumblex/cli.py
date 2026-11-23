@@ -60,6 +60,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = p.add_argument_group("alignment")
     a.add_argument("--no_align", action="store_true", help="skip word timestamps (segment times only)")
+    a.add_argument("--text", default=None, metavar="FILE",
+                   help="align this transcript (a text file) instead of transcribing; one audio file only")  # fmt: skip
     a.add_argument("--end_rule", default="next_start", help=argparse.SUPPRESS)
 
     d = p.add_argument_group("diarization (pyannote; needs the [diarize] extra and Hugging Face access)")
@@ -153,6 +155,15 @@ def _check_args(args) -> str | None:
     if clashes:
         listed = "; ".join(", ".join(paths) for paths in clashes)
         return f"inputs with the same name would overwrite each other's output in {args.output_dir}: {listed}"
+    if args.text is not None:
+        if len(args.audio) != 1:
+            return "--text aligns one transcript to one audio file; give a single audio file"
+        if not Path(args.text).is_file():
+            return f"not found: {args.text}"
+        if args.no_align:
+            return "--text and --no_align can't be combined: aligning the text is all --text does"
+        if args.vllm_url:
+            return "--text doesn't use the decoder, so --vllm_url has no effect; leave it out"
     if args.language is not None:
         args.language = args.language.strip() or None
     if args.language is not None:
@@ -219,22 +230,31 @@ def main(argv: Sequence[str] | None = None, load_pipeline: Callable = _load_pipe
                 wav = load_audio(path)
                 timings["decode_s"] = time.perf_counter() - t
                 t = time.perf_counter()
-                result = tr.transcribe(
-                    wav,
-                    max_chunk_s=args.chunk_size,
-                    language=args.language,
-                    prompt=args.prompt,
-                    digits=not args.no_digits,
-                    filler=args.filler,
-                    verbatim=not args.no_verbatim,
-                    keep_encoder_states=al is not None,
-                    progress=lambda done, total, task=task: prog.update(task, completed=done, total=total),
-                )
-                timings["transcribe_s"] = time.perf_counter() - t
-                if al is not None:
-                    t = time.perf_counter()
-                    al.align(result, wav)
+                on_progress = lambda done, total, task=task: prog.update(task, completed=done, total=total)
+                if args.text is not None:
+                    from rumblex.textalign import align_text
+
+                    text = Path(args.text).read_text(encoding="utf-8-sig")
+                    result = align_text(tr, al, wav, text, max_chunk_s=args.chunk_size, language=args.language,
+                                        progress=on_progress)  # fmt: skip
                     timings["align_s"] = time.perf_counter() - t
+                else:
+                    result = tr.transcribe(
+                        wav,
+                        max_chunk_s=args.chunk_size,
+                        language=args.language,
+                        prompt=args.prompt,
+                        digits=not args.no_digits,
+                        filler=args.filler,
+                        verbatim=not args.no_verbatim,
+                        keep_encoder_states=al is not None,
+                        progress=on_progress,
+                    )
+                    timings["transcribe_s"] = time.perf_counter() - t
+                    if al is not None:
+                        t = time.perf_counter()
+                        al.align(result, wav)
+                        timings["align_s"] = time.perf_counter() - t
                 if dz is not None:
                     prog.update(task, description=f"{Path(path).name} (speakers)")
                     t = time.perf_counter()
