@@ -129,8 +129,9 @@ chosen by start MAE + end MAE: 20 ms, 7 frames, `last_inside` on, start shift âˆ
 | new default | 49.5 ms | 32 ms | 69.0% | 53.7 ms | 34 ms | 65.2% | 85.6% |
 
 Scored through `Aligner.align_tokens` with default options, `test_clean` gives the same 49.5 / 53.7 ms. The
-gain is small next to the gap to a 20 ms aligner: these numbers are on CPU states, and the GPU comparison
-with WhisperX in the top-level README predates this change.
+gain is small next to the gap to a 20 ms aligner. On an RTX 4090 in bf16, next to WhisperX: starts 52.6 to
+50.6 ms, ends 57.7 to 54.6 ms, against WhisperX's 74.8 and 33.9 ms
+([run](bench_2026-11-23_rtx4090_timing/README.md)).
 
 ## Transcription quality on the same data
 

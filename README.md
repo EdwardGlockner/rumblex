@@ -164,17 +164,18 @@ all but 1 of 4,288 chunks outside Hindi; for Hindi see Limitations.
 ### Timestamp accuracy
 
 200 LibriSpeech utterances against Montreal Forced Aligner references (another aligner, not human labels),
-with the current aligner ([run](docs/bench_2026-11-22_rtx4090_timing/README.md),
+with the current aligner ([run](docs/bench_2026-11-23_rtx4090_timing/README.md),
 settings chosen on dev-clean in [docs/alignment_eval.md](docs/alignment_eval.md)).
 
 | mean absolute error | rumblex | WhisperX |
 |---|---|---|
-| word start | 53 ms | 75 ms |
-| word end | 58 ms | 34 ms |
+| word start | 51 ms | 75 ms |
+| word end | 55 ms | 34 ms |
 
 The encoder runs at 13 frames per second against WhisperX's 20 ms aligner, which shows in the ends. rumblex
-pulls each word end back to where the audio goes quiet, and since 0.1.1 penalises the blank before Viterbi,
-which took starts from 58 to 53 ms.
+pulls each word end back to where the audio goes quiet and moves each start to the nearest dip in loudness,
+and it penalises the blank before Viterbi. Together these took starts from 58 to 51 ms and ends from 57 to
+55 ms since 0.1.0.
 
 ## How it works
 
