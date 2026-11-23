@@ -1,15 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-11-23)
 
 - Words have a `probability`: the decoder's, exp of the mean log-prob of the word's tokens, taken during
-  decoding on both backends (vLLM is asked for `logprobs`). It separates wrong words from right ones best:
+  decoding on both backends (vLLM is asked for `logprobs`; on 50 AMI/Earnings-22 utterances it returned
+  them for every chunk, matching the transformers backend to bf16 rounding,
+  `docs/bench_2026-11-23_a40_logprobs`). It separates wrong words from right ones best:
   AUC 0.882 on AMI and 0.837 on Earnings-22 (test halves, `docs/confidence_eval.md`). Empty (`null`) with
   `--text` and on words that got proportional times.
 - Word `score` is now the lowest over the word's tokens of each token's peak CTC probability, instead of
   the mean of mean probabilities. It separates wrong words from right ones better: AUC 0.856 vs 0.825 on
   AMI and 0.829 vs 0.795 on Earnings-22 (test halves, `docs/confidence_eval.md`,
-  `scripts/eval_confidence.py`). Word times are unchanged.
+  `scripts/eval_confidence.py`). Word times are unchanged, but `score` values are not comparable with
+  0.2.0's: correct words can score near 0, so use it to rank words, or use `probability`.
 
 ## 0.2.0 (2026-11-23)
 
