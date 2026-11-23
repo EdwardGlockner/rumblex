@@ -1,7 +1,7 @@
 # Word confidence
 
-Whether a word's score says anything about whether the word is right, and which score says it best.
-rumblex 0.2.0 writes `score` on every word: the mean over the word's tokens of each token's mean CTC
+How well a word's score tells right words from wrong ones, for several candidate scores. rumblex 0.2.0
+wrote `score` on every word: the mean over the word's tokens of each token's mean CTC
 probability over its frames. This compares it with other CTC scores and with the decoder's own token
 probabilities.
 
@@ -39,14 +39,14 @@ AUC is the chance that a random wrong word scores lower than a random right one 
 
 | | words | wrong | `ctc_mean` | `ctc_min` | `ctc_peak_min` | `dec_mean` | `dec_min` | `combined` |
 |---|---|---|---|---|---|---|---|---|
-| AMI dev | 3,736 | 6.5% | 0.793 | 0.797 | 0.815 | **0.841** | 0.840 | 0.836 |
-| Earnings-22 dev | 7,578 | 7.0% | 0.790 | 0.789 | 0.827 | **0.836** | 0.835 | 0.834 |
-| AMI test | 3,689 | 5.5% | 0.825 | 0.837 | 0.856 | **0.882** | 0.879 | 0.876 |
-| Earnings-22 test | 7,318 | 7.0% | 0.795 | 0.797 | 0.829 | **0.837** | 0.837 | 0.827 |
+| AMI dev | 3,736 | 6.5% | 0.793 | 0.797 | 0.815 | 0.841 | 0.840 | 0.836 |
+| Earnings-22 dev | 7,578 | 7.0% | 0.790 | 0.789 | 0.827 | 0.836 | 0.835 | 0.834 |
+| AMI test | 3,689 | 5.5% | 0.825 | 0.837 | 0.856 | 0.882 | 0.879 | 0.876 |
+| Earnings-22 test | 7,318 | 7.0% | 0.795 | 0.797 | 0.829 | 0.837 | 0.837 | 0.827 |
 
 The decoder's mean token probability is best on both dev sets, and the order holds on test. Among
 CTC-only scores, `ctc_peak_min` beats 0.2.0's `ctc_mean` by 0.02 to 0.04 everywhere. Adding the CTC score
-to the decoder score this way doesn't help. Following this, rumblex now writes `dec_mean` as each word's
+to the decoder score this way doesn't help. Since 0.3.0, rumblex writes `dec_mean` as each word's
 `probability` and `ctc_peak_min` as its `score`.
 
 Flagging words below a threshold chosen on dev (both sets pooled) to flag 10% of dev words:
@@ -67,12 +67,12 @@ are in the JSON.
 
 ## Label noise
 
-The labels are only as good as the references. Reading 60 randomly drawn wrong dev words (`--audit`)
-under a first version of the labelling that only lowercased and dropped punctuation, by hand about 18
-were right. Four were spelling and contraction variants (organisation, it's / it is, 'cause, gotta) that
-the normaliser above now handles, two were compounds it doesn't handle (onto / on to, multiannual), and
-the rest were reference typos or gaps ("parch" for patch, Sierra "Garda", phrases missing from the
-reference). About 18 more were unclear: AMI crosstalk from another speaker, repeated words the reference
-may have cleaned up, segment edges. The normaliser change raised every AUC by 0.003 to 0.07 and kept
-the decoder scores ahead of the CTC scores and `ctc_peak_min` ahead of `ctc_mean`. The remaining noise
-makes some right words count as wrong, so the AUCs above understate every score.
+60 randomly drawn wrong dev words (`--audit`) were read by hand, under a first version of the labelling that
+only lowercased and dropped punctuation. About 18 of them were actually right. Four were spelling and
+contraction variants (organisation, it's / it is, 'cause, gotta) that the normaliser above now handles, two
+were compounds it doesn't handle (onto / on to, multiannual), and the rest were reference typos or gaps
+("parch" for patch, Sierra "Garda", phrases missing from the reference). About 18 more were unclear: AMI
+crosstalk from another speaker, repeated words the reference may have cleaned up, segment edges. The
+normaliser change raised every AUC by 0.003 to 0.07 and kept the decoder scores ahead of the CTC scores and
+`ctc_peak_min` ahead of `ctc_mean`. The remaining noise makes some right words count as wrong, so the AUCs
+above understate every score.

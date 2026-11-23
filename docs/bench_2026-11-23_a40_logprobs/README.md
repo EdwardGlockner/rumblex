@@ -15,13 +15,13 @@ of every token and the word `probability` built from them.
 | AMI | 23 | 0 | 23 | 0.0077 / 0.071 / 0.229 | 0.0055 / 0.056 / 0.097 |
 | Earnings-22 | 27 | 0 | 26 | 0.0022 / 0.053 / 0.106 | 0.0010 / 0.020 / 0.028 |
 
-Every chunk got its log-probs from the server, lined up with its token ids. The differences are of the size
-bf16 rounding gives between two implementations; one Earnings-22 chunk decoded to different tokens and is
-left out of the comparison.
+Every chunk got its log-probs from the server, lined up with its token ids. The differences are small, as
+expected with both backends in bf16. One Earnings-22 chunk decoded to different tokens and is left out of
+the comparison.
 
 The script's last step (the whole pipeline through vLLM on the files in `samples/`) didn't run: `samples/`
 is git-ignored, so the clone on the pod had none, and the script stopped before writing its JSON.
-`logprobs_vllm.json` here holds the per-set lines it had already printed (`check_logprobs.log`, its log without the warning lines). The script
-now writes the sets first and skips missing samples.
+`logprobs_vllm.json` here holds the per-set lines it had already printed (`check_logprobs.log` is its log
+without the warning lines). The script now writes the sets first and skips missing samples.
 
 Package versions: `envs.txt`. Session log: `session.log`.
