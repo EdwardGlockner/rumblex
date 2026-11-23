@@ -7,8 +7,9 @@ Viterbi, and tokens are grouped into words at the leading-space marker.
 
 The head is very peaky (a token is a ~1-frame spike), so the alignment gives good onsets but no word
 ends. A word ends where the next one starts (`END_RULES["next_start"]`), pulled back to the first
-silence in the audio when the audio is available (`refine_ends`). Both were chosen on LibriSpeech
-dev_clean and reported on test_clean in docs/alignment_eval.md.
+silence in the audio when the audio is available (`refine_ends`). With the audio, starts also move to
+the nearest dip in loudness (`snap_to_dips`). All of it was chosen on LibriSpeech dev_clean and reported on
+test_clean in docs/alignment_eval.md.
 If alignment fails for a chunk, words are spread over the chunk's VAD speech regions by length.
 
 Words are split at spaces, so languages written without spaces (Chinese, Japanese) get one "word"
@@ -306,6 +307,12 @@ class LoudnessRefinement:
     min_silence: float = MIN_SILENCE
     starts: bool = False
     ends: bool = True
+    # Move each start to the quietest 10 ms frame (loudness smoothed over `dip_smooth` frames) within
+    # `dip_window` seconds of its CTC start; 0 turns it off.
+    dip_window: float = 0.0
+    dip_smooth: int = 1
+    # Let the last word of the chunk end inside its last CTC frame, not only after it.
+    last_inside: bool = False
 
 
 def word_times(
@@ -322,9 +329,12 @@ def word_times(
     Words never overlap: an end is clamped to the next word's start."""
     times = frame_times(n_frames, grid) + chunk_start
     spike_start = np.array([times[w.first] for w in words])
-    starts = np.maximum(spike_start - FRAME_STEP / 2 + start_shift, chunk_start)
-    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
     lr = loudness
+    starts = spike_start - FRAME_STEP / 2
+    if lr is not None and lr.dip_window > 0:
+        starts = snap_to_dips(starts, lr.audio, lr.audio_start, lr.dip_window, lr.dip_smooth)
+    starts = np.maximum.accumulate(np.maximum(starts + start_shift, chunk_start))
+    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
     if lr is not None and lr.starts:
         starts = refine_starts(
             starts, spike_start, spike_end, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence
@@ -332,7 +342,10 @@ def word_times(
     ends = END_RULES[end_rule](starts, spike_end, list(regions))
     ends[:-1] = np.minimum(ends[:-1], starts[1:])
     if lr is not None and lr.ends:
-        ends = refine_ends(starts, spike_end, ends, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence)
+        search_from = spike_end.copy()
+        if lr.last_inside:
+            search_from[-1] -= FRAME_STEP
+        ends = refine_ends(starts, search_from, ends, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence)
     ends = np.maximum(ends, starts + 0.01)
     return starts, ends
 
@@ -348,6 +361,26 @@ def frame_db(audio: np.ndarray, sr: int = SAMPLE_RATE, hop: float = ENERGY_HOP) 
         return np.zeros(0)
     f = audio[: k * n].astype(np.float64).reshape(k, n)
     return 10 * np.log10((f**2).mean(axis=1) + 1e-12)
+
+
+def snap_to_dips(
+    starts: np.ndarray, audio: np.ndarray, audio_start: float, window: float, smooth: int = 1
+) -> np.ndarray:
+    """Move each start to the quietest 10 ms frame within `window` seconds of it, on loudness smoothed
+    over `smooth` frames. Words that run into each other often meet at a dip in loudness, which is finer
+    than the 80 ms CTC frames."""
+    db = frame_db(audio)
+    if db.size == 0:
+        return starts
+    if smooth > 1:
+        db = np.convolve(db, np.ones(smooth) / smooth, mode="same")
+    out = starts.copy()
+    for i, t in enumerate(starts):
+        lo = max(0, int(np.floor((t - window - audio_start) / ENERGY_HOP)))
+        hi = min(len(db), int(np.ceil((t + window - audio_start) / ENERGY_HOP)))
+        if hi > lo:
+            out[i] = audio_start + (lo + int(np.argmin(db[lo:hi]))) * ENERGY_HOP
+    return out
 
 
 def _silent_frames(audio: np.ndarray, silence_db: float) -> np.ndarray:
@@ -441,6 +474,12 @@ class AlignOptions:
     refine_starts: bool = False
     silence_db: float = SILENCE_DB
     min_silence: float = MIN_SILENCE
+    # Starts moved to a loudness dip, and the last word of a chunk may end inside its last frame. Chosen on
+    # dev_clean (docs/alignment_eval.md); with them the start shift is recalibrated to dip_start_shift.
+    dip_window: float = 0.02
+    dip_smooth: int = 7
+    last_inside: bool = True
+    dip_start_shift: float = -0.004
 
 
 class Aligner:
@@ -494,13 +533,15 @@ class Aligner:
         if not words:
             return None
         loudness = None
-        if audio is not None and (o.refine_ends or o.refine_starts):
+        shift = o.start_shift
+        if audio is not None and (o.refine_ends or o.refine_starts or o.dip_window > 0):
             loudness = LoudnessRefinement(
-                audio, chunk_start, o.silence_db, o.min_silence, starts=o.refine_starts, ends=o.refine_ends
-            )
-        starts, ends = word_times(
-            words, len(em), chunk_start, regions, o.grid, o.end_rule, o.start_shift, loudness
-        )
+                audio, chunk_start, o.silence_db, o.min_silence, starts=o.refine_starts, ends=o.refine_ends,
+                dip_window=o.dip_window, dip_smooth=o.dip_smooth, last_inside=o.last_inside,
+            )  # fmt: skip
+            if o.dip_window > 0:
+                shift = o.dip_start_shift
+        starts, ends = word_times(words, len(em), chunk_start, regions, o.grid, o.end_rule, shift, loudness)
         return [
             WordSegment(
                 w.text,

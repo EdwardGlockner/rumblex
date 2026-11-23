@@ -22,7 +22,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | | what | produced by |
 |---|---|---|
 | [model_inspection.md](model_inspection.md) | What is in the Rumble-2-Flash checkpoint: CTC head, frame rate, options, tokenizer, single-clip timings | `scripts/inspect_rumble_ctc.py` |
-| [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement and blank penalty were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py` |
+| [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement, blank penalty and loudness-dip starts were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py`, `scripts/sweep_word_ends.py` |
 | [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file | `scripts/eval_align_text.py` |
 | [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
@@ -42,6 +42,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `confidence_eval.json` | Raw output behind `confidence_eval.md`, with calibration bins for every score | `scripts/eval_confidence.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
+| `alignment_word_ends_sweep.json` | Raw output of the loudness-dip start and last-word end sweep in `alignment_eval.md` | `scripts/sweep_word_ends.py` |
 | `alignment_smoothing_sweep.json` | Raw output of the logit temperature and blank penalty sweep in `alignment_eval.md` | `scripts/sweep_smoothing.py` |
 | `demo.gif` | The README's terminal demo: the captured output of one CLI run on an RTX 4090 (bf16, commit `da3aea8`), replayed with the waiting shortened | `scripts/render_demo_gif.py` |
 | `words.gif`, `words_gif.json` | The README's word-timing animation: 28–42 s of `words_gif.json`, the JSON a CPU run of the 0.1.0 package wrote for a 60 s two-speaker clip with `--diarize`, played back in real time | `scripts/render_words_gif.py` |

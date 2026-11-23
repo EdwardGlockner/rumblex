@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Word times: starts move to a loudness dip within 20 ms of the CTC start, and the last word of a chunk can
+  end inside its last CTC frame. On LibriSpeech test_clean (CPU) start error went from 52.2 to 49.5 ms and
+  end error from 57.2 to 53.7 ms (`docs/alignment_eval.md`, `scripts/sweep_word_ends.py`). Needs the audio,
+  like the existing end refinement; `AlignOptions(dip_window=0, last_inside=False)` gives the old times.
+
 ## 0.4.0 (2026-11-23)
 
 - `rumblex serve`: an OpenAI-compatible transcription server (`POST /v1/audio/transcriptions`) with the

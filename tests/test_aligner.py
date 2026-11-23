@@ -349,3 +349,29 @@ def test_blank_penalty_widens_token_spans():
     assert [w.start for w in a] == [w.start for w in b]  # the spikes still start the words
     assert b[1].end > a[1].end  # the last word now holds frame 7 too
     assert a[1].score == b[1].score == pytest.approx(0.98)  # scores come from the unpenalised log-probs
+
+
+def test_snap_to_dips_moves_starts_to_the_quietest_frame():
+    from rumblex.aligner import snap_to_dips
+
+    sr = 16000
+    a = np.sin(2 * np.pi * 220 * np.arange(sr) / sr).astype(np.float32)
+    a[int(0.50 * sr) : int(0.51 * sr)] *= 0.01  # a 10 ms dip at 0.50 s
+    out = snap_to_dips(np.array([0.48, 0.80]), a, 0.0, window=0.03)
+    assert out[0] == pytest.approx(0.50, abs=1e-6)
+    assert abs(out[1] - 0.80) <= 0.03 + 1e-9  # no dip nearby: stays within the window
+    assert snap_to_dips(np.array([0.48]), a, 0.0, window=0.01)[0] == pytest.approx(0.48, abs=0.011)
+    assert snap_to_dips(np.array([0.2]), np.zeros(0, np.float32), 0.0, 0.03)[0] == 0.2  # no audio
+
+
+def test_last_word_may_end_inside_its_last_frame():
+    from rumblex.aligner import AlignedWord, LoudnessRefinement, word_times
+
+    a = _tone_gap_tone()  # sound stops at 0.5 s
+    words = [AlignedWord("a", 1, 1, 1.0), AlignedWord("b", 6, 6, 1.0)]  # last frame covers 0.44-0.52 s
+    after = word_times(words, 13, 0.0, [(0.0, 1.0)], loudness=LoudnessRefinement(a, 0.0))[1]
+    inside = word_times(words, 13, 0.0, [(0.0, 1.0)], loudness=LoudnessRefinement(a, 0.0, last_inside=True))[
+        1
+    ]
+    assert after[1] == pytest.approx(0.52, abs=1e-6) and inside[1] == pytest.approx(0.50, abs=0.011)
+    assert after[0] == inside[0]  # only the chunk's last word changes

@@ -95,6 +95,43 @@ On the path, blank frames drop from 65% to 49% and a token holds 1.9 frames inst
 ends with the shipped rule stay the same, since that rule mostly takes them from the next word's start and
 the audio. Ends taken straight from the last CTC frame (`spike`) improve from 115 to 101 ms, still far behind.
 
+## Starts on loudness dips, and the last word's end (added 2026-11-23)
+
+Most words run straight into the next one, and there a word's end is the next word's start, so its end
+error is that start's error. Better ends therefore need better starts. The CTC head gives nothing finer
+than its 80 ms frames: weighting a start by the token's probability on the neighbouring frames changed
+nothing on dev, because the frames around a spike carry almost no probability for the token. Those checks
+were not saved; what follows is the part that helped.
+
+Two refinements on the audio, both in `rumblex.aligner` and on by default when the audio is passed:
+
+- `dip_window`, `dip_smooth`: each start moves to the quietest 10 ms frame within `dip_window` of its CTC
+  start, on loudness smoothed over `dip_smooth` frames (`snap_to_dips`).
+- `last_inside`: the silence search for the last word of a chunk begins at the start of its last CTC frame
+  instead of after it, so that word can end inside the frame.
+
+Swept on `dev_clean` over windows {5, 10, 20, 30, 40, 50} ms, smoothing {1, 3, 5, 7, 9, 11, 15} frames and
+`last_inside` on or off, with the start shift recalibrated on dev for each (median signed start error), and
+chosen by start MAE + end MAE: 20 ms, 7 frames, `last_inside` on, start shift −4 ms. Reported once on
+`test_clean`. Same states as the blank penalty sweep; script `scripts/sweep_word_ends.py`, output
+[alignment_word_ends_sweep.json](alignment_word_ends_sweep.json).
+
+| dev_clean | start MAE | start median | end MAE | end median |
+|---|---|---|---|---|
+| previous default | 45.4 ms | 34 ms | 51.0 ms | 36 ms |
+| `last_inside` only | 45.4 ms | 34 ms | 49.3 ms | 34 ms |
+| dips only (20 ms, 7 frames) | 43.0 ms | 30 ms | 49.7 ms | 32 ms |
+| both (new default) | 43.0 ms | 30 ms | 48.0 ms | 32 ms |
+
+| test_clean | start MAE | start median | starts ≤ 50 ms | end MAE | end median | ends ≤ 50 ms | ends ≤ 100 ms |
+|---|---|---|---|---|---|---|---|
+| previous default | 52.2 ms | 36 ms | 64.6% | 57.2 ms | 38 ms | 60.3% | 84.5% |
+| new default | 49.5 ms | 32 ms | 69.0% | 53.7 ms | 34 ms | 65.2% | 85.6% |
+
+Scored through `Aligner.align_tokens` with default options, `test_clean` gives the same 49.5 / 53.7 ms. The
+gain is small next to the gap to a 20 ms aligner: these numbers are on CPU states, and the GPU comparison
+with WhisperX in the top-level README predates this change.
+
 ## Transcription quality on the same data
 
 | set | words | WER |
