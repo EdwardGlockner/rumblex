@@ -14,6 +14,8 @@ run() { local name=$1; shift; if "$@" > "logs/$name.log" 2>&1; then log "ok: $na
 command -v uv >/dev/null || { curl -LsSf https://astral.sh/uv/install.sh | sh; export PATH="$HOME/.local/bin:$PATH"; }
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee results/gpu.txt
 git rev-parse --short HEAD | tee results/commit.txt
+# some hosts list the GPU in nvidia-smi but fail CUDA init; stop before installing anything
+python3 -c "import torch; torch.zeros(1).cuda()" || { log "CUDA does not work on this host; stopping"; exit 1; }
 
 log "env"
 # an environment that is already there (a resumed session) is kept
