@@ -184,11 +184,11 @@ words, i.e. `rumblex.align` against WhisperX's aligner ([docs/fabench_eval.md](d
 | Buckeye test | rumblex | WhisperX |
 |---|---|---|
 | word start, mean absolute error | 42 ms | 58 ms |
-| word end, mean absolute error | 57 ms | 38 ms |
-| starts and ends within 20 ms (F1) | 0.33 | 0.28 |
+| word end, mean absolute error | 41 ms | 38 ms |
+| starts and ends within 20 ms (F1) | 0.36 | 0.28 |
 
-The picture is the same: better starts, worse ends. Aligners built on phone models do much better than
-either on this benchmark; see FA-Bench's leaderboard.
+Better starts, slightly worse ends. Aligners built on phone models do much better than either on this
+benchmark; see FA-Bench's leaderboard.
 
 ## How it works
 

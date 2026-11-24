@@ -5,7 +5,8 @@
 - `rumblex.align` / `--text`: word ends on text without punctuation are no longer early. The CTC path may
   hold a punctuation mark after a word that has none, as it does for the model's own text; the text is not
   changed. On LibriSpeech test_clean, end error on the unpunctuated reference transcript went from 67.0 to
-  51.4 ms, with starts unchanged (`docs/align_text_eval.md`, `scripts/sweep_text_punct.py`).
+  51.4 ms, with starts unchanged (`docs/align_text_eval.md`, `scripts/sweep_text_punct.py`). Against
+  Buckeye's human labels (FA-Bench, test split) it went from 56.5 to 41.1 ms (`docs/fabench_eval.md`).
   `optional_punct=False` or `AlignOptions(punct_penalty=...)` control it.
 
 ## 0.4.1 (2026-11-23)
