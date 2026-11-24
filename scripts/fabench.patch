@@ -1,0 +1,146 @@
+diff --git a/evals/aligners/rumblex/config.yaml b/evals/aligners/rumblex/config.yaml
+new file mode 100644
+index 0000000..3c521ff
+--- /dev/null
++++ b/evals/aligners/rumblex/config.yaml
+@@ -0,0 +1,18 @@
++# rumblex given the reference transcript (rumblex.align): Rumble-2-Flash's encoder and CTC head. Word tier
++# only. Point the three paths below at a rumblex checkout.
++name: rumblex
++adapter: rumblex
++enabled: true
++modes: [A]
++granularity: [word]
++emits_confidence: true
++params:
++  venv: /path/to/rumblex/.venv
++  worker: /path/to/rumblex/scripts/fabench_worker.py
++  model: Reson8/Rumble-2-Flash
++  device: cpu
++  timeout_s: null
++  env:
++    PYTHONPATH: /path/to/rumblex/src
++    OMP_NUM_THREADS: 4
++    MKL_NUM_THREADS: 4
+diff --git a/evals/aligners/whisperx/config.yaml b/evals/aligners/whisperx/config.yaml
+index f4ca19a..ad3ab29 100644
+--- a/evals/aligners/whisperx/config.yaml
++++ b/evals/aligners/whisperx/config.yaml
+@@ -17,4 +17,4 @@ emits_confidence: true
+ params:
+   venv: venv
+   model: WAV2VEC2_ASR_BASE_960H
+-  device: cuda
++  device: cpu
+diff --git a/evals/timestamp_asrs/rumblex_asr/config.yaml b/evals/timestamp_asrs/rumblex_asr/config.yaml
+new file mode 100644
+index 0000000..19d2e4f
+--- /dev/null
++++ b/evals/timestamp_asrs/rumblex_asr/config.yaml
+@@ -0,0 +1,17 @@
++# rumblex end to end (rumblex.transcribe): Rumble-2-Flash decodes, its CTC head times the words. Track 2.
++name: rumblex_asr
++adapter: rumblex_asr
++enabled: true
++modes: [A]
++granularity: [word]
++emits_confidence: false
++params:
++  venv: /path/to/rumblex/.venv
++  worker: /path/to/rumblex/scripts/fabench_worker.py
++  model: Reson8/Rumble-2-Flash
++  device: cpu
++  timeout_s: null
++  env:
++    PYTHONPATH: /path/to/rumblex/src
++    OMP_NUM_THREADS: 4
++    MKL_NUM_THREADS: 4
+diff --git a/fabench/aligners/__init__.py b/fabench/aligners/__init__.py
+index 87714d5..eb09e18 100644
+--- a/fabench/aligners/__init__.py
++++ b/fabench/aligners/__init__.py
+@@ -12,6 +12,10 @@ _REGISTRY = {
+     "torchaudio_fa": "fabench.aligners.torchaudio_fa:TorchaudioFA",
+     "charsiu": "fabench.aligners.charsiu:Charsiu",
+     "whisperx": "fabench.aligners.whisperx:WhisperX",
++    # rumblex: Rumble-2-Flash encoder + its CTC head, given the transcript.
++    "rumblex": "fabench.aligners.rumblex:Rumblex",
++    # The same package transcribing by itself (track 2).
++    "rumblex_asr": "fabench.timestamp_asrs.rumblex_asr:RumblexASR",
+     "mfa": "fabench.aligners.mfa:MFA",
+     "bfa": "fabench.aligners.bfa:BFA",
+     "maps": "fabench.aligners.maps:MAPS",
+diff --git a/fabench/aligners/rumblex/__init__.py b/fabench/aligners/rumblex/__init__.py
+new file mode 100644
+index 0000000..a2563b0
+--- /dev/null
++++ b/fabench/aligners/rumblex/__init__.py
+@@ -0,0 +1,3 @@
++from fabench.aligners.rumblex.adapter import Rumblex
++
++__all__ = ["Rumblex"]
+diff --git a/fabench/aligners/rumblex/adapter.py b/fabench/aligners/rumblex/adapter.py
+new file mode 100644
+index 0000000..9e09ca6
+--- /dev/null
++++ b/fabench/aligners/rumblex/adapter.py
+@@ -0,0 +1,16 @@
++"""rumblex forced alignment: the Rumble-2-Flash encoder and its CTC head place the words of a given
++transcript (`rumblex.align`). Word tier only. Runs in its own interpreter."""
++from __future__ import annotations
++
++from fabench.aligners.subprocess_aligner import SubprocessAligner
++
++
++class Rumblex(SubprocessAligner):
++    name = "rumblex"
++    source = "orthographic"
++    granularity = ("word",)
++    default_model = "Reson8/Rumble-2-Flash"
++
++    def _extra_argv(self) -> list[str]:
++        """worker.py <jobs> <model> <device> <task>."""
++        return [str(self.params.get("device", "cuda")), "align"]
+diff --git a/fabench/aligners/subprocess_aligner.py b/fabench/aligners/subprocess_aligner.py
+index ea125fa..ce156ef 100644
+--- a/fabench/aligners/subprocess_aligner.py
++++ b/fabench/aligners/subprocess_aligner.py
+@@ -78,6 +78,10 @@ class SubprocessAligner(AlignerAdapter):
+                 f"download_and_install.sh."
+             )
+         self.python = Path(venv) / "bin" / "python"
++        if not self.python.exists():  # a venv made on Windows
++            win = Path(venv) / "Scripts" / "python.exe"
++            if win.exists():
++                self.python = win
+         # Find the worker by SEARCHING UP from the venv, not at a fixed depth.
+         # Venvs sit at different depths per tool -- `<tool>/venv` for qwen3_fa
+         # and crisperwhisper, `<tool>/repo/env` for charsiu and bfa -- so
+diff --git a/fabench/timestamp_asrs/rumblex_asr/__init__.py b/fabench/timestamp_asrs/rumblex_asr/__init__.py
+new file mode 100644
+index 0000000..2263276
+--- /dev/null
++++ b/fabench/timestamp_asrs/rumblex_asr/__init__.py
+@@ -0,0 +1,3 @@
++from fabench.timestamp_asrs.rumblex_asr.adapter import RumblexASR
++
++__all__ = ["RumblexASR"]
+diff --git a/fabench/timestamp_asrs/rumblex_asr/adapter.py b/fabench/timestamp_asrs/rumblex_asr/adapter.py
+new file mode 100644
+index 0000000..d3176df
+--- /dev/null
++++ b/fabench/timestamp_asrs/rumblex_asr/adapter.py
+@@ -0,0 +1,13 @@
++"""rumblex end to end: Rumble-2-Flash decodes, its own CTC head times the words (`rumblex.transcribe`).
++Track 2, no transcript given. The track 1 row `rumblex` is the same package given the reference words."""
++from __future__ import annotations
++
++from fabench.timestamp_asrs.subprocess_asr import SubprocessTimestampASR
++
++
++class RumblexASR(SubprocessTimestampASR):
++    default_model = "Reson8/Rumble-2-Flash"
++    frame_s = 1 / 13
++
++    def _extra_argv(self) -> list[str]:
++        return [str(self.params.get("device", "cuda")), "transcribe"]
