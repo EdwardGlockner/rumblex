@@ -375,3 +375,64 @@ def test_last_word_may_end_inside_its_last_frame():
     ]
     assert after[1] == pytest.approx(0.52, abs=1e-6) and inside[1] == pytest.approx(0.50, abs=0.011)
     assert after[0] == inside[0]  # only the chunk's last word changes
+
+
+@pytest.mark.parametrize("seed", range(20))
+def test_viterbi_optional_tokens_match_best_subset(seed):
+    # the best path with optional tokens scores like the best of the paths with each subset of them left out
+    rng = np.random.default_rng(seed)
+    T, L = int(rng.integers(3, 9)), int(rng.integers(1, 5))
+    ids = [int(x) for x in rng.integers(0, 2, L)]
+    opt = [False] * L
+    for k in range(L):
+        if rng.random() < 0.4 and not (k and opt[k - 1]):
+            opt[k], ids[k] = True, 5 + k  # optional tokens differ from every other token
+    base = rng.normal(size=(T, 10))
+    em = np.column_stack([base[:, 9], base[:, ids]])
+    best = -np.inf
+    for mask in range(2**L):
+        keep = [k for k in range(L) if not (opt[k] and mask >> k & 1)]
+        kept = [ids[k] for k in keep]
+        sub = em[:, [0, *(k + 1 for k in keep)]]
+        best = max(best, ctc_score(sub, len(keep), _same(kept)))
+    kept = [i for i, o in zip(ids, opt) if not o]
+    same, it = [], iter(_same(kept))
+    for o in opt:
+        same.append(False if o else next(it))
+    path = ctc_viterbi(em, L, same, opt)
+    if path is None:
+        assert best == -np.inf
+        return
+    cols = np.where(path % 2, path // 2 + 1, 0)
+    assert em[np.arange(T), cols].sum() == pytest.approx(best)
+
+
+def test_optional_punctuation_extends_the_word_before_it():
+    class Tok(FakeTokenizer):
+        def convert_tokens_to_ids(self, tokens):
+            return [{".": 9}.get(t) for t in tokens]
+
+    class Head:  # "The" at frame 1, a full stop at frame 2 (when asked for), "cat" at frame 6
+        def emissions(self, states, classes):
+            em = np.full((10, len(classes)), np.log(0.001))
+            em[:, 0] = np.log(0.98)
+            for frame, cls in ((1, 7), (2, 9), (6, 8)):
+                if cls in classes:
+                    em[frame, classes.index(cls)], em[frame, 0] = np.log(0.98), np.log(0.01)
+            return em
+
+    def run(penalty, optional):
+        opts = AlignOptions(end_rule="spike", start_shift=0.0, blank_penalty=0.0, punct_penalty=penalty)
+        return Aligner(Head(), Tok(), opts).align_tokens(
+            [7, 8], torch.zeros(10, 4), 0.0, optional_punct=optional
+        )
+
+    off, on, costly = run(0.0, False), run(0.0, True), run(20.0, True)
+    assert [w.word for w in on] == ["The", "cat"]  # the text is not changed
+    assert off[0].end == pytest.approx(0.12) and on[0].end == pytest.approx(0.20)
+    assert [w.start for w in on] == [w.start for w in off] and on[1].end == off[1].end
+    assert [w.score for w in on] == [w.score for w in off]
+    assert [(w.start, w.end) for w in costly] == [(w.start, w.end) for w in off]
+    # a word that already ends in punctuation gets no optional mark
+    al = Aligner(Head(), Tok())
+    assert al._punct_slots([7, 8, 9, 10], al.tokenizer.convert_ids_to_tokens([7, 8, 9, 10])) == [0, 3]

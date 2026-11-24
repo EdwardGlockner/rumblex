@@ -257,7 +257,7 @@ def test_text_option_aligns_instead_of_transcribing(tmp_path):
             return [np.zeros((26, 4), np.float32) for _ in chunks]
 
     class TextAligner:
-        def align(self, result, audio=None):
+        def align(self, result, audio=None, **kw):
             it = result.metadata["chunk_transcripts"][0]
             words = [WordSegment(w, 0.1 * i, 0.1 * i + 0.1, 1.0) for i, w in enumerate(it.text.split())]
             result.segments = [Segment(0.0, 1.0, it.text, words)]

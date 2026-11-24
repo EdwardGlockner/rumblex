@@ -23,7 +23,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 |---|---|---|
 | [model_inspection.md](model_inspection.md) | What is in the Rumble-2-Flash checkpoint: CTC head, frame rate, options, tokenizer, single-clip timings | `scripts/inspect_rumble_ctc.py` |
 | [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement, blank penalty and loudness-dip starts were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py`, `scripts/sweep_word_ends.py` |
-| [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file | `scripts/eval_align_text.py` |
+| [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file; optional punctuation for text without it | `scripts/eval_align_text.py`, `scripts/sweep_text_punct.py` |
 | [fabench_eval.md](fabench_eval.md) | Word timing accuracy of `rumblex.align` and WhisperX against Buckeye's human word labels, scored by FA-Bench | `scripts/fabench_worker.py`, `scripts/fabench.patch` |
 | [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
@@ -43,6 +43,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
 | `confidence_eval.json` | Raw output behind `confidence_eval.md`, with calibration bins for every score | `scripts/eval_confidence.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |
+| `text_punct_sweep.json` | Raw output of the optional punctuation sweep in `align_text_eval.md` | `scripts/sweep_text_punct.py` |
 | `fabench_eval.csv` | The leaderboard rows FA-Bench wrote for `fabench_eval.md` | `scripts/fabench_worker.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
 | `alignment_word_ends_sweep.json` | Raw output of the loudness-dip start and last-word end sweep in `alignment_eval.md` | `scripts/sweep_word_ends.py` |

@@ -15,6 +15,7 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `collect_alignment_states.py` | Transcribes LibriSpeech dev/test (and FLEURS Dutch) and saves encoder states, so alignment variants can be scored on CPU | input for the next two |
 | `eval_alignment.py` | Scores frame grids, end rules and start shift on the saved states; dev chooses, test reports. Writes `eval_alignment.json` into the `--states` folder | `docs/alignment_eval.md`, `docs/alignment_eval.json` |
 | `sweep_energy.py` | Sweeps the loudness refinement of word ends and starts on the saved states | `docs/alignment_energy_sweep.json` |
+| `sweep_text_punct.py` | Sweeps the penalty on optional punctuation when aligning a given transcript, on the saved states | `docs/text_punct_sweep.json` |
 | `sweep_smoothing.py` | Sweeps logit temperature and a blank penalty before Viterbi on the saved states | `docs/alignment_smoothing_sweep.json` |
 | `collect_confidence_states.py` | Transcribes AMI and Earnings-22 and saves encoder states, token ids and decoder token log-probs, so word scores can be compared on CPU | input for the next one |
 | `eval_confidence.py` | Labels transcribed words right or wrong against the reference and scores CTC and decoder word scores: AUC, dev-chosen thresholds, calibration (CPU only) | `docs/confidence_eval.md`, `docs/confidence_eval.json` |

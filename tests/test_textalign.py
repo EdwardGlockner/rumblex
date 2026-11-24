@@ -101,6 +101,9 @@ class WordTokenizer:
     def decode(self, ids, **kw):
         return "".join(" " + self.words[i] for i in ids)
 
+    def convert_tokens_to_ids(self, tokens):  # no punctuation tokens in this vocabulary
+        return [None] * len(tokens)
+
 
 class SpikeHead:
     """Emissions: target k spikes at frame 3k + 1. Greedy: the words this chunk was built with."""

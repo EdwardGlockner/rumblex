@@ -73,7 +73,7 @@ def align(
 ) -> TranscriptResult:
     """Word timestamps for a transcript you already have, without transcribing: the audio is encoded and
     `text` is force-aligned to it with the CTC head. Works on long files; the text doesn't need line breaks
-    or timings. kwargs: language (recorded only), max_chunk_s, chunks, progress.
+    or timings. kwargs: language (recorded only), max_chunk_s, chunks, progress, optional_punct.
 
     Words the audio doesn't contain still get times, squeezed in where the text puts them, so the text should
     match the audio. Without `model`, a new model is loaded on every call."""

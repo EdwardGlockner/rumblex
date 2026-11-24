@@ -118,10 +118,12 @@ def align_text(
     max_chunk_s: float = 20.0,
     language: str | None = None,
     progress: Callable[[int, int], None] | None = None,
+    optional_punct: bool = True,
 ) -> TranscriptResult:
     """Align `text` to 16 kHz `wav`. `model` is a RumbleTranscriber (or VLLMTranscriber; only its encoder
     is used) and `aligner` an `Aligner`. Returns segments with word timestamps, as `transcribe` does.
-    `language` is only recorded in the result."""
+    `language` is only recorded in the result. With `optional_punct`, a word without punctuation may be
+    aligned as if a punctuation mark followed it (the text itself is not changed)."""
     words = text.split()
     if chunks is None:
         chunks = speech_chunks(wav, max_chunk_s, model.device)
@@ -159,7 +161,7 @@ def align_text(
             "chunk_transcripts": items,
         },
     )
-    aligner.align(result, wav)
+    aligner.align(result, wav, optional_punct=optional_punct)
     result.metadata.pop("chunk_transcripts", None)
     return result
 

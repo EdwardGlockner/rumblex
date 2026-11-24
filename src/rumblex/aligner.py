@@ -118,47 +118,68 @@ class CTCHead:
         return [t for k, t in enumerate(ids) if t != BLANK and (k == 0 or t != ids[k - 1])]
 
 
-def _viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]):
+def _viterbi(
+    em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool], optional: Sequence[bool] | None = None
+):
     """Viterbi over the 2n+1 extended CTC states: (best final state, its log-prob, back pointers), or None
-    if the tokens can't fit in the frames. See `ctc_viterbi`."""
+    if the tokens can't fit in the frames. A back pointer is how many states the path jumped. See
+    `ctc_viterbi`."""
     T, L = em.shape[0], n_tokens
     S = 2 * L + 1
-    if T == 0 or L + sum(same_as_prev) > T:
+    opt = np.zeros(L, dtype=bool) if optional is None else np.asarray(optional, dtype=bool)
+    same = np.asarray(same_as_prev, dtype=bool)
+    if T == 0 or L - int(opt.sum()) + int(same.sum()) > T:
         return None
     cols = np.zeros(S, dtype=np.int64)
     cols[1::2] = np.arange(1, L + 1)
     e = em[:, cols]  # [T, S]
-    skip_ok = np.zeros(S, dtype=bool)  # may jump s-2 -> s: token states whose token differs from the previous
-    skip_ok[3::2] = ~np.asarray(same_as_prev[1:], dtype=bool) if L > 1 else []
+    # Jumps into token k's state s = 2k+1. From s-2 (token k-1) when the two differ; an optional token
+    # differs from its neighbours. Past an optional token k-1: from s-3 (the blank before it) and from s-4
+    # (token k-2, when it differs from token k).
+    after_opt = np.concatenate(([False], opt[:-1]))
+    jump = np.zeros((5, S), dtype=bool)
+    jump[:2] = True
+    jump[2, 3::2] = (~same | opt | after_opt)[1:]
+    jump[3, 1::2] = after_opt
+    jump[4, 5::2] = (after_opt & ~same)[2:]
     neg = -np.inf
     dp = np.full(S, neg)
     dp[0] = e[0, 0]
     if S > 1:
         dp[1] = e[0, 1]
+    if L > 1 and opt[0]:
+        dp[3] = e[0, 3]
     back = np.zeros((T, S), dtype=np.int8)
+    n_jumps = 5 if opt.any() else 3
     for t in range(1, T):
-        stay = dp
-        step = np.concatenate(([neg], dp[:-1]))
-        skip = np.where(skip_ok, np.concatenate(([neg, neg], dp[:-2])), neg)
-        cand = np.stack([stay, step, skip])
+        cand = np.full((n_jumps, S), neg)
+        cand[0] = dp
+        for j in range(1, n_jumps):
+            cand[j, j:] = np.where(jump[j, j:], dp[:-j], neg)
         arg = cand.argmax(0)
         dp = cand[arg, np.arange(S)] + e[t]
         back[t] = arg
-    s = S - 1 if S == 1 or dp[S - 1] >= dp[S - 2] else S - 2
+    # ends on the last token or the blank after it; if that token is optional, also one token earlier
+    finals = [s for s in ((S - 1, S - 2, S - 3, S - 4) if L and opt[-1] else (S - 1, S - 2)) if s >= 0]
+    s = max(finals, key=lambda s: dp[s])
     if not np.isfinite(dp[s]):
         return None
     return s, float(dp[s]), back
 
 
-def ctc_viterbi(em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool]) -> np.ndarray | None:
+def ctc_viterbi(
+    em: np.ndarray, n_tokens: int, same_as_prev: Sequence[bool], optional: Sequence[bool] | None = None
+) -> np.ndarray | None:
     """CTC forced alignment, vectorised over states.
 
     `em`: [T, 1 + n_tokens] log-probs, column 0 = blank, column k+1 = target token k.
-    `same_as_prev[k]`: token k equals token k-1 (then a blank must separate them).
+    `same_as_prev[k]`: token k equals the token before it (then a blank must separate them). When that
+    token is optional, compare with the one before the optional token.
+    `optional[k]`: token k may be left out of the path. Two optional tokens must not follow each other.
     Returns the state path [T] over the 2n+1 extended states (even = blank, 2k+1 = token k),
     or None if the tokens can't fit in T frames.
     """
-    best = _viterbi(em, n_tokens, same_as_prev)
+    best = _viterbi(em, n_tokens, same_as_prev, optional)
     if best is None:
         return None
     s, _, back = best
@@ -192,6 +213,7 @@ def token_spans(path: np.ndarray, n_tokens: int) -> list[tuple[int, int]]:
 
 
 _HAS_ALNUM = re.compile(r"\w")
+_ENDS_ALNUM = re.compile(r"\w$")
 
 
 @dataclass
@@ -480,6 +502,13 @@ class AlignOptions:
     dip_smooth: int = 7
     last_inside: bool = True
     dip_start_shift: float = -0.004
+    # For text given without punctuation (`rumblex.align`): the path may hold one of PUNCTUATION after a
+    # word, as it does when the model's own punctuated text is aligned. Subtracted from that token's
+    # log-prob, as blank_penalty is from the blank's.
+    punct_penalty: float = 2.5  # chosen on dev_clean, see docs/align_text_eval.md
+
+
+PUNCTUATION = (",", ".", "?", "!")
 
 
 class Aligner:
@@ -487,6 +516,7 @@ class Aligner:
         self.head = head
         self.tokenizer = tokenizer
         self.opts = opts or AlignOptions()
+        self._punct_ids: list[int] | None = None
         if self.opts.end_rule not in END_RULES:
             raise ValueError(f"end_rule must be one of {list(END_RULES)}")
 
@@ -505,30 +535,59 @@ class Aligner:
         regions: Sequence[tuple[float, float]] = (),
         audio: np.ndarray | None = None,
         token_logprobs: Sequence[float] | None = None,
+        optional_punct: bool = False,
     ) -> list[WordSegment] | None:
         """Word timings (global seconds) for one chunk's tokens, or None if CTC alignment fails.
         `regions` are the chunk's speech regions in global seconds. With the decoder's `token_logprobs`
-        (one per token) words also get a `probability`."""
+        (one per token) words also get a `probability`. `optional_punct` lets the path put a punctuation
+        mark after words that have none (for text that was given without punctuation)."""
         token_ids = list(token_ids)
         if token_logprobs is not None and len(token_logprobs) != len(token_ids):
             raise ValueError("token_logprobs must have one value per token")
         if not token_ids or states is None:
             return None
-        em = self.head.emissions(states, [BLANK, *token_ids])
+        n = len(token_ids)
+        tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+        slots = self._punct_slots(token_ids, tokens) if optional_punct else []
+        em = self.head.emissions(states, [BLANK, *token_ids, *(self._punctuation() if slots else [])])
         same = [False] + [a == b for a, b in pairwise(token_ids)]
         o = self.opts
+        punct = em[:, n + 1 :].max(axis=1) - o.punct_penalty if slots else None
+        em = em[:, : n + 1]
         vit = em
         if o.blank_penalty:
             vit = em.copy()
             vit[:, 0] -= o.blank_penalty
-        path = ctc_viterbi(vit, len(token_ids), same)
-        if path is None:
-            return None
-        spans = token_spans(path, len(token_ids))
+        if punct is None:
+            path = ctc_viterbi(vit, n, same)
+            if path is None:
+                return None
+            spans = token_spans(path, n)
+        else:
+            # extended sequence: every token, with an optional punctuation token after each slot
+            after, cols, opt, same_x, at = set(slots), [0], [], [], []
+            for k in range(n):
+                at.append(len(opt))
+                cols.append(k + 1)
+                opt.append(False)
+                same_x.append(same[k])
+                if k in after:
+                    cols.append(n + 1)
+                    opt.append(True)
+                    same_x.append(False)
+            path = ctc_viterbi(np.column_stack([vit, punct])[:, cols], len(opt), same_x, opt)
+            if path is None:
+                return None
+            spans_x = token_spans(path, len(opt))
+            spans = [spans_x[i] for i in at]
         # a token's highest CTC probability on its frames; a word scores its weakest token
         # (best of the CTC-only word scores in docs/confidence_eval.md)
         probs = [float(np.exp(em[a : b + 1, k + 1]).max()) for k, (a, b) in enumerate(spans)]
-        tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+        if punct is not None:  # a word runs to the end of the punctuation the path put after it
+            for k in slots:
+                last = spans_x[at[k] + 1][1]
+                if last >= 0:
+                    spans[k] = (spans[k][0], last)
         words = group_words(token_ids, spans, probs, tokens, self._decode, token_logprobs)
         if not words:
             return None
@@ -553,10 +612,13 @@ class Aligner:
             for w, s, e in zip(words, starts, ends)
         ]
 
-    def align(self, result: TranscriptResult, audio: np.ndarray | None = None) -> TranscriptResult:
+    def align(
+        self, result: TranscriptResult, audio: np.ndarray | None = None, optional_punct: bool = False
+    ) -> TranscriptResult:
         """Fill in words for a result from `RumbleTranscriber.transcribe` (needs keep_encoder_states=True).
         Pass the 16 kHz `audio` that was transcribed to enable the loudness refinement of word ends.
-        Segments are re-cut at sentence ends when `split_sentences` is on."""
+        Segments are re-cut at sentence ends when `split_sentences` is on. `optional_punct`: see
+        `align_tokens`."""
         items = result.metadata.get("chunk_transcripts")
         if items is None:
             raise ValueError("result has no chunk_transcripts; transcribe with keep_encoder_states=True")
@@ -574,8 +636,9 @@ class Aligner:
             ]
             chunk_audio = None if audio is None else it.chunk.slice(audio)
             words = self.align_tokens(
-                it.token_ids, it.encoder_states, it.chunk.start_s, regions, chunk_audio, it.token_logprobs
-            )
+                it.token_ids, it.encoder_states, it.chunk.start_s, regions, chunk_audio, it.token_logprobs,
+                optional_punct,
+            )  # fmt: skip
             if words is None:
                 n_fallback += 1
                 words = proportional_words(it.text, regions)
@@ -592,6 +655,25 @@ class Aligner:
 
     def _decode(self, ids: list[int]) -> str:
         return self.tokenizer.decode(ids, clean_up_tokenization_spaces=False)
+
+    def _punctuation(self) -> list[int]:
+        if self._punct_ids is None:
+            ids = self.tokenizer.convert_tokens_to_ids(list(PUNCTUATION))
+            self._punct_ids = [i for i in ids if i is not None and 0 <= i < BLANK]
+        return self._punct_ids
+
+    def _punct_slots(self, token_ids: Sequence[int], tokens: Sequence[str]) -> list[int]:
+        """Indices of the tokens that end a word whose text ends in a letter or digit."""
+        if not self._punctuation():
+            return []
+        slots, first = [], 0
+        for k in range(len(tokens)):
+            if k + 1 < len(tokens) and not tokens[k + 1].startswith("Ġ"):
+                continue
+            if _ENDS_ALNUM.search(self._decode(list(token_ids[first : k + 1])).strip()):
+                slots.append(k)
+            first = k + 1
+        return slots
 
 
 def clamp_to_chunk(words: list[WordSegment], start: float, end: float) -> None:
