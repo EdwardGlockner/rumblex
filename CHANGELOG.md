@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 (2026-11-24)
 
 - `rumblex.align` / `--text`: word ends on text without punctuation are no longer early. The CTC path may
   hold a punctuation mark after a word that has none, as it does for the model's own text; the text is not
@@ -8,6 +8,9 @@
   51.4 ms, with starts unchanged (`docs/align_text_eval.md`, `scripts/sweep_text_punct.py`). Against
   Buckeye's human labels (FA-Bench, test split) it went from 56.5 to 41.1 ms (`docs/fabench_eval.md`).
   `optional_punct=False` or `AlignOptions(punct_penalty=...)` control it.
+- Docs: giving the model the previous chunk's text as `prompt` was tried on TED-LIUM long-form and made
+  WER worse (2.55% to 5.31% on the dev split), so chunks are still decoded without context
+  (`docs/chunk_context_eval.md`, `scripts/eval_chunk_context.py`).
 
 ## 0.4.1 (2026-11-23)
 

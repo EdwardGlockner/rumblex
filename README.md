@@ -204,7 +204,9 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 ## Limitations
 
 - Timing resolution is limited to 13 frames/s; word ends are less precise than WhisperX's.
-- Chunks are decoded independently, so a sentence crossing a chunk boundary can be broken there.
+- Chunks are decoded independently, so a sentence crossing a chunk boundary can be broken there. Passing
+  the previous chunk's text as context made transcripts worse
+  ([docs/chunk_context_eval.md](docs/chunk_context_eval.md)).
 - Words split at spaces, so Chinese and Japanese get one "word" per chunk.
 - WhisperX large-v3 had lower WER on clean English and on FLEURS in most languages measured (13 so far,
   all read speech except the English meeting and call sets).
