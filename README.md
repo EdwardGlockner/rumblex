@@ -177,6 +177,19 @@ pulls each word end back to where the audio goes quiet and moves each start to t
 and it penalises the blank before Viterbi. Together these took starts from 58 to 51 ms and ends from 57 to
 55 ms since 0.1.0.
 
+Against human labels: the Buckeye corpus of spontaneous speech, test split of
+[FA-Bench](https://github.com/olewave/fa-bench) (4,513 utterances), with both tools given the reference
+words, i.e. `rumblex.align` against WhisperX's aligner ([docs/fabench_eval.md](docs/fabench_eval.md)).
+
+| Buckeye test | rumblex | WhisperX |
+|---|---|---|
+| word start, mean absolute error | 42 ms | 58 ms |
+| word end, mean absolute error | 57 ms | 38 ms |
+| starts and ends within 20 ms (F1) | 0.33 | 0.28 |
+
+The picture is the same: better starts, worse ends. Aligners built on phone models do much better than
+either on this benchmark; see FA-Bench's leaderboard.
+
 ## How it works
 
 1. ffmpeg decodes to 16 kHz mono.
