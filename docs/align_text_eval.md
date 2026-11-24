@@ -3,10 +3,11 @@
 How accurate the word times from `rumblex.align` (CLI: `--text`) are. It takes a transcript you already
 have, runs only the encoder and the CTC head, and gives every word of that text a time.
 
-Measured 2026-11-23 on CPU, float32, with `scripts/eval_align_text.py`; the raw output is
-[align_text_eval.json](align_text_eval.json). Run again the same day after starts were moved to loudness
-dips ([alignment_eval.md](alignment_eval.md)); the numbers here are from that second run. The JSON doesn't
-record the commit; it is the commit that last changed this file.
+Measured 2026-11-24 on CPU, float32, with `scripts/eval_align_text.py`; the raw output is
+[align_text_eval.json](align_text_eval.json). This is the run after optional punctuation was added
+([below](#optional-punctuation)); the numbers of the run before it, from 2026-11-23, are kept in
+[Before optional punctuation](#before-optional-punctuation). The JSON doesn't record the commit; it is the
+commit that last changed this file.
 
 ## Setup
 
@@ -30,33 +31,32 @@ scored, and one utterance (`61-70970-0004`) where MFA splits a word in two is al
 
 ## Results
 
-These numbers are from 0.4.1, before optional punctuation (below) was added, and have not been run again
-since.
-
 | | words | start MAE | start median | starts ≤ 50 ms | starts ≤ 100 ms | end MAE | end median | ends ≤ 100 ms | gross |
 |---|---|---|---|---|---|---|---|---|---|
-| align, per utterance | 4,043 | 49.5 ms | 34 ms | 67.3% | 87.7% | 67.3 ms | 36 ms | 80.9% | 0 |
-| align, long file | 4,043 | 50.2 ms | 31 ms | 67.8% | 87.2% | 64.5 ms | 36 ms | 81.8% | 1 |
+| align, per utterance | 4,043 | 49.5 ms | 34 ms | 67.4% | 87.7% | 51.9 ms | 34 ms | 86.9% | 0 |
+| align, long file | 4,043 | 50.2 ms | 31 ms | 67.9% | 87.2% | 54.4 ms | 34 ms | 85.8% | 1 |
 | transcribe + align | 3,945 | 50.6 ms | 34 ms | 67.3% | 87.6% | 54.6 ms | 34 ms | 85.4% | 0 |
-| align, same 3,945 words | 3,945 | 49.5 ms | 34 ms | 67.2% | 87.5% | 67.2 ms | 36 ms | 80.9% | 0 |
+| align, same 3,945 words | 3,945 | 49.5 ms | 34 ms | 67.2% | 87.5% | 51.7 ms | 34 ms | 87.0% | 0 |
 
-Starts are as good as with transcribe + align. Ends are about 13 ms worse on average: the mean signed
-end error is −21.9 ms against +3.6 ms for transcribe + align on the same words, so ends come out early.
+Starts and ends are both as good as with transcribe + align. On the words both of them time, the mean
+signed end error is +4.5 ms for align and +3.6 ms for transcribe + align.
 
-The cause is the missing punctuation. The model writes punctuation, and in the CTC path a punctuation
-mark sits right after the word it follows. Without those tokens, the word before them ends sooner. In a quick check (not saved here), aligning the model's own
-transcript with its punctuation gave the same times as transcribe + align, and the same transcript with
-punctuation removed gave early ends; casing made no difference.
+The one gross word in the long file is "whenever" (`3570-5694-0021`), placed 1.44 s early. Its onset was
+clipped by the VAD, so the aligner had no audio for it where it was said.
 
 ## Optional punctuation
 
-Since then the aligner lets the CTC path hold a punctuation mark (`,` `.` `?` `!`, whichever is most
-likely on a frame) after any word of the given text that doesn't end in one. The mark is optional, so the
-path only takes it where the head puts one, and it only changes times: the word runs to the end of the
-mark, and the text that comes back is the text that was given. `punct_penalty` is subtracted from the
-mark's log-prob, as `blank_penalty` is from the blank's.
+The model writes punctuation, and in the CTC path a punctuation mark sits right after the word it
+follows. Text given without punctuation has no such token, and the word before it then ends sooner (see
+the numbers of the earlier run below).
 
-Measured 2026-11-24 on CPU with `scripts/sweep_text_punct.py`; raw output in
+So the aligner lets the CTC path hold a punctuation mark (`,` `.` `?` `!`, whichever is most likely on a
+frame) after any word of the given text that doesn't end in one. The mark is optional, so the path only
+takes it where the head puts one, and it only changes times: the word runs to the end of the mark, and
+the text that comes back is the text that was given. `punct_penalty` is subtracted from the mark's
+log-prob, as `blank_penalty` is from the blank's.
+
+The penalty was chosen on 2026-11-24 on CPU with `scripts/sweep_text_punct.py`; raw output in
 [text_punct_sweep.json](text_punct_sweep.json). It uses the VAD chunks and encoder states saved by
 `scripts/collect_alignment_states.py` (GTX 1060, float32), the same ones behind
 [alignment_eval.md](alignment_eval.md), so the utterances are cut by the VAD here and the numbers are
@@ -86,15 +86,27 @@ other. LibriSpeech `test_clean`, 200 utterances, scored once with that setting:
 | given, no optional punctuation | 4,076 | 49.9 ms | 67.0 ms | 36 ms | −21.3 ms | 80.9% |
 | given, penalty 2.5 | 4,076 | 49.9 ms | 51.4 ms | 34 ms | +4.7 ms | 87.3% |
 
-Word ends on text without punctuation are now as accurate as with the model's own punctuated text, and
-starts are unchanged. `rumblex.align(..., optional_punct=False)` gives the old times. Not measured: text
-that has some punctuation but not all of it, and languages other than English.
+`rumblex.align(..., optional_punct=False)` gives the old times. Not measured: text that has some
+punctuation but not all of it, and languages other than English.
 
-The one gross word in the long file is "whenever" (`3570-5694-0021`), placed 1.32 s early. Its onset was
-clipped by the VAD, so the aligner had no audio for it where it was said.
+## Before optional punctuation
+
+The same evaluation as in [Results](#results), run on 2026-11-23 with 0.4.1:
+
+| | words | start MAE | start median | starts ≤ 50 ms | starts ≤ 100 ms | end MAE | end median | ends ≤ 100 ms | gross |
+|---|---|---|---|---|---|---|---|---|---|
+| align, per utterance | 4,043 | 49.5 ms | 34 ms | 67.3% | 87.7% | 67.3 ms | 36 ms | 80.9% | 0 |
+| align, long file | 4,043 | 50.2 ms | 31 ms | 67.8% | 87.2% | 64.5 ms | 36 ms | 81.8% | 1 |
+| transcribe + align | 3,945 | 50.6 ms | 34 ms | 67.3% | 87.6% | 54.6 ms | 34 ms | 85.4% | 0 |
+| align, same 3,945 words | 3,945 | 49.5 ms | 34 ms | 67.2% | 87.5% | 67.2 ms | 36 ms | 80.9% | 0 |
+
+Ends were about 13 ms worse than with transcribe + align: the mean signed end error was −21.9 ms against
++3.6 ms on the same words, so ends came out early. In a quick check at the time (not saved), aligning the
+model's own transcript with its punctuation gave the same times as transcribe + align, and the same
+transcript with punctuation removed gave early ends; casing made no difference.
 
 ## Time
 
-On the CPU used here, aligning the 200 utterances one by one took 318.9 s against 1,102.2 s for
-transcribing and aligning them, and the 28.6 min long file took 365.8 s. This is one run on a machine
+On the CPU used here, aligning the 200 utterances one by one took 293.9 s against 1,001.4 s for
+transcribing and aligning them, and the 28.6 min long file took 396.0 s. This is one run on a machine
 that wasn't kept idle, so take these as rough.

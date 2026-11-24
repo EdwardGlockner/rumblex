@@ -11,14 +11,14 @@
   "start_mae_ms": 49.5,
   "start_median_ae_ms": 34.0,
   "start_mean_signed_ms": 22.1,
-  "starts_within_50ms": 0.673,
+  "starts_within_50ms": 0.6735,
   "starts_within_100ms": 0.8766,
-  "end_mae_ms": 67.3,
-  "end_median_ae_ms": 36.0,
-  "end_mean_signed_ms": -21.8,
-  "ends_within_100ms": 0.8086,
+  "end_mae_ms": 51.9,
+  "end_median_ae_ms": 34.0,
+  "end_mean_signed_ms": 4.9,
+  "ends_within_100ms": 0.8694,
   "gross_over_1s": 0,
-  "seconds": 318.9
+  "seconds": 293.9
  },
  "transcribe_align": {
   "words": 3945,
@@ -32,7 +32,7 @@
   "end_mean_signed_ms": 3.6,
   "ends_within_100ms": 0.854,
   "gross_over_1s": 0,
-  "seconds": 1102.2
+  "seconds": 1001.4
  },
  "same_words": {
   "align": {
@@ -40,12 +40,12 @@
    "start_mae_ms": 49.5,
    "start_median_ae_ms": 34.0,
    "start_mean_signed_ms": 21.9,
-   "starts_within_50ms": 0.6717,
+   "starts_within_50ms": 0.6722,
    "starts_within_100ms": 0.8753,
-   "end_mae_ms": 67.2,
-   "end_median_ae_ms": 36.0,
-   "end_mean_signed_ms": -21.9,
-   "ends_within_100ms": 0.8091,
+   "end_mae_ms": 51.7,
+   "end_median_ae_ms": 34.0,
+   "end_mean_signed_ms": 4.5,
+   "ends_within_100ms": 0.8702,
    "gross_over_1s": 0
   },
   "transcribe_align": {
@@ -67,23 +67,23 @@
   "start_mae_ms": 50.2,
   "start_median_ae_ms": 31.1,
   "start_mean_signed_ms": 23.8,
-  "starts_within_50ms": 0.678,
-  "starts_within_100ms": 0.8721,
-  "end_mae_ms": 64.5,
-  "end_median_ae_ms": 36.1,
-  "end_mean_signed_ms": -16.7,
-  "ends_within_100ms": 0.8177,
+  "starts_within_50ms": 0.6787,
+  "starts_within_100ms": 0.8724,
+  "end_mae_ms": 54.4,
+  "end_median_ae_ms": 34.1,
+  "end_mean_signed_ms": 6.9,
+  "ends_within_100ms": 0.858,
   "gross_over_1s": 1,
   "audio_seconds": 1714.8,
   "chunks": 102,
   "fallback_chunks": 0,
-  "seconds": 365.8,
+  "seconds": 396.0,
   "gross_words": [
    {
     "utterance": "3570-5694-0021",
     "word": "whenever",
     "ref_start": 537.24,
-    "start": 535.92
+    "start": 535.8
    }
   ]
  }
