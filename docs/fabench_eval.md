@@ -11,7 +11,7 @@ Measured 2026-11-24 on CPU (Intel i5-6600K, 4 threads, float32), FA-Bench at com
 The rows FA-Bench wrote are in [fabench_eval.csv](fabench_eval.csv).
 
 This is FA-Bench's track 1: both tools are handed the reference words and only have to place them.
-Transcribing from audio alone (track 2) has not been run yet.
+Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2-not-run) below.
 
 ## Setup
 
@@ -72,6 +72,46 @@ on the same data, not re-run here: nyra-FA 0.731 / 20.2 ms, Montreal Forced Alig
 MMS-FA 0.344 / 37.1 ms. rumblex's 0.332 / 56.0 ms on test sits next to MMS-FA on F1 and behind it on
 MAE, and far behind the aligners built on phone models. With 13 frames a second the CTC head cannot do
 much better at a 20 ms tolerance.
+
+## Track 2 (not run)
+
+FA-Bench scores tools in two ways. Track 1, above, hands the tool the audio and the correct words and
+asks only when each word was said. Track 2 hands it the audio alone: the tool transcribes and times its
+own words, which for rumblex is the normal `rumblex.transcribe` and for WhisperX is faster-whisper
+large-v3 followed by its aligner. A word the tool gets wrong has no label to match, so the track 2
+score mixes recognition errors with timing errors, and FA-Bench reports WER next to it.
+
+It was left out for now because it would mostly combine two things already measured separately: timing
+against human labels (above; the timing code is the same in both modes) and recognition (WER on other
+sets, in the top-level README). It would add one number for normal use on spontaneous speech. The
+WhisperX side also needs a GPU to finish in reasonable time.
+
+What is in place, and what has and hasn't been tried:
+
+- `scripts/fabench_worker.py` has a `transcribe` task: English forced, numbers spelled out
+  (`digits=False`), fillers kept (`filler=True`, `verbatim=True`), since Buckeye's transcripts spell
+  numbers out and include "um" and "uh". Otherwise package defaults. Utterances here are under 20 s, so
+  they go in whole without VAD. These options are a first guess and have not been checked against the
+  dev split.
+- `scripts/fabench.patch` adds the `rumblex_asr` adapter and its recipe
+  (`evals/timestamp_asrs/rumblex_asr/config.yaml`).
+- The worker's `transcribe` task is covered by a unit test with the model mocked. The `rumblex_asr`
+  recipe has not been run inside FA-Bench, not even on a few utterances, so expect to fix something on
+  the first try.
+- FA-Bench's WhisperX counterpart is `whisperx_asr`. It shares the venv of the track 1 `whisperx`
+  recipe and its recipe is set to `device: cuda`.
+
+To run it, with the data already ingested as below:
+
+```
+python evals/gen_config.py --corpus buckeye --subset dev --tools rumblex_asr
+C=evals/timestamp_asrs/rumblex_asr/en/buckeye/dev/origin/config.yaml
+python -m fabench.cli align --config $C --aligner rumblex_asr
+python -m fabench.cli score --config $C
+```
+
+and the same with `whisperx_asr`. Any choice of options should be made on dev and reported once on
+test. When reading the result, compare `wer` first: a timing column only covers the words that matched.
 
 ## Reproducing
 
