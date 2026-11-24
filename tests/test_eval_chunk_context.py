@@ -88,4 +88,4 @@ def test_change_stats_counts_changed_chunks_and_repeats(cc):
     assert c["chunks_changed"] == 2 and c["chunks_changed_a_lot"] == 1
     assert c["changed_words"] == 13 and c["changed_words_in_those"] == 12
     assert c["chunks_repeating_context"] == 1
-    assert cc.shared_run("a b c d".split(), "x b c y".split()) == 2
+    assert cc.shared_run(["a", "b", "c", "d"], ["x", "b", "c", "y"]) == 2
