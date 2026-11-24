@@ -75,3 +75,17 @@ def test_score_variant_adds_up(cc):
     assert r["errors"] == 1 and r["ref_words"] == 6
     assert r["near"]["ref_words"] + r["far"]["ref_words"] == 6
     assert r["wer_per_talk"] == {"t": round(1 / 6, 4)}
+
+
+def test_change_stats_counts_changed_chunks_and_repeats(cc):
+    said = "one two three four five six seven eight nine ten eleven twelve"
+    texts = {
+        "none": [[said, "this chunk is fine", "so is this one"]],
+        # chunk 1 says its context again, chunk 2 only swaps a word
+        "twopass": [[said, said, "so was this one"]],
+    }
+    c = cc.change_stats("twopass", texts, str.lower)
+    assert c["chunks_changed"] == 2 and c["chunks_changed_a_lot"] == 1
+    assert c["changed_words"] == 13 and c["changed_words_in_those"] == 12
+    assert c["chunks_repeating_context"] == 1
+    assert cc.shared_run("a b c d".split(), "x b c y".split()) == 2

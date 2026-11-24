@@ -28,6 +28,7 @@ import io
 import json
 import time
 from collections.abc import Callable, Sequence
+from difflib import SequenceMatcher
 from itertools import pairwise
 from pathlib import Path
 
@@ -37,6 +38,8 @@ REPO, REVISION = "distil-whisper/tedlium-long-form", "ea3a7847"
 VARIANTS = ("none", "prev", "twopass", "other")
 GAP_S = 0.5  # silence between talks in the joined audio
 ZONE = 3  # words on each side of a chunk boundary that count as "next to" it
+BIG_CHANGE = 10  # words that differ from the no-context text for a chunk to count as changed a lot
+COPY_RUN = 5  # words in a row shared with the context for a chunk to count as repeating it
 
 
 def load_talks(split: str, limit: int | None = None) -> list[dict]:
@@ -237,6 +240,38 @@ def score_variant(talks: Sequence[dict], texts: Sequence[Sequence[str]], norm: C
     }  # fmt: skip
 
 
+def shared_run(a: Sequence[str], b: Sequence[str]) -> int:
+    """Length of the longest run of words that `a` and `b` have in common."""
+    return SequenceMatcher(None, a, b, autojunk=False).find_longest_match(0, len(a), 0, len(b)).size
+
+
+def change_stats(variant: str, texts: dict[str, list[list[str]]], norm: Callable[[str], str]) -> dict:
+    """How a variant's chunk texts differ from the `none` texts, chunk by chunk, on normalised words.
+    A chunk changed a lot when at least `BIG_CHANGE` words differ. It repeats its context when it shares a
+    run of `COPY_RUN` words or more with the context it was given and the `none` text of that chunk
+    doesn't."""
+    out = {
+        "chunks_changed": 0, "changed_words": 0, "chunks_changed_a_lot": 0, "changed_words_in_those": 0,
+        "chunks_repeating_context": 0,
+    }  # fmt: skip
+    for t, (base, own) in enumerate(zip(texts["none"], texts[variant])):
+        for k, (a, b) in enumerate(zip(base, own)):
+            wa, wb = norm(a).split(), norm(b).split()
+            if wa == wb:
+                continue
+            ops = SequenceMatcher(None, wa, wb, autojunk=False).get_opcodes()
+            n = sum(max(i2 - i1, j2 - j1) for tag, i1, i2, j1, j2 in ops if tag != "equal")
+            out["chunks_changed"] += 1
+            out["changed_words"] += n
+            if n >= BIG_CHANGE:
+                out["chunks_changed_a_lot"] += 1
+                out["changed_words_in_those"] += n
+            ctx = norm(context_for(variant, texts, t, k) or "").split()
+            if shared_run(ctx, wb) >= COPY_RUN > shared_run(ctx, wa):
+                out["chunks_repeating_context"] += 1
+    return out
+
+
 def score(args: argparse.Namespace) -> None:
     from rumblex.bench import english_normalizer
 
@@ -244,6 +279,7 @@ def score(args: argparse.Namespace) -> None:
     name, norm = english_normalizer()
     result = {
         "script": "scripts/eval_chunk_context.py", **doc["meta"], "normalizer": name, "zone_words": ZONE,
+        "big_change_words": BIG_CHANGE, "copy_run_words": COPY_RUN,
         "talks": len(doc["talks"]), "chunks": sum(doc["sizes"]), "seconds": doc["seconds"],
         "variants": {v: score_variant(doc["talks"], t, norm) for v, t in doc["texts"].items()},
     }  # fmt: skip
@@ -254,6 +290,13 @@ def score(args: argparse.Namespace) -> None:
             f"{r['wer_elsewhere']:.4f}  ends sentence {b['ends_sentence']}/{b['boundaries']}  "
             f"starts lowercase {b['starts_lowercase']}/{b['boundaries']}  {doc['seconds'].get(v)} s"
         )
+        if v != "none" and "none" in doc["texts"]:
+            c = r["against_none"] = change_stats(v, doc["texts"], norm)
+            print(
+                f"         against none: {c['chunks_changed']} chunks changed ({c['changed_words']} words), "
+                f"{c['chunks_changed_a_lot']} by {BIG_CHANGE}+ words ({c['changed_words_in_those']} words), "
+                f"{c['chunks_repeating_context']} repeat their context"
+            )
     if args.json:
         Path(args.json).write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
 

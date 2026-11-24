@@ -1,0 +1,167 @@
+{
+ "script": "scripts/eval_chunk_context.py",
+ "dataset": "distil-whisper/tedlium-long-form",
+ "revision": "ea3a7847",
+ "split": "validation",
+ "device": "cuda:0",
+ "gpu": "NVIDIA GeForce GTX 1070",
+ "dtype": "torch.float32",
+ "batch_size": 8,
+ "torch": "2.14.0+cu126",
+ "audio_s": 5627.3,
+ "normalizer": "whisper-english",
+ "zone_words": 3,
+ "big_change_words": 10,
+ "copy_run_words": 5,
+ "talks": 8,
+ "chunks": 378,
+ "seconds": {
+  "none": 175.1,
+  "prev": 334.9,
+  "twopass": 183.9,
+  "other": 184.9
+ },
+ "variants": {
+  "none": {
+   "wer": 0.0255,
+   "errors": 452,
+   "ref_words": 17705,
+   "wer_near_boundary": 0.0322,
+   "near": {
+    "errors": 71,
+    "ref_words": 2205
+   },
+   "wer_elsewhere": 0.0246,
+   "far": {
+    "errors": 381,
+    "ref_words": 15500
+   },
+   "boundary_text": {
+    "boundaries": 369,
+    "ends_sentence": 313,
+    "starts_lowercase": 14
+   },
+   "wer_per_talk": {
+    "Al_Gore-merged": 0.0172,
+    "Barry_Schwartz-merged": 0.0137,
+    "Blaise_Agueray_Arcas-merged": 0.0518,
+    "Brian_Cox-merged": 0.0322,
+    "Craig_Venter-merged": 0.0149,
+    "David_Merrill-merged": 0.023,
+    "Elizabeth_Gilbert-merged": 0.022,
+    "Wade_Davis-merged": 0.0367
+   }
+  },
+  "prev": {
+   "wer": 0.0531,
+   "errors": 941,
+   "ref_words": 17705,
+   "wer_near_boundary": 0.0782,
+   "near": {
+    "errors": 174,
+    "ref_words": 2224
+   },
+   "wer_elsewhere": 0.0495,
+   "far": {
+    "errors": 767,
+    "ref_words": 15481
+   },
+   "boundary_text": {
+    "boundaries": 370,
+    "ends_sentence": 309,
+    "starts_lowercase": 7
+   },
+   "wer_per_talk": {
+    "Al_Gore-merged": 0.0458,
+    "Barry_Schwartz-merged": 0.0347,
+    "Blaise_Agueray_Arcas-merged": 0.1686,
+    "Brian_Cox-merged": 0.0373,
+    "Craig_Venter-merged": 0.0253,
+    "David_Merrill-merged": 0.0177,
+    "Elizabeth_Gilbert-merged": 0.0669,
+    "Wade_Davis-merged": 0.0453
+   },
+   "against_none": {
+    "chunks_changed": 62,
+    "changed_words": 670,
+    "chunks_changed_a_lot": 14,
+    "changed_words_in_those": 602,
+    "chunks_repeating_context": 14
+   }
+  },
+  "twopass": {
+   "wer": 0.0483,
+   "errors": 855,
+   "ref_words": 17705,
+   "wer_near_boundary": 0.0736,
+   "near": {
+    "errors": 164,
+    "ref_words": 2228
+   },
+   "wer_elsewhere": 0.0446,
+   "far": {
+    "errors": 691,
+    "ref_words": 15477
+   },
+   "boundary_text": {
+    "boundaries": 370,
+    "ends_sentence": 310,
+    "starts_lowercase": 9
+   },
+   "wer_per_talk": {
+    "Al_Gore-merged": 0.0458,
+    "Barry_Schwartz-merged": 0.035,
+    "Blaise_Agueray_Arcas-merged": 0.1057,
+    "Brian_Cox-merged": 0.0373,
+    "Craig_Venter-merged": 0.0253,
+    "David_Merrill-merged": 0.0204,
+    "Elizabeth_Gilbert-merged": 0.0669,
+    "Wade_Davis-merged": 0.0453
+   },
+   "against_none": {
+    "chunks_changed": 59,
+    "changed_words": 558,
+    "chunks_changed_a_lot": 11,
+    "changed_words_in_those": 485,
+    "chunks_repeating_context": 11
+   }
+  },
+  "other": {
+   "wer": 0.0324,
+   "errors": 573,
+   "ref_words": 17705,
+   "wer_near_boundary": 0.0464,
+   "near": {
+    "errors": 102,
+    "ref_words": 2198
+   },
+   "wer_elsewhere": 0.0304,
+   "far": {
+    "errors": 471,
+    "ref_words": 15507
+   },
+   "boundary_text": {
+    "boundaries": 370,
+    "ends_sentence": 307,
+    "starts_lowercase": 11
+   },
+   "wer_per_talk": {
+    "Al_Gore-merged": 0.0286,
+    "Barry_Schwartz-merged": 0.0182,
+    "Blaise_Agueray_Arcas-merged": 0.0588,
+    "Brian_Cox-merged": 0.0322,
+    "Craig_Venter-merged": 0.0278,
+    "David_Merrill-merged": 0.0239,
+    "Elizabeth_Gilbert-merged": 0.022,
+    "Wade_Davis-merged": 0.0495
+   },
+   "against_none": {
+    "chunks_changed": 46,
+    "changed_words": 192,
+    "chunks_changed_a_lot": 4,
+    "changed_words_in_those": 117,
+    "chunks_repeating_context": 5
+   }
+  }
+ }
+}
