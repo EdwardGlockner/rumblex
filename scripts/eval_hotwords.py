@@ -18,7 +18,8 @@ per call (seeded), from the calls ConEC has context files for.
 
 Settings: no hotwords; the list as rumblex takes it (capitals also get a Title Case form); the same but
 single words of up to four letters keep only their capitals ("IBM" gets no "Ibm"); and the list with no
-Title Case forms at all.
+Title Case forms at all. Last, `prompt`: no hotwords, the whole list as given, comma-separated, in the
+prompt. That is thousands of tokens in front of every clip, so it runs one clip at a time.
 
 `score` (CPU) reports, per setting: WER, recall of the list words that are spoken, false triggers (list
 words written where the reference has something else) per 100 clips, and the change against no hotwords
@@ -45,7 +46,7 @@ import numpy as np
 MIN_S, MAX_S = 5.0, 20.0
 MIN_GAP, PAD = 0.3, 0.2
 SHORT = 4  # "acronyms" setting: single words up to this many letters get no Title Case form
-SETTINGS = ("none", "hotwords", "hotwords_acronyms", "hotwords_as_given")
+SETTINGS = ("none", "hotwords", "hotwords_acronyms", "hotwords_as_given", "prompt")
 
 
 def read_nlp(path: Path) -> list[dict]:
@@ -177,8 +178,11 @@ def collect(args) -> None:
         if name in out["settings"]:
             print("have", name, flush=True)
             continue
-        hw, build_s = None, 0.0
-        if name != "none":
+        hw, build_s, prompt = None, 0.0, None
+        if name == "prompt":
+            prompt = ", ".join(phrases)
+            tr.batch_size = 1
+        elif name != "none":
             entries, title_caps = entries_for(name, phrases)
             t0 = time.perf_counter()
             hw = Timed(entries, tr.tokenizer, title_caps=title_caps)
@@ -191,7 +195,7 @@ def collect(args) -> None:
                 chunks.append(SpeechChunk(pos, pos + len(p), (SpeechRegion(pos, pos + len(p)),)))
                 pos += len(p)
             t0 = time.perf_counter()
-            items = tr.transcribe_chunks(audio, chunks, language="English", hotwords=hw)
+            items = tr.transcribe_chunks(audio, chunks, language="English", hotwords=hw, prompt=prompt)
             wall += time.perf_counter() - t0
             utts += [{"id": c["id"], "ref": c["text"], "hyp": it.text} for c, it in zip(clips, items)]
         out["settings"][name] = {
@@ -200,6 +204,11 @@ def collect(args) -> None:
             "list_build_s": round(build_s, 2), "token_paths": sum(map(len, hw.trie.paths)) if hw else 0,
             "utts": utts,
         }  # fmt: skip
+        if prompt:
+            out["settings"][name].update(
+                batch_size=1, prompt_tokens=len(tr.tokenizer(prompt, add_special_tokens=False).input_ids)
+            )
+            tr.batch_size = args.batch_size
         s = out["settings"][name]
         print(f"{name}: decode {s['decode_s']} s, rtf {s['rtf']}, processor {s['processor_ms_per_clip']} ms/clip, "
               f"list built in {s['list_build_s']} s", flush=True)  # fmt: skip
