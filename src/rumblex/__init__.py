@@ -46,8 +46,8 @@ def transcribe(
     sr: int | None = None,
     **kwargs,
 ) -> TranscriptResult:
-    """Transcribe a file, or an array (16 kHz unless `sr` says otherwise). kwargs: language, prompt, digits,
-    filler, verbatim, max_chunk_s, chunks (precomputed SpeechChunks instead of VAD) and progress
+    """Transcribe a file, or an array (16 kHz unless `sr` says otherwise). kwargs: language, prompt, hotwords,
+    digits, filler, verbatim, max_chunk_s, chunks (precomputed SpeechChunks instead of VAD) and progress
     (called with (done, total) chunks). With `align`, words get CTC timestamps (word ends refined on the
     audio) and segments are cut at sentence ends.
 

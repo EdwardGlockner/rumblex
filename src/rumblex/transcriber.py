@@ -13,6 +13,7 @@ from collections import Counter
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
@@ -20,6 +21,9 @@ import torch
 from rumblex.audio import SAMPLE_RATE, AudioInput, load_audio
 from rumblex.types import Segment, TranscriptResult
 from rumblex.vad import SpeechChunk, SpeechRegion, vad_chunks
+
+if TYPE_CHECKING:
+    from rumblex.hotwords import Hotwords
 
 DEFAULT_MODEL = "Reson8/Rumble-2-Flash"
 
@@ -150,16 +154,23 @@ def text_positions(ids: Sequence[int]) -> list[int]:
 
 
 class _TokenLogprobs:
-    """Logits processor keeping, per step, each row's log-prob of its most likely token. Decoding is greedy
-    with no score processors in the checkpoint's generation config, so that is the token generate() picks
-    (`_run_batch` checks this against the generated ids)."""
+    """Logits processor keeping, per step, each row's top token and the model's log-prob of it. Decoding is
+    greedy with no score processors in the checkpoint's generation config, so that is the token generate()
+    picks (`_run_batch` checks this against the generated ids).
 
-    def __init__(self) -> None:
+    `bias` is a hotword processor to run on the scores. The log-prob kept is the one from before the bonus,
+    so a word that only won because of its bonus shows up with a low probability."""
+
+    def __init__(self, bias=None) -> None:
+        self.bias = bias
         self.steps: list[tuple[torch.Tensor, torch.Tensor]] = []
 
     def __call__(self, input_ids: torch.Tensor, scores: torch.Tensor) -> torch.Tensor:
-        lp, tok = scores.float().log_softmax(-1).max(-1)
-        self.steps.append((tok, lp))
+        lp = scores.float().log_softmax(-1)
+        if self.bias is not None:
+            scores = self.bias(input_ids, scores)
+        tok = scores.argmax(-1)
+        self.steps.append((tok, lp.gather(-1, tok[:, None])[:, 0]))
         return scores
 
     def rows(self) -> tuple[list[list[int]], np.ndarray]:
@@ -290,6 +301,7 @@ class RumbleTranscriber:
         *,
         language: str | None = None,
         prompt: str | None = None,
+        hotwords: Sequence[str] | Hotwords | None = None,
         digits: bool = True,
         filler: bool = False,
         verbatim: bool = True,
@@ -299,16 +311,25 @@ class RumbleTranscriber:
         """Transcribe each chunk of 16 kHz `audio`. Results come back in chunk order.
 
         `language` forces the language (name or ISO code); otherwise each chunk is detected separately.
-        `prompt` is free-text context / hotwords for the system prompt. `digits`, `filler` and `verbatim`
-        are the model's control tokens (defaults match the model's own defaults).
+        `prompt` is free-text context for the system prompt. `hotwords` is a list of names and terms the
+        decoder is nudged towards (rumblex.hotwords), or a `Hotwords` object built once for several calls.
+        `digits`, `filler` and `verbatim` are the model's control tokens (defaults match the model's own
+        defaults).
         """
+        if hotwords is not None:
+            from rumblex.hotwords import Hotwords
+
+            if not isinstance(hotwords, Hotwords):
+                hotwords = Hotwords(hotwords, self.tokenizer)
+            if not len(hotwords):
+                hotwords = None
         results: list[ChunkTranscript | None] = [None] * len(chunks)
         batches = make_batches([c.duration for c in chunks], self.batch_size)
         done = 0
         options = {"digits": digits, "filler": filler, "verbatim": verbatim}
         for idx in batches:
             batch = [chunks[i] for i in idx]
-            out = self._run_batch(audio, batch, language, prompt, options, keep_encoder_states)
+            out = self._run_batch(audio, batch, language, prompt, options, keep_encoder_states, hotwords)
             for i, r in zip(idx, out):
                 results[i] = r
             done += len(idx)
@@ -339,7 +360,7 @@ class RumbleTranscriber:
                 progress(done, len(chunks))
         return out  # type: ignore[return-value]
 
-    def _run_batch(self, audio, batch, language, prompt, options, keep_states):
+    def _run_batch(self, audio, batch, language, prompt, options, keep_states, hotwords=None):
         clips = [prepare_clip(c.slice(audio)) for c in batch]
         inputs = self.processor.apply_transcription_request(
             audio=clips, language=language, prompt=prompt, **options
@@ -354,7 +375,7 @@ class RumbleTranscriber:
         from transformers import LogitsProcessorList
 
         captured: list[torch.Tensor] = []
-        rec = _TokenLogprobs()
+        rec = _TokenLogprobs(hotwords.processor() if hotwords is not None else None)
         hook = self.audio_tower.ln_post.register_forward_hook(lambda m, i, o: captured.append(o.detach()))
         try:
             max_new = int(max(c.duration for c in batch) * MAX_TOKENS_PER_SECOND) + MAX_TOKENS_OVERHEAD
