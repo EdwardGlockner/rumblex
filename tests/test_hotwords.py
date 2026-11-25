@@ -67,9 +67,6 @@ def step(p, ids):
     return p(torch.tensor(ids), torch.zeros(len(ids), V))
 
 
-# ---------------------------------------------------------------------------------------------- trie
-
-
 def test_insert_walk_and_shared_prefix():
     t = TokenTrie()
     a = t.insert([5, 6, 7], 0)
@@ -172,9 +169,6 @@ def test_real_tokenizer_paths():
         assert hw.trie.walk(enc(text)) in hw.trie.terminal, text
     assert hw.trie.terminal[hw.trie.walk(enc(" paracetamol"))] == [1]
     assert hw.word_start[enc(" paracetamol")[0]] and not hw.word_start[enc("paracetamol")[0]]
-
-
-# ---------------------------------------------------------------------------------------- processor
 
 
 def test_bonus_follows_the_trie():
@@ -320,9 +314,6 @@ def test_more_rows_than_at_the_start_is_an_error():
         step(p, [P + [10], P + [20]])
 
 
-# ------------------------------------------------------------------------------------ decoding loop
-
-
 def greedy(step_logits, bias=None):
     """generate()'s greedy loop on canned logits: rows of {token: logit} per step, one batch row."""
     rec = _TokenLogprobs(bias)
@@ -359,9 +350,6 @@ def test_bonus_is_too_small_to_override_a_clear_choice():
     t.insert([20, 21], 0)
     toks, _ = greedy([{30: 9.0, 20: 4.0}, {EOS_ID: 9.0}], HotwordProcessor(t, WS))
     assert toks == [30, EOS_ID]
-
-
-# ------------------------------------------------------------------------------------- transcriber
 
 
 def fake_transcriber(seen):

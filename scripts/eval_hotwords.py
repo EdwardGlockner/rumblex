@@ -206,9 +206,6 @@ def collect(args) -> None:
         args.out.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
 
 
-# ---------------------------------------------------------------------------------------------- scoring
-
-
 def align_words(ref: list[str], hyp: list[str]) -> list[tuple[str | None, str | None]]:
     """Levenshtein word alignment: (ref word or None, hyp word or None) pairs, in order."""
     n, m = len(ref), len(hyp)
