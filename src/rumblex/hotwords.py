@@ -20,6 +20,7 @@ Three guards keep the bonus from running away:
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 
@@ -34,6 +35,7 @@ CASES = ("as_given", "lower", "title", "upper")
 BOOST = 2.0
 REPEAT_DECAY = 0.0
 ABANDON_DECAY = 0.5
+WARN_ABOVE = 1000  # entries; a longer list gets a warning
 
 
 def case_forms(w: str, cases: Sequence[str] = CASES) -> list[str]:
@@ -236,6 +238,12 @@ class Hotwords:
         if isinstance(entries, str):
             entries = [entries]
         self.entries = parse_entries(entries, title_caps)
+        if len(self.entries) > WARN_ABOVE:
+            warnings.warn(
+                f"{len(self.entries)} hotwords: the bonus is meant for the names and terms of one recording. "
+                f"With more than {WARN_ABOVE} entries, expect more wrongly inserted list words.",
+                stacklevel=2,
+            )
         self.trie = TokenTrie.from_entries(
             self.entries, lambda s: tokenizer.encode(s, add_special_tokens=False)
         )

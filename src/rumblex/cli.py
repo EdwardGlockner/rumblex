@@ -3,7 +3,8 @@ transcription server (rumblex.server).
 
 Flags follow WhisperX where the meaning is the same (--model, --device, --batch_size, --compute_type,
 --language, --output_dir, --output_format, --max_line_width, --max_line_count, --highlight_words,
---no_align), plus Rumble-2-Flash's own options (--prompt, --no_digits, --filler, --no_verbatim).
+--no_align), plus Rumble-2-Flash's own options (--prompt, --no_digits, --filler, --no_verbatim) and
+--hotwords / --hotwords_file (rumblex.hotwords).
 """
 
 from __future__ import annotations
@@ -60,7 +61,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     t = p.add_argument_group("transcription")
     t.add_argument("--language", default=None, help="force a language (name or ISO code); default: detect")
-    t.add_argument("--prompt", default=None, help="context or hotwords for the model, e.g. names and terms")
+    t.add_argument("--prompt", default=None, help="free-text context for the model")
+    t.add_argument("--hotwords", default=None, metavar="LIST",
+                   help='names and terms to listen for, separated by commas: "Stifel, Paul Betz"')  # fmt: skip
+    t.add_argument("--hotwords_file", default=None, metavar="FILE",
+                   help='hotwords from a text file, one per line; other written forms after a bar: '
+                        '"paracetamol | paracetamols"')  # fmt: skip
+    t.add_argument("--hotword_boost", type=_positive(float), default=None, help=argparse.SUPPRESS)
     t.add_argument("--no_digits", action="store_true", help="write numbers as words")
     t.add_argument("--filler", action="store_true", help="keep fillers like 'uh', 'um'")
     t.add_argument("--no_verbatim", action="store_true", help="collapse repeated words")
@@ -173,6 +180,12 @@ def _check_args(args) -> str | None:
             return "--text and --no_align can't be combined: aligning the text is all --text does"
         if args.vllm_url:
             return "--text doesn't use the decoder, so --vllm_url has no effect; leave it out"
+        if args.hotwords is not None or args.hotwords_file is not None:
+            return "--text doesn't use the decoder, so hotwords have no effect; leave them out"
+    if args.hotwords_file is not None and not Path(args.hotwords_file).is_file():
+        return f"not found: {args.hotwords_file}"
+    if args.vllm_url and (args.hotwords is not None or args.hotwords_file is not None):
+        return "hotwords aren't supported with --vllm_url yet; leave out --vllm_url to use them"
     if args.language is not None:
         args.language = args.language.strip() or None
     if args.language is not None:
@@ -186,6 +199,14 @@ def _check_args(args) -> str | None:
             codes = ", ".join(sorted(LANGUAGE_CODE_TO_NAME))
             return f"unsupported language {args.language!r}; use a language name or one of: {codes}"
     return None
+
+
+def _hotword_entries(args) -> list[str]:
+    """The entries of --hotwords (comma-separated) followed by the lines of --hotwords_file."""
+    entries = [s.strip() for s in (args.hotwords or "").split(",")]
+    if args.hotwords_file is not None:
+        entries += Path(args.hotwords_file).read_text(encoding="utf-8-sig").splitlines()
+    return [e for e in entries if e.strip()]
 
 
 def build_serve_parser() -> argparse.ArgumentParser:
@@ -305,6 +326,18 @@ def main(argv: Sequence[str] | None = None, load_pipeline: Callable = _load_pipe
     dtype = str(tr.dtype).removeprefix("torch.")
     console.print(f"model loaded in {time.perf_counter() - t0:.1f}s ({tr.device}, {dtype})")
     wopts = WriterOptions(args.max_line_width, args.max_line_count, args.highlight_words)
+    extra = {}
+    entries = _hotword_entries(args)
+    if entries:
+        import warnings
+
+        from rumblex.hotwords import BOOST, Hotwords
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            extra["hotwords"] = Hotwords(entries, tr.tokenizer, boost=args.hotword_boost or BOOST)
+        for w in caught:
+            console.print(f"[yellow]warning:[/yellow] {escape(str(w.message))}", highlight=False)
 
     failures = 0
     for path in args.audio:
@@ -336,6 +369,7 @@ def main(argv: Sequence[str] | None = None, load_pipeline: Callable = _load_pipe
                         verbatim=not args.no_verbatim,
                         keep_encoder_states=al is not None,
                         progress=on_progress,
+                        **extra,
                     )
                     timings["transcribe_s"] = time.perf_counter() - t
                     if al is not None:

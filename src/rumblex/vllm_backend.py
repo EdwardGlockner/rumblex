@@ -182,12 +182,15 @@ class VLLMTranscriber:
         *,
         language: str | None = None,
         prompt: str | None = None,
+        hotwords=None,
         digits: bool = True,
         filler: bool = False,
         verbatim: bool = True,
         keep_encoder_states: bool = False,
         progress: Callable[[int, int], None] | None = None,
     ) -> list[ChunkTranscript]:
+        if hotwords is not None:
+            raise ValueError("hotwords aren't supported on the vLLM backend yet; use RumbleTranscriber")
         forced = language_name(language)
         clips = [prepare_clip(c.slice(audio)) for c in chunks]
         kwargs = {"digits": digits, "filler": filler, "verbatim": verbatim}

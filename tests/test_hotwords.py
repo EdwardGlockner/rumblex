@@ -396,3 +396,17 @@ def test_transcribe_chunks_without_hotwords():
     tr.transcribe_chunks(np.zeros(16000, np.float32), chunks(1), hotwords=[])
     tr.transcribe_chunks(np.zeros(16000, np.float32), chunks(1), hotwords=["", " "])
     assert seen == [None, None, None]
+
+
+def test_long_list_warns():
+    with pytest.warns(UserWarning, match="1001 hotwords"):
+        Hotwords([f"term{i}" for i in range(1001)], ToyTokenizer())
+
+
+def test_vllm_backend_refuses_hotwords():
+    pytest.importorskip("openai")
+    from rumblex.vllm_backend import VLLMTranscriber
+
+    tr = object.__new__(VLLMTranscriber)
+    with pytest.raises(ValueError, match="vLLM backend"):
+        tr.transcribe_chunks(np.zeros(16000, np.float32), chunks(1), hotwords=["Stifel"])

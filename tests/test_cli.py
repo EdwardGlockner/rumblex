@@ -269,3 +269,94 @@ def test_text_option_aligns_instead_of_transcribing(tmp_path):
     d = json.loads((tmp_path / "out" / "talk.json").read_text(encoding="utf-8"))
     assert [w["word"] for w in d["segments"][0]["words"]] == ["Hello", "world."]
     assert d["metadata"]["aligned_text"] and "transcribe_s" not in d["metadata"]["timings"]
+
+
+class ToyTokenizer:
+    """One id per character, as in test_hotwords.py."""
+
+    @property
+    def added_tokens_decoder(self):
+        return {99562: "<|endoftext|>", 99623: "<asr_text>"}
+
+    def encode(self, text, add_special_tokens=False):
+        ids = [ord(c) for c in text.lstrip(" ")]
+        if text.startswith(" ") and ids:
+            ids[0] += 1000
+        return ids
+
+    def convert_tokens_to_ids(self, token):
+        return {"<asr_text>": 99623}[token]
+
+    def get_vocab(self):
+        return {"G" + chr(c): 1000 + c for c in range(32, 127)}
+
+
+def test_hotwords_from_the_flag_and_the_file(tmp_path):
+    audio = _wav(tmp_path / "talk.wav")
+    terms = tmp_path / "terms.txt"
+    terms.write_text("\ufeffparacetamol | paracetamols\n\nGOLDMAN SACHS\n", encoding="utf-8")
+    tr = FakeTr()
+    tr.tokenizer = ToyTokenizer()
+    rc = main([str(audio), "-o", str(tmp_path), "-f", "json", "-q", "--hotwords", "Stifel, Paul Betz,",
+               "--hotwords_file", str(terms), "--prompt", "an earnings call"],
+              load_pipeline=lambda args: (tr, None, None))  # fmt: skip
+    assert rc == 0
+    hw = tr.calls[0]["hotwords"]
+    assert [e.term for e in hw.entries] == ["Stifel", "Paul Betz", "paracetamol", "GOLDMAN SACHS"]
+    assert hw.entries[2].variants == ("paracetamols",) and hw.entries[3].variants == ("Goldman Sachs",)
+    assert hw.boost == 2.0 and tr.calls[0]["prompt"] == "an earnings call"
+
+
+def test_no_hotwords_argument_without_the_flags(tmp_path):
+    audio = _wav(tmp_path / "talk.wav")
+    tr = FakeTr()
+    assert main([str(audio), "-o", str(tmp_path), "-q", "--hotwords", " , "],
+                load_pipeline=lambda args: (tr, None, None)) == 0  # fmt: skip
+    assert "hotwords" not in tr.calls[0]
+
+
+def test_hotword_boost_is_hidden_but_works(tmp_path, capsys):
+    audio = _wav(tmp_path / "talk.wav")
+    tr = FakeTr()
+    tr.tokenizer = ToyTokenizer()
+    main([str(audio), "-o", str(tmp_path), "-q", "--hotwords", "Stifel", "--hotword_boost", "3"],
+         load_pipeline=lambda args: (tr, None, None))  # fmt: skip
+    assert tr.calls[0]["hotwords"].boost == 3.0
+    assert "--hotword_boost" not in build_parser().format_help()
+    assert "--hotwords_file" in build_parser().format_help()
+
+
+def test_long_hotword_list_warns(tmp_path, capsys):
+    audio = _wav(tmp_path / "talk.wav")
+    terms = tmp_path / "terms.txt"
+    terms.write_text("\n".join(f"term{i}" for i in range(1001)), encoding="utf-8")
+    tr = FakeTr()
+    tr.tokenizer = ToyTokenizer()
+    assert main([str(audio), "-o", str(tmp_path), "--hotwords_file", str(terms)],
+                load_pipeline=lambda args: (tr, None, None)) == 0  # fmt: skip
+    err = capsys.readouterr().err
+    assert "warning:" in err and "1001 hotwords" in err
+    assert len(tr.calls[0]["hotwords"]) == 1001
+
+
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (["--vllm_url", "http://localhost:8000/v1"], "aren't supported with --vllm_url"),
+        (["--hotwords_file", "missing.txt"], "not found: missing.txt"),
+    ],
+)
+def test_hotword_argument_errors(tmp_path, capsys, extra, message):
+    audio = _wav(tmp_path / "talk.wav")
+    loaded = []
+    rc = main([str(audio), "--hotwords", "Stifel", *extra], load_pipeline=lambda args: loaded.append(1))
+    assert rc == 2 and not loaded
+    assert message in capsys.readouterr().err
+
+
+def test_hotwords_with_text_is_an_error(tmp_path, capsys):
+    audio = _wav(tmp_path / "talk.wav")
+    text = tmp_path / "talk.txt"
+    text.write_text("hello world", encoding="utf-8")
+    rc = main([str(audio), "--text", str(text), "--hotwords", "Stifel"], load_pipeline=lambda args: 1 / 0)
+    assert rc == 2 and "hotwords have no effect" in capsys.readouterr().err
