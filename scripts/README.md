@@ -20,6 +20,7 @@ e.g. `PYTHONPATH=src:scripts python scripts/<name>.py --help`.
 | `collect_confidence_states.py` | Transcribes AMI and Earnings-22 and saves encoder states, token ids and decoder token log-probs, so word scores can be compared on CPU | input for the next one |
 | `eval_confidence.py` | Labels transcribed words right or wrong against the reference and scores CTC and decoder word scores: AUC, dev-chosen thresholds, calibration (CPU only) | `docs/confidence_eval.md`, `docs/confidence_eval.json` |
 | `eval_chunk_context.py` | Transcribes TED-LIUM long-form talks with and without the previous chunk's text as context (`collect`, GPU) and scores WER, boundary errors and repeated context (`score`, CPU) | `docs/chunk_context_eval.md`, `docs/chunk_context_eval.json` |
+| `sweep_shifted_frames.py` | Encodes each chunk again from 10 to 70 ms earlier and averages the word starts read off each pass, on the saved chunks (dev_clean only so far) | `docs/alignment_shift_sweep.json` |
 | `sweep_word_ends.py` | Sweeps moving starts to a loudness dip and letting a chunk's last word end inside its last frame, on the saved states | `docs/alignment_word_ends_sweep.json` |
 | `fabench_worker.py`, `fabench.patch` | Runs `rumblex.align` or `rumblex.transcribe` inside FA-Bench; the patch adds the adapter and recipe to an FA-Bench checkout (CPU is enough) | `docs/fabench_eval.md`, `docs/fabench_eval.csv` |
 | `profile_speed.py` | Where the time goes: VAD vs transcription vs alignment over batch size and chunk length | `docs/bench_2026-11-20_rtx4090_tune/` |

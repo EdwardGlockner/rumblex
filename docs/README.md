@@ -48,6 +48,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `text_punct_sweep.json` | Raw output of the optional punctuation sweep in `align_text_eval.md` | `scripts/sweep_text_punct.py` |
 | `fabench_eval.csv` | The leaderboard rows FA-Bench wrote for `fabench_eval.md` | `scripts/fabench_worker.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
+| `alignment_shift_sweep.json` | Raw dev_clean output of the shifted-encoding sweep (several encoder passes per chunk); not written up, the gain was small | `scripts/sweep_shifted_frames.py` |
 | `alignment_word_ends_sweep.json` | Raw output of the loudness-dip start and last-word end sweep in `alignment_eval.md` | `scripts/sweep_word_ends.py` |
 | `alignment_smoothing_sweep.json` | Raw output of the logit temperature and blank penalty sweep in `alignment_eval.md` | `scripts/sweep_smoothing.py` |
 | `demo.gif` | The README's terminal demo: the captured output of one CLI run on an RTX 4090 (bf16, commit `da3aea8`), replayed with the waiting shortened | `scripts/render_demo_gif.py` |

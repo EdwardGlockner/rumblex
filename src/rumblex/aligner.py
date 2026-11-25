@@ -351,12 +351,26 @@ def word_times(
     Words never overlap: an end is clamped to the next word's start."""
     times = frame_times(n_frames, grid) + chunk_start
     spike_start = np.array([times[w.first] for w in words])
+    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
+    return spike_times(spike_start, spike_end, chunk_start, regions, end_rule, start_shift, loudness)
+
+
+def spike_times(
+    spike_start: np.ndarray,
+    spike_end: np.ndarray,
+    chunk_start: float,
+    regions: Sequence[tuple[float, float]],
+    end_rule: str = "next_start",
+    start_shift: float = 0.0,
+    loudness: LoudnessRefinement | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """`word_times` from seconds instead of frames: `spike_start` is the centre of each word's first CTC
+    frame, `spike_end` the end of its last one (global seconds)."""
     lr = loudness
     starts = spike_start - FRAME_STEP / 2
     if lr is not None and lr.dip_window > 0:
         starts = snap_to_dips(starts, lr.audio, lr.audio_start, lr.dip_window, lr.dip_smooth)
     starts = np.maximum.accumulate(np.maximum(starts + start_shift, chunk_start))
-    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
     if lr is not None and lr.starts:
         starts = refine_starts(
             starts, spike_start, spike_end, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence
