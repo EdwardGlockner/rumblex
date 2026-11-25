@@ -399,8 +399,8 @@ def test_transcribe_chunks_without_hotwords():
 
 
 def test_long_list_warns():
-    with pytest.warns(UserWarning, match="1001 hotwords"):
-        Hotwords([f"term{i}" for i in range(1001)], ToyTokenizer())
+    with pytest.warns(UserWarning, match="2001 hotwords"):
+        Hotwords([f"term{i}" for i in range(2001)], ToyTokenizer())
 
 
 def test_vllm_backend_refuses_hotwords():
@@ -410,3 +410,8 @@ def test_vllm_backend_refuses_hotwords():
     tr = object.__new__(VLLMTranscriber)
     with pytest.raises(ValueError, match="vLLM backend"):
         tr.transcribe_chunks(np.zeros(16000, np.float32), chunks(1), hotwords=["Stifel"])
+
+
+def test_list_at_the_limit_does_not_warn(recwarn):
+    Hotwords([f"term{i}" for i in range(2000)], ToyTokenizer())
+    assert not recwarn.list

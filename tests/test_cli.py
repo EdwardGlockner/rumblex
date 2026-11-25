@@ -329,14 +329,14 @@ def test_hotword_boost_is_hidden_but_works(tmp_path, capsys):
 def test_long_hotword_list_warns(tmp_path, capsys):
     audio = _wav(tmp_path / "talk.wav")
     terms = tmp_path / "terms.txt"
-    terms.write_text("\n".join(f"term{i}" for i in range(1001)), encoding="utf-8")
+    terms.write_text("\n".join(f"term{i}" for i in range(2001)), encoding="utf-8")
     tr = FakeTr()
     tr.tokenizer = ToyTokenizer()
     assert main([str(audio), "-o", str(tmp_path), "--hotwords_file", str(terms)],
                 load_pipeline=lambda args: (tr, None, None)) == 0  # fmt: skip
     err = capsys.readouterr().err
-    assert "warning:" in err and "1001 hotwords" in err
-    assert len(tr.calls[0]["hotwords"]) == 1001
+    assert "warning:" in err and "2001 hotwords" in err
+    assert len(tr.calls[0]["hotwords"]) == 2001
 
 
 @pytest.mark.parametrize(

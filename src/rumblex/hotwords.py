@@ -35,7 +35,7 @@ CASES = ("as_given", "lower", "title", "upper")
 BOOST = 2.0
 REPEAT_DECAY = 0.0
 ABANDON_DECAY = 0.5
-WARN_ABOVE = 1000  # entries; a longer list gets a warning
+WARN_ABOVE = 2000  # entries; a longer list gets a warning
 
 
 def case_forms(w: str, cases: Sequence[str] = CASES) -> list[str]:
