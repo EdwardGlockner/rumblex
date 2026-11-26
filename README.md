@@ -180,32 +180,32 @@ all but 1 of 4,288 chunks outside Hindi; for Hindi see Limitations.
 
 ### Timestamp accuracy
 
-200 LibriSpeech utterances against Montreal Forced Aligner references (another aligner, not human labels),
-with the current aligner ([run](docs/bench_2026-11-23_rtx4090_timing/README.md),
-settings chosen on dev-clean in [docs/alignment_eval.md](docs/alignment_eval.md)).
+The encoder runs at 13 frames per second, 80 ms a frame. Since 0.6.0 a small learned head on the encoder
+states places each word's start and end inside its frame ([docs/boundary_head.md](docs/boundary_head.md)).
+On 200 LibriSpeech test-clean utterances against Montreal Forced Aligner references (another aligner, not
+human labels), settings chosen on dev-clean:
 
-| mean absolute error | rumblex | WhisperX |
+| mean absolute error | rumblex 0.6.0 | rumblex 0.5.0 |
 |---|---|---|
-| word start | 51 ms | 75 ms |
-| word end | 55 ms | 34 ms |
+| word start | 20 ms | 50 ms |
+| word end | 31 ms | 54 ms |
 
-The encoder runs at 13 frames per second against WhisperX's 20 ms aligner, which shows in the ends. rumblex
-pulls each word end back to where the audio goes quiet and moves each start to the nearest dip in loudness,
-and it penalises the blank before Viterbi. Together these took starts from 58 to 51 ms and ends from 57 to
-55 ms since 0.1.0.
+WhisperX was not part of that measurement. In an earlier run on 200 LibriSpeech utterances it had 75 ms on
+starts and 34 ms on ends, next to 51 and 55 ms for rumblex without the head
+([run](docs/bench_2026-11-23_rtx4090_timing/README.md)).
 
 Against human labels: the Buckeye corpus of spontaneous speech, test split of
 [FA-Bench](https://github.com/olewave/fa-bench) (4,513 utterances), with both tools given the reference
 words, i.e. `rumblex.align` against WhisperX's aligner ([docs/fabench_eval.md](docs/fabench_eval.md)).
 
-| Buckeye test | rumblex | WhisperX |
-|---|---|---|
-| word start, mean absolute error | 42 ms | 58 ms |
-| word end, mean absolute error | 41 ms | 38 ms |
-| starts and ends within 20 ms (F1) | 0.36 | 0.28 |
+| Buckeye test | rumblex 0.6.0 | rumblex 0.5.0 | WhisperX |
+|---|---|---|---|
+| word start, mean absolute error | 25 ms | 42 ms | 58 ms |
+| word end, mean absolute error | 30 ms | 41 ms | 38 ms |
+| starts and ends within 20 ms (F1) | 0.54 | 0.36 | 0.28 |
 
-Better starts, slightly worse ends. Aligners built on phone models do much better than either on this
-benchmark; see FA-Bench's leaderboard.
+The head was fitted on read English and has seen no Buckeye data. Aligners built on phone models still do
+better than either tool on this benchmark; see FA-Bench's leaderboard.
 
 ## How it works
 
@@ -220,7 +220,8 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 
 ## Limitations
 
-- Timing resolution is limited to 13 frames/s; word ends are less precise than WhisperX's.
+- The encoder runs at 13 frames/s. The boundary head places words finer than that, but it was fitted and
+  measured on English only, and word ends are still less precise than starts.
 - Chunks are decoded independently, so a sentence crossing a chunk boundary can be broken there. Passing
   the previous chunk's text as context made transcripts worse
   ([docs/chunk_context_eval.md](docs/chunk_context_eval.md)).

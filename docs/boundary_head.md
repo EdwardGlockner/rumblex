@@ -49,10 +49,12 @@ Adding the loudness dip on top of the corrected starts made them worse on dev (1
 ## Limits
 
 - The reference is forced-aligner output, not human labels, and the head was fitted to that same kind of
-  reference. It may have learned MFA's habits along with the real boundaries.
-- Read English only. Nothing here says how it does on conversational speech or other languages. There is
-  no Dutch set with word times in this repository.
+  reference. It may have learned MFA's habits along with the real boundaries. Against the hand-corrected
+  labels of Buckeye the gain is smaller but still there: on the test split, starts went from 42.1 to
+  25.1 ms and ends from 41.1 to 29.6 ms ([fabench_eval.md](fabench_eval.md)).
+- Fitted on read English only. Buckeye, above, is the one check on conversational speech. Nothing here
+  says how it does in other languages. There is no Dutch set with word times in this repository.
 - Ends are still worse than starts and lean early: the mean signed end error is -23.4 ms on test_clean,
   and the mean (31.1 ms) is far above the median (17.1 ms).
-- Fitted on the model's own transcripts. `rumblex.align` with a given text uses the same head; that
-  combination was not scored here.
+- Fitted on the model's own transcripts. `rumblex.align` with a given text uses the same head; the
+  Buckeye numbers above are that combination. It was not scored on LibriSpeech.

@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-11-26)
 
 - Word starts and ends are corrected by a small learned head on the encoder states around each word
   (43 KB, shipped in the package). On LibriSpeech test_clean, start error went from 49.5 to 20.3 ms and
   end error from 53.7 to 31.1 ms against MFA word times (`docs/boundary_head.md`,
   `scripts/boundary_head.py`). It replaces the start shift and the loudness rules, so word times no longer
-  depend on the audio being passed to the aligner. Fitted and measured on read English only.
+  depend on the audio being passed to the aligner. Against Buckeye's human labels (FA-Bench, test split,
+  `rumblex.align` on the reference words) start error went from 42.1 to 25.1 ms and end error from 41.1
+  to 29.6 ms (`docs/fabench_eval.md`). Fitted on read English only; not measured in other languages.
   `--no_boundary_head` or `AlignOptions(boundary_head=False)` gives the old times.
 - Hotwords: `--hotwords "Stifel, Paul Betz"`, `--hotwords_file terms.txt` and `hotwords=` in Python. The
   list becomes a prefix tree over the decoder's tokens, and tokens that start or continue an entry get a

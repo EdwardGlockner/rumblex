@@ -9,8 +9,10 @@ Measured 2026-11-24 on CPU (Intel i5-6600K, 4 threads, float32), FA-Bench at com
 [scripts/fabench.patch](../scripts/fabench.patch) applied. rumblex was run through
 `scripts/fabench_worker.py`, twice on the same day: first with the aligner of 0.4.1, then at the commit
 that added optional punctuation for text given without it ([align_text_eval.md](align_text_eval.md)).
-WhisperX was run once. The rows FA-Bench wrote are in [fabench_eval.csv](fabench_eval.csv); its `run`
-column tells the two rumblex runs apart.
+WhisperX was run once. rumblex was run a third time on 2026-11-26, same machine and FA-Bench checkout, at
+the commit that added the boundary head ([boundary_head.md](boundary_head.md)), which is the aligner of
+0.6.0. The rows FA-Bench wrote are in [fabench_eval.csv](fabench_eval.csv); its `run` column tells the
+three rumblex runs apart.
 
 This is FA-Bench's track 1: both tools are handed the reference words and only have to place them.
 Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2-not-run) below.
@@ -27,7 +29,9 @@ Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2
 - WhisperX 3.8.6: FA-Bench's own recipe and worker, unchanged except for `device: cpu`. It aligns with
   `WAV2VEC2_ASR_BASE_960H`.
 - Nothing was tuned on either split. Dev and test are both reported. The penalty on the optional
-  punctuation was chosen on LibriSpeech `dev_clean` before the second run.
+  punctuation was chosen on LibriSpeech `dev_clean` before the second run. The boundary head was fitted
+  on LibriSpeech training utterances against Montreal Forced Aligner times and its settings chosen on
+  `dev_clean`; it has seen no Buckeye audio or labels.
 
 FA-Bench's columns, as used below:
 
@@ -43,20 +47,32 @@ FA-Bench's columns, as used below:
 
 | split | tool | words | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
 |---|---|---|---|---|---|---|---|
-| dev | rumblex | 47,401 | 42.6 ms | 40.4 ms | 41.5 ms | 41.5 ms | 0.356 |
+| dev | rumblex 0.6.0 | 47,401 | 24.5 ms | 29.7 ms | 27.1 ms | 29.8 ms | 0.540 |
+| dev | rumblex 0.5.0 | 47,401 | 42.6 ms | 40.4 ms | 41.5 ms | 41.5 ms | 0.356 |
 | dev | WhisperX | 47,386 | 58.8 ms | 36.7 ms | 47.8 ms | 40.3 ms | 0.284 |
 | dev | rumblex 0.4.1 | 47,401 | 42.9 ms | 57.4 ms | 50.2 ms | 56.8 ms | 0.331 |
-| test | rumblex | 45,921 | 42.1 ms | 41.1 ms | 41.6 ms | 42.5 ms | 0.358 |
+| test | rumblex 0.6.0 | 45,921 | 25.1 ms | 29.6 ms | 27.4 ms | 30.3 ms | 0.536 |
+| test | rumblex 0.5.0 | 45,921 | 42.1 ms | 41.1 ms | 41.6 ms | 42.5 ms | 0.358 |
 | test | WhisperX | 45,921 | 58.4 ms | 38.1 ms | 48.2 ms | 41.7 ms | 0.281 |
 | test | rumblex 0.4.1 | 45,921 | 42.4 ms | 56.5 ms | 49.5 ms | 56.0 ms | 0.332 |
+
+In the CSV, 0.6.0 is the run `boundary head` and 0.5.0 is `optional punctuation`.
 
 "words" is the number of words scored (timestamps matched, divided by two), out of 47,401 in dev and
 45,922 in test. WhisperX returned nothing for one dev utterance (15 words), and one test word is missing
 from both tools' output.
 
-rumblex places word starts about 16 ms better than WhisperX, and WhisperX places word ends 3 to 4 ms
-better than rumblex. Pooled over starts and ends rumblex is ahead by about 6 ms. On boundary MAE, which
-follows the ends, WhisperX is ahead by about 1 ms. On F1 at 20 ms rumblex is ahead, 0.36 against 0.28.
+With the boundary head (0.6.0), starts are 17 to 18 ms better than in 0.5.0 and ends about 11 ms better,
+and the share of starts and ends within 20 ms goes from 0.36 to 0.54. Against WhisperX that is 33 to
+34 ms better on starts, 7 to 8 ms better on ends and about 11 ms better on boundary MAE. The head was
+fitted to forced-aligner times on read speech, so this is also the first check of it against human
+labels and on spontaneous speech: the gain is smaller than on LibriSpeech (where starts went from 49.5
+to 20.3 ms, [boundary_head.md](boundary_head.md)) but it holds.
+
+Without the head (0.5.0), rumblex places word starts about 16 ms better than WhisperX, and WhisperX
+places word ends 3 to 4 ms better than rumblex. Pooled over starts and ends rumblex is ahead by about
+6 ms. On boundary MAE, which follows the ends, WhisperX is ahead by about 1 ms. On F1 at 20 ms rumblex
+is ahead, 0.36 against 0.28.
 
 With 0.4.1 the ends were 16 to 17 ms worse (57.4 and 56.5 ms), which put WhisperX ahead on timestamp MAE
 and about 15 ms ahead on boundary MAE. Buckeye's transcripts have no punctuation, and that was the
@@ -66,7 +82,7 @@ here as it did on LibriSpeech. Starts moved by less than half a millisecond.
 Dev and test agree to within about 1 ms for rumblex, so the result does not depend on the speakers.
 
 Compared with LibriSpeech and MFA references ([align_text_eval.md](align_text_eval.md), start 49.5 ms and
-end 51.9 ms on `test_clean` for the same task), both are better here. The data and the labels differ,
+end 51.9 ms on `test_clean` for the same task with 0.5.0), both are better here for 0.5.0. The data and the labels differ,
 so this is only a rough check that the two evaluations tell the same story about rumblex.
 
 ## Check against FA-Bench's published row
@@ -75,9 +91,9 @@ FA-Bench's leaderboard (olewave.com/en/leaderboard/fa-bench, as updated 2026-11-
 Buckeye clean at F1 0.281 and MAE 41.7 ms; the paper gives the same MAE for the test split. Our CPU run
 of the same recipe gives 0.281 and 41.7 ms on test, so the setup here reproduces theirs. Their rows for other aligners
 on the same data, not re-run here: nyra-FA 0.731 / 20.2 ms, Montreal Forced Aligner 0.706 / 21.3 ms,
-MMS-FA 0.344 / 37.1 ms. rumblex's 0.358 / 42.5 ms on test sits next to MMS-FA on F1 and next to
-WhisperX on MAE, and far behind the aligners built on phone models. With 13 frames a second the CTC head
-cannot do much better at a 20 ms tolerance.
+MMS-FA 0.344 / 37.1 ms. rumblex 0.5.0, at 0.358 / 42.5 ms on test, sat next to MMS-FA on F1 and next to
+WhisperX on MAE. 0.6.0, at 0.536 / 30.3 ms, is ahead of MMS-FA and WhisperX on both and still clearly
+behind the aligners built on phone models.
 
 ## Track 2 (not run)
 
@@ -143,4 +159,4 @@ adapter and recipe, lets FA-Bench find the interpreter of a venv made on Windows
 CPU; on Windows the commands also need `PYTHONUTF8=1`.
 
 Each split took about an hour per tool on this CPU, with the two tools running at the same time, so
-these are not speed measurements.
+these are not speed measurements. The 0.6.0 run took about the same, 115 minutes for both splits.
