@@ -70,7 +70,7 @@ def features(args) -> None:
     utts_out, fs, fe, ys, ye = [], [], [], [], []
     row = 0
     # cmd.exe and the job queue pass patterns through unexpanded
-    paths = [p for pat in args.states for p in (sorted(glob.glob(pat)) or [pat])]
+    paths = [p for pat in args.states for p in (sorted(glob.glob(str(pat))) or [pat])]
     for path in paths:
         for u in torch.load(path, weights_only=False):
             hyp, chunks = [], []
