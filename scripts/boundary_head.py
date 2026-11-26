@@ -24,6 +24,7 @@ aligner, and writes the chosen head:
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 from itertools import product
 from pathlib import Path
@@ -68,7 +69,9 @@ def features(args) -> None:
     head = CTCHead.from_pretrained(device=args.device)
     utts_out, fs, fe, ys, ye = [], [], [], [], []
     row = 0
-    for path in args.states:
+    # cmd.exe and the job queue pass patterns through unexpanded
+    paths = [p for pat in args.states for p in (sorted(glob.glob(pat)) or [pat])]
+    for path in paths:
         for u in torch.load(path, weights_only=False):
             hyp, chunks = [], []
             for c in u["chunks"]:
