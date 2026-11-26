@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Word starts and ends are corrected by a small learned head on the encoder states around each word
+  (43 KB, shipped in the package). On LibriSpeech test_clean, start error went from 49.5 to 20.3 ms and
+  end error from 53.7 to 31.1 ms against MFA word times (`docs/boundary_head.md`,
+  `scripts/boundary_head.py`). It replaces the start shift and the loudness rules, so word times no longer
+  depend on the audio being passed to the aligner. Fitted and measured on read English only.
+  `--no_boundary_head` or `AlignOptions(boundary_head=False)` gives the old times.
 - Hotwords: `--hotwords "Stifel, Paul Betz"`, `--hotwords_file terms.txt` and `hotwords=` in Python. The
   list becomes a prefix tree over the decoder's tokens, and tokens that start or continue an entry get a
   bonus of 2 on their logit during greedy decoding. An entry in capitals also gets a Title Case form. On

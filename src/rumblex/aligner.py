@@ -351,12 +351,26 @@ def word_times(
     Words never overlap: an end is clamped to the next word's start."""
     times = frame_times(n_frames, grid) + chunk_start
     spike_start = np.array([times[w.first] for w in words])
+    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
+    return spike_times(spike_start, spike_end, chunk_start, regions, end_rule, start_shift, loudness)
+
+
+def spike_times(
+    spike_start: np.ndarray,
+    spike_end: np.ndarray,
+    chunk_start: float,
+    regions: Sequence[tuple[float, float]],
+    end_rule: str = "next_start",
+    start_shift: float = 0.0,
+    loudness: LoudnessRefinement | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """`word_times` from seconds instead of frames: `spike_start` is the centre of each word's first CTC
+    frame, `spike_end` the end of its last one (global seconds)."""
     lr = loudness
     starts = spike_start - FRAME_STEP / 2
     if lr is not None and lr.dip_window > 0:
         starts = snap_to_dips(starts, lr.audio, lr.audio_start, lr.dip_window, lr.dip_smooth)
     starts = np.maximum.accumulate(np.maximum(starts + start_shift, chunk_start))
-    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
     if lr is not None and lr.starts:
         starts = refine_starts(
             starts, spike_start, spike_end, lr.audio, lr.audio_start, lr.silence_db, lr.min_silence
@@ -481,8 +495,86 @@ def refine_starts(
     return out
 
 
+class BoundaryHead:
+    """Corrections to word starts and ends, read from the encoder states around a word's first and last
+    CTC frame: one linear map each, in milliseconds. Fitted on LibriSpeech training utterances with ridge
+    regression, settings chosen on dev_clean (scripts/boundary_head.py, docs/boundary_head.md). The
+    weights ship with the package."""
+
+    FILE = Path(__file__).with_name("boundary_head.safetensors")
+
+    def __init__(
+        self,
+        start: tuple[torch.Tensor, float, int],
+        end: tuple[torch.Tensor, float, int] | None = None,
+        start_shift: float = 0.0,
+    ):
+        """`start` and `end` are (weights, bias, frames used on each side of the word's frame)."""
+        self.start, self.end, self.start_shift = start, end, start_shift
+        self.dim = len(start[0]) // (2 * start[2] + 1)  # width of the encoder states it was fitted on
+
+    @classmethod
+    def load(cls, path: str | Path | None = None) -> BoundaryHead:
+        from safetensors import safe_open
+
+        with safe_open(str(path or cls.FILE), "pt") as f:
+            sd = {k: f.get_tensor(k).float() for k in f.keys()}  # noqa: SIM118
+            chosen = json.loads(f.metadata()["chosen"])
+        start = (sd["start.weight"], float(sd["start.bias"]), chosen["start"]["width"])
+        end = (
+            (sd["end.weight"], float(sd["end.bias"]), chosen["end"]["width"]) if "end.weight" in sd else None
+        )
+        return cls(start, end, chosen["start"]["start_shift_ms"] / 1000)
+
+    @staticmethod
+    def _apply(head: tuple[torch.Tensor, float, int], states: torch.Tensor, idx: Sequence[int]) -> np.ndarray:
+        w, b, width = head
+        rows = torch.as_tensor(list(idx))[:, None] + torch.arange(-width, width + 1)[None, :]
+        x = states[rows.clamp(0, len(states) - 1)].flatten(1)  # past the chunk's edges: the edge frame
+        return ((x @ w + b) / 1000).numpy().astype(np.float64)
+
+    def offsets(
+        self, states: torch.Tensor, first: Sequence[int], last: Sequence[int]
+    ) -> tuple[np.ndarray, np.ndarray | None]:
+        """Seconds to add to each word's raw start (the start of its first frame) and raw end (the end of
+        its last frame). No end offsets if the file has no end weights."""
+        st = states.detach().to("cpu", torch.float32)
+        return self._apply(self.start, st, first), None if self.end is None else self._apply(
+            self.end, st, last
+        )
+
+
+def boundary_times(
+    words: Sequence[AlignedWord],
+    n_frames: int,
+    chunk_start: float,
+    regions: Sequence[tuple[float, float]],
+    start_offset: np.ndarray,
+    end_offset: np.ndarray | None,
+    grid: str = "block",
+    start_shift: float = 0.0,
+    loudness: LoudnessRefinement | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """`word_times` with a BoundaryHead's offsets. Ends come from `end_offset`, never past the next word's
+    start; without it they follow the next-start rule and `loudness`."""
+    times = frame_times(n_frames, grid) + chunk_start
+    spike_start = np.array([times[w.first] for w in words]) + start_offset
+    spike_end = np.array([times[w.last] for w in words]) + FRAME_STEP / 2
+    starts, ends = spike_times(
+        spike_start, spike_end, chunk_start, regions, "next_start", start_shift, loudness
+    )
+    if end_offset is not None:
+        ends = spike_end + end_offset
+        ends[:-1] = np.minimum(ends[:-1], starts[1:])
+        ends = np.maximum(ends, starts + 0.01)
+    return starts, ends
+
+
 @dataclass
 class AlignOptions:
+    # Word starts and ends corrected by the BoundaryHead; it replaces the start shift and the loudness
+    # rules below. False gives the timings of 0.5.0 and earlier.
+    boundary_head: bool = True
     end_rule: str = "next_start"  # chosen on dev_clean, see docs/alignment_eval.md
     grid: str = "block"
     start_shift: float = -0.010  # added to every start; median start error on dev_clean (block grid)
@@ -517,6 +609,7 @@ class Aligner:
         self.tokenizer = tokenizer
         self.opts = opts or AlignOptions()
         self._punct_ids: list[int] | None = None
+        self.boundary = BoundaryHead.load() if self.opts.boundary_head else None
         if self.opts.end_rule not in END_RULES:
             raise ValueError(f"end_rule must be one of {list(END_RULES)}")
 
@@ -593,14 +686,29 @@ class Aligner:
             return None
         loudness = None
         shift = o.start_shift
-        if audio is not None and (o.refine_ends or o.refine_starts or o.dip_window > 0):
+        boundary = self.boundary
+        if boundary is not None and states.shape[-1] != boundary.dim:  # states from another encoder
+            boundary = None
+        if boundary is not None:
+            ds, de = boundary.offsets(states, [w.first for w in words], [w.last for w in words])
+            if de is None and audio is not None and o.refine_ends:
+                loudness = LoudnessRefinement(
+                    audio, chunk_start, o.silence_db, o.min_silence, last_inside=True
+                )
+            starts, ends = boundary_times(
+                words, len(em), chunk_start, regions, ds, de, o.grid, boundary.start_shift, loudness
+            )
+        elif audio is not None and (o.refine_ends or o.refine_starts or o.dip_window > 0):
             loudness = LoudnessRefinement(
                 audio, chunk_start, o.silence_db, o.min_silence, starts=o.refine_starts, ends=o.refine_ends,
                 dip_window=o.dip_window, dip_smooth=o.dip_smooth, last_inside=o.last_inside,
             )  # fmt: skip
             if o.dip_window > 0:
                 shift = o.dip_start_shift
-        starts, ends = word_times(words, len(em), chunk_start, regions, o.grid, o.end_rule, shift, loudness)
+        if boundary is None:
+            starts, ends = word_times(
+                words, len(em), chunk_start, regions, o.grid, o.end_rule, shift, loudness
+            )
         return [
             WordSegment(
                 w.text,

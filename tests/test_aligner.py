@@ -436,3 +436,44 @@ def test_optional_punctuation_extends_the_word_before_it():
     # a word that already ends in punctuation gets no optional mark
     al = Aligner(Head(), Tok())
     assert al._punct_slots([7, 8, 9, 10], al.tokenizer.convert_ids_to_tokens([7, 8, 9, 10])) == [0, 3]
+
+
+def test_boundary_head_ships_with_the_package():
+    from rumblex.aligner import BoundaryHead
+
+    bh = BoundaryHead.load()
+    assert bh.dim == 896 and bh.end is not None
+    assert len(bh.start[0]) == 896 * (2 * bh.start[2] + 1)
+    ds, de = bh.offsets(torch.zeros(20, 896), [0, 5, 19], [2, 7, 19])  # edges repeat the edge frame
+    assert ds.shape == de.shape == (3,) and np.isfinite(ds).all() and np.isfinite(de).all()
+
+
+def test_boundary_head_moves_starts_and_ends():
+    from rumblex.aligner import BoundaryHead
+
+    # state value 1 on the frame itself -> start 20 ms later; end weights look one frame to each side
+    start = (torch.tensor([20.0, 0, 0, 0]), 0.0, 0)
+    end = (torch.tensor([0.0] * 4 + [-30.0, 0, 0, 0] + [0.0] * 4), 5.0, 1)
+    al = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(blank_penalty=0.0))
+    al.boundary = BoundaryHead(start, end, start_shift=-0.01)
+    states = torch.zeros(20, 4)
+    states[4, 0] = 1.0  # "cat" is on frame 4, "The" on frame 1
+    states[1, 0] = 1.0
+    words = al.align_tokens([7, 8, 10], states, chunk_start=10.0)
+    off = Aligner(
+        FakeHead(), FakeTokenizer(), AlignOptions(boundary_head=False, start_shift=0.0, blank_penalty=0.0)
+    )
+    plain = off.align_tokens([7, 8, 10], states, chunk_start=10.0)
+    # starts: raw + offset + shift; "The" also has state 1 on its own frame
+    assert [w.start for w in words] == pytest.approx(
+        [p.start + d for p, d in zip(plain, (0.01, 0.01, -0.01))]
+    )
+    # ends: end of the last frame + offset; "The" and "cat" lose 30 ms and all gain the 5 ms bias
+    assert words[0].end == pytest.approx(10.08 + 0.04 - 0.025)
+    assert words[1].end == pytest.approx(10.32 + 0.04 - 0.025)
+    assert words[2].end == pytest.approx(10.56 + 0.04 + 0.005)
+    assert all(a.end <= b.start for a, b in pairwise(words))
+    # states of another width leave the head out
+    old = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(boundary_head=False, blank_penalty=0.0))
+    other = torch.zeros(20, 3)
+    assert al.align_tokens([7, 8, 10], other, 10.0) == old.align_tokens([7, 8, 10], other, 10.0)
