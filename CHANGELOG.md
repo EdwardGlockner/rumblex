@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Word starts and ends are corrected by a small learned head on the encoder states around each word
+  (43 KB, shipped in the package). On LibriSpeech test_clean, start error went from 49.5 to 20.3 ms and
+  end error from 53.7 to 31.1 ms against MFA word times (`docs/boundary_head.md`,
+  `scripts/boundary_head.py`). It replaces the start shift and the loudness rules, so word times no longer
+  depend on the audio being passed to the aligner. Fitted and measured on read English only.
+  `--no_boundary_head` or `AlignOptions(boundary_head=False)` gives the old times.
+
 ## 0.5.0 (2026-11-24)
 
 - `rumblex.align` / `--text`: word ends on text without punctuation are no longer early. The CTC path may

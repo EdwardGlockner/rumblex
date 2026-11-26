@@ -24,6 +24,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [model_inspection.md](model_inspection.md) | What is in the Rumble-2-Flash checkpoint: CTC head, frame rate, options, tokenizer, single-clip timings | `scripts/inspect_rumble_ctc.py` |
 | [alignment_eval.md](alignment_eval.md) | Word timestamp accuracy on LibriSpeech; how the end rule, frame grid, start shift, loudness refinement, blank penalty and loudness-dip starts were chosen | `scripts/eval_alignment.py`, `scripts/sweep_energy.py`, `scripts/sweep_smoothing.py`, `scripts/sweep_word_ends.py` |
 | [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file; optional punctuation for text without it | `scripts/eval_align_text.py`, `scripts/sweep_text_punct.py` |
+| [boundary_head.md](boundary_head.md) | The learned correction of word starts and ends: what it is, how it was fitted, timing error on LibriSpeech with and without it | `scripts/collect_boundary_train.py`, `scripts/boundary_head.py` |
 | [fabench_eval.md](fabench_eval.md) | Word timing accuracy of `rumblex.align` and WhisperX against Buckeye's human word labels, scored by FA-Bench | `scripts/fabench_worker.py`, `scripts/fabench.patch` |
 | [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
 | [chunk_context_eval.md](chunk_context_eval.md) | Whether giving the model the previous chunk's text as context helps on long recordings (TED-LIUM long-form, dev split): it doesn't | `scripts/eval_chunk_context.py` |
@@ -46,6 +47,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `chunk_context_eval.json` | Raw output behind `chunk_context_eval.md` (numbers only, no transcripts) | `scripts/eval_chunk_context.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |
 | `text_punct_sweep.json` | Raw output of the optional punctuation sweep in `align_text_eval.md` | `scripts/sweep_text_punct.py` |
+| `boundary_head_sweep.json` | Raw output behind `boundary_head.md`: every setting on dev_clean, the chosen one on test_clean | `scripts/boundary_head.py fit --test` |
 | `fabench_eval.csv` | The leaderboard rows FA-Bench wrote for `fabench_eval.md` | `scripts/fabench_worker.py` |
 | `alignment_energy_sweep.json` | Raw output of the word-end refinement sweep in `alignment_eval.md` | `scripts/sweep_energy.py` |
 | `alignment_shift_sweep.json` | Raw dev_clean output of the shifted-encoding sweep (several encoder passes per chunk); not written up, the gain was small | `scripts/sweep_shifted_frames.py` |

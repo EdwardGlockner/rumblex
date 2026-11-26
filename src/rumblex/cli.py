@@ -71,6 +71,8 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--no_align", action="store_true", help="skip word timestamps (segment times only)")
     a.add_argument("--text", default=None, metavar="FILE",
                    help="align this transcript (a text file) instead of transcribing; one audio file only")  # fmt: skip
+    a.add_argument("--no_boundary_head", action="store_true",
+                   help="word times as in 0.5.0, without the learned start and end correction")  # fmt: skip
     a.add_argument("--end_rule", default="next_start", help=argparse.SUPPRESS)
 
     d = p.add_argument_group("diarization (pyannote; needs the [diarize] extra and Hugging Face access)")
@@ -130,7 +132,8 @@ def _load_pipeline(args):
         tr = RumbleTranscriber(
             args.model, device=args.device, dtype=args.compute_type, batch_size=args.batch_size
         )
-    al = None if args.no_align else Aligner.from_transcriber(tr, AlignOptions(end_rule=args.end_rule))
+    opts = AlignOptions(end_rule=args.end_rule, boundary_head=not args.no_boundary_head)
+    al = None if args.no_align else Aligner.from_transcriber(tr, opts)
     return tr, al, dz
 
 
@@ -212,6 +215,8 @@ def build_serve_parser() -> argparse.ArgumentParser:
     t.add_argument(
         "--diarize_model", default="pyannote/speaker-diarization-community-1", help=argparse.SUPPRESS
     )
+    t.add_argument("--no_boundary_head", action="store_true",
+                   help="word times as in 0.5.0, without the learned start and end correction")  # fmt: skip
     p.set_defaults(end_rule="next_start")
     return p
 
