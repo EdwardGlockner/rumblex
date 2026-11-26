@@ -23,9 +23,8 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
   `language`, `prompt`, `digits`, `filler` and `verbatim` options.
 - Hotwords: a list of names and terms the decoder is nudged towards (`--hotwords`, `--hotwords_file`).
 - Word timestamps from the CTC head. If alignment fails on a chunk, its words get proportional times.
-- Two per-word confidences: `probability`, the decoder's (exp of the mean log-prob of the word's tokens),
-  and `score`, the CTC head's (the lowest of its tokens' peak probabilities). `probability` is the better
-  of the two at telling wrong words from right ones ([eval](docs/confidence_eval.md)); it is empty for
+- Two per-word confidences: `probability` from the decoder and `score` from the CTC head. `probability` is
+  the better at telling wrong words from right ones ([eval](docs/confidence_eval.md)); it is empty for
   `--text` and for words with proportional times.
 - Alignment of a transcript you already have (`--text`, `rumblex.align`): no decoding, only the encoder
   and the CTC head.
@@ -88,9 +87,8 @@ On 857 clips of Earnings-21 calls with Rev's 1,013-entry biasing list, the share
 came out right went from 67.9% to 76.9%, with WER going from 5.84% to 6.02%
 ([docs/hotwords.md](docs/hotwords.md)). Write entries the way they should appear; a list in capitals is
 handled. It is meant for a list that belongs to the recording or the customer, not a dictionary.
-`--prompt` is still there for free-text context, but don't put a list in it: the same list as a prompt
-took WER to 24.13% and recall down to 52.0%. Not available with
-`--vllm_url` or in `rumblex serve` yet.
+`--prompt` is still there for free-text context, but don't put a list in it; that made things much worse.
+Not available with `--vllm_url` or in `rumblex serve` yet.
 
 **vLLM.** On Linux, decoding can run on a vLLM server (`pip install "rumblex[vllm]"`):
 
@@ -108,30 +106,10 @@ to 601× real time with the same WER
 and run `hf auth login`. rumblex turns off pyannote's telemetry unless you set
 `PYANNOTE_METRICS_ENABLED=true`.
 
-**Server.** `rumblex serve` answers OpenAI's transcription API, so the `openai` client and tools built on it
-can use rumblex by changing the base URL (`pip install "rumblex[server]"`):
-
-```bash
-rumblex serve                                        # port 9000; add --diarize for speaker labels
-```
-
-```python
-from openai import OpenAI
-
-client = OpenAI(base_url="http://localhost:9000/v1", api_key="unused")
-result = client.audio.transcriptions.create(
-    model="rumble-2-flash",
-    file=open("meeting.mp3", "rb"),
-    response_format="verbose_json",
-    timestamp_granularities=["word"],
-)
-print(result.words[0].word, result.words[0].start, result.words[0].probability)
-```
-
-It supports the `json`, `text`, `srt`, `vtt` and `verbose_json` formats, and `diarized_json` with
-`--diarize`. Words in `verbose_json` also have rumblex's `probability` and `score`. The server listens on
-127.0.0.1 unless you pass `--host`; set `--api_key` (or `RUMBLEX_API_KEY`) before exposing it. Requests run
-one at a time. `model` and `temperature` are accepted and ignored.
+**Server.** `rumblex serve` answers OpenAI's transcription API on port 9000, so the `openai` client and
+tools built on it can use rumblex by changing the base URL (`pip install "rumblex[server]"`). It listens on
+127.0.0.1 unless you pass `--host`; set `--api_key` before exposing it. Formats and a client example:
+[docs/server.md](docs/server.md).
 
 ## Compared with WhisperX
 
@@ -159,6 +137,13 @@ FLEURS (read speech), 350 utterances per language, same settings as above on ano
 normaliser, as on the model card; the run also has it with Whisper's normalisers. Speed is the ratio of the
 two systems on a 20-minute file per language, since that pod was slower overall than the one above.
 
+WhisperX large-v3 has the lower WER in most of these; rumblex is level on Spanish and French and well ahead
+on Hindi. English FLEURS (Whisper's normaliser) was 6.3% vs 5.2%. Word timestamps came from the CTC head in
+all but 1 of 4,288 chunks outside Hindi; for Hindi see Limitations.
+
+<details>
+<summary>WER and speed per language</summary>
+
 | language | rumblex WER | WhisperX WER | rumblex faster by |
 |---|---|---|---|
 | German | 5.0% | 3.3% | 3.7× |
@@ -174,27 +159,14 @@ two systems on a 20-minute file per language, since that pod was slower overall 
 | Arabic | 19.1% | 14.7% | 3.4× |
 | Hindi | 12.6% | 26.5% | 1.9× |
 
-WhisperX large-v3 has the lower WER in most of these; rumblex is level on Spanish and French and well ahead
-on Hindi. English FLEURS (Whisper's normaliser) was 6.3% vs 5.2%. Word timestamps came from the CTC head in
-all but 1 of 4,288 chunks outside Hindi; for Hindi see Limitations.
+</details>
 
 ### Timestamp accuracy
 
 The encoder runs at 13 frames per second, 80 ms a frame. Since 0.6.0 a small learned head on the encoder
 states places each word's start and end inside its frame ([docs/boundary_head.md](docs/boundary_head.md)).
-On 200 LibriSpeech test-clean utterances against Montreal Forced Aligner references (another aligner, not
-human labels), settings chosen on dev-clean:
 
-| mean absolute error | rumblex 0.6.0 | rumblex 0.5.0 |
-|---|---|---|
-| word start | 20 ms | 50 ms |
-| word end | 31 ms | 54 ms |
-
-WhisperX was not part of that measurement. In an earlier run on 200 LibriSpeech utterances it had 75 ms on
-starts and 34 ms on ends, next to 51 and 55 ms for rumblex without the head
-([run](docs/bench_2026-11-23_rtx4090_timing/README.md)).
-
-Against human labels: the Buckeye corpus of spontaneous speech, test split of
+Measured against human labels on the Buckeye corpus of spontaneous speech, test split of
 [FA-Bench](https://github.com/olewave/fa-bench) (4,513 utterances), with both tools given the reference
 words, i.e. `rumblex.align` against WhisperX's aligner ([docs/fabench_eval.md](docs/fabench_eval.md)).
 
@@ -206,6 +178,11 @@ words, i.e. `rumblex.align` against WhisperX's aligner ([docs/fabench_eval.md](d
 
 The head was fitted on read English and has seen no Buckeye data. Aligners built on phone models still do
 better than either tool on this benchmark; see FA-Bench's leaderboard.
+
+On LibriSpeech test-clean, against Montreal Forced Aligner references rather than human labels, the head
+took the start error from 50 to 20 ms and the end error from 54 to 31 ms
+([docs/boundary_head.md](docs/boundary_head.md)). An earlier LibriSpeech run that included WhisperX is in
+[bench_2026-11-23_rtx4090_timing](docs/bench_2026-11-23_rtx4090_timing/README.md).
 
 ## How it works
 
@@ -226,8 +203,7 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
   the previous chunk's text as context made transcripts worse
   ([docs/chunk_context_eval.md](docs/chunk_context_eval.md)).
 - Words split at spaces, so Chinese and Japanese get one "word" per chunk.
-- WhisperX large-v3 had lower WER on clean English and on FLEURS in most languages measured (13 so far,
-  all read speech except the English meeting and call sets).
+- WhisperX large-v3 had lower WER on read speech in most languages measured (tables above).
 - Hindi word times are less reliable: Hindi text runs to about 10 tokens per second of audio against the
   encoder's 13 frames, so in fast speech the CTC path doesn't fit and 30 of 360 chunks fell back to
   proportional times.
