@@ -20,7 +20,8 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
 
 - Any input ffmpeg reads. Long files are split into speech chunks with Silero VAD.
 - Batched transcription; a chunk's output doesn't depend on what it's batched with. Exposes the model's
-  `language`, `prompt` (hotwords), `digits`, `filler` and `verbatim` options.
+  `language`, `prompt`, `digits`, `filler` and `verbatim` options.
+- Hotwords: a list of names and terms the decoder is nudged towards (`--hotwords`, `--hotwords_file`).
 - Word timestamps from the CTC head. If alignment fails on a chunk, its words get proportional times.
 - Two per-word confidences: `probability`, the decoder's (exp of the mean log-prob of the word's tokens),
   and `score`, the CTC head's (the lowest of its tokens' peak probabilities). `probability` is the better
@@ -56,7 +57,8 @@ RTX 50-series install torch yourself and use `pip install -e .`.
 rumblex meeting.mp4                                   # all formats into the current folder
 rumblex talk.wav -f srt vtt --max_line_width 42
 rumblex interview.m4a --language Dutch --diarize -f srt txt
-rumblex call.wav --prompt "Kubernetes, metoprolol"   # hotwords
+rumblex call.wav --hotwords "Stifel, Paul Betz"      # names and terms to listen for
+rumblex call.wav --hotwords_file terms.txt           # one per line
 rumblex lecture.mp3 --text lecture.txt               # word times for your own transcript
 ```
 
@@ -74,6 +76,21 @@ result = rumblex.align("lecture.mp3", text, model)  # no transcribing
 ```
 
 More in [examples/](examples/).
+
+**Hotwords.** Give rumblex the names and terms you expect, and tokens that would write one of them get a
+small bonus during decoding:
+
+```python
+result = rumblex.transcribe("call.wav", model, hotwords=["Stifel", "Paul Betz", "SiTime"])
+```
+
+On 857 clips of Earnings-21 calls with Rev's 1,013-entry biasing list, the share of spoken list words that
+came out right went from 67.9% to 76.9%, with WER going from 5.84% to 6.02%
+([docs/hotwords.md](docs/hotwords.md)). Write entries the way they should appear; a list in capitals is
+handled. It is meant for a list that belongs to the recording or the customer, not a dictionary.
+`--prompt` is still there for free-text context, but don't put a list in it: the same list as a prompt
+took WER to 24.13% and recall down to 52.0%. Not available with
+`--vllm_url` or in `rumblex serve` yet.
 
 **vLLM.** On Linux, decoding can run on a vLLM server (`pip install "rumblex[vllm]"`):
 
@@ -213,6 +230,8 @@ Model details: [docs/model_inspection.md](docs/model_inspection.md).
 - Hindi word times are less reliable: Hindi text runs to about 10 tokens per second of audio against the
   encoder's 13 frames, so in fast speech the CTC path doesn't fit and 30 of 360 chunks fell back to
   proportional times.
+- Hotwords were measured on English earnings calls with one list. They don't work with the vLLM backend
+  or the server yet.
 - vLLM needs Linux and a GPU vLLM supports.
 
 ## Development

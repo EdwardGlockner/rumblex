@@ -1,0 +1,164 @@
+{
+ "device": "NVIDIA GeForce GTX 1070",
+ "dtype": "float32",
+ "batch_size": 4,
+ "seed": 0,
+ "clips_per_call": 20,
+ "calls": 44,
+ "clips": 857,
+ "audio_s": 13269.1,
+ "list_entries": 1013,
+ "language": "English",
+ "script": "scripts/eval_hotwords.py",
+ "normaliser": "whisper-english",
+ "list_words": 887,
+ "ref_words": 33667,
+ "list_words_spoken": 321,
+ "bootstrap_resamples": 2000,
+ "settings": {
+  "none": {
+   "wer": 5.84,
+   "list_recall": 67.9,
+   "false_triggers_per_100": 1.8,
+   "decode_s": 518.0,
+   "rtf": 0.039,
+   "processor_ms_per_clip": 0.0,
+   "list_build_s": 0.0,
+   "token_paths": 0
+  },
+  "hotwords": {
+   "wer": 6.02,
+   "list_recall": 76.9,
+   "false_triggers_per_100": 2.1,
+   "decode_s": 525.2,
+   "rtf": 0.0396,
+   "processor_ms_per_clip": 69.3,
+   "list_build_s": 1.32,
+   "token_paths": 6078,
+   "delta": {
+    "wer": 0.18,
+    "list_recall": 9.0,
+    "false_triggers_per_100": 0.3
+   },
+   "delta_ci95": {
+    "wer": [
+     0.06,
+     0.31
+    ],
+    "list_recall": [
+     5.72,
+     12.5
+    ],
+    "false_triggers_per_100": [
+     -0.12,
+     0.93
+    ]
+   },
+   "clips_changed": 242
+  },
+  "hotwords_acronyms": {
+   "wer": 6.02,
+   "list_recall": 76.9,
+   "false_triggers_per_100": 2.1,
+   "decode_s": 521.9,
+   "rtf": 0.0393,
+   "processor_ms_per_clip": 68.8,
+   "list_build_s": 0.5,
+   "token_paths": 5928,
+   "delta": {
+    "wer": 0.18,
+    "list_recall": 9.0,
+    "false_triggers_per_100": 0.3
+   },
+   "delta_ci95": {
+    "wer": [
+     0.06,
+     0.31
+    ],
+    "list_recall": [
+     5.72,
+     12.5
+    ],
+    "false_triggers_per_100": [
+     -0.12,
+     0.93
+    ]
+   },
+   "clips_changed": 242
+  },
+  "hotwords_as_given": {
+   "wer": 6.01,
+   "list_recall": 70.7,
+   "false_triggers_per_100": 1.8,
+   "decode_s": 516.5,
+   "rtf": 0.0389,
+   "processor_ms_per_clip": 68.4,
+   "list_build_s": 0.28,
+   "token_paths": 4052,
+   "delta": {
+    "wer": 0.17,
+    "list_recall": 2.8,
+    "false_triggers_per_100": 0.0
+   },
+   "delta_ci95": {
+    "wer": [
+     0.04,
+     0.3
+    ],
+    "list_recall": [
+     0.87,
+     5.04
+    ],
+    "false_triggers_per_100": [
+     -0.35,
+     0.35
+    ]
+   },
+   "clips_changed": 221
+  },
+  "prompt": {
+   "wer": 24.13,
+   "list_recall": 52.0,
+   "false_triggers_per_100": 4.6,
+   "decode_s": 2897.2,
+   "rtf": 0.2183,
+   "processor_ms_per_clip": 0.0,
+   "list_build_s": 0.0,
+   "token_paths": 0,
+   "batch_size": 1,
+   "prompt_tokens": 6286,
+   "delta": {
+    "wer": 18.29,
+    "list_recall": -15.9,
+    "false_triggers_per_100": 2.8
+   },
+   "delta_ci95": {
+    "wer": [
+     15.94,
+     21.13
+    ],
+    "list_recall": [
+     -20.56,
+     -11.55
+    ],
+    "false_triggers_per_100": [
+     0.58,
+     5.37
+    ]
+   },
+   "clips_changed": 610
+  }
+ },
+ "compare": {
+  "none=none": {
+   "clips": 857,
+   "missing": 0,
+   "different": 0
+  },
+  "hotwords=static_a2": {
+   "clips": 857,
+   "missing": 0,
+   "different": 0
+  }
+ }
+}

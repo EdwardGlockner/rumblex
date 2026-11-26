@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Hotwords: `--hotwords "Stifel, Paul Betz"`, `--hotwords_file terms.txt` and `hotwords=` in Python. The
+  list becomes a prefix tree over the decoder's tokens, and tokens that start or continue an entry get a
+  bonus of 2 on their logit during greedy decoding. An entry in capitals also gets a Title Case form. On
+  857 Earnings-21 clips with Rev's 1,013-entry list, recall of the spoken list words went from 67.9% to
+  76.9% (+9.0 [5.7, 12.5] points) and WER from 5.84% to 6.02% (+0.18 [0.06, 0.31])
+  (`docs/hotwords.md`, `scripts/eval_hotwords.py`). Transformers backend only: `--vllm_url` with hotwords
+  is an error, and `rumblex serve` doesn't take them yet.
+- A word's `probability` is now the log-prob of the token that was written, taken before any hotword
+  bonus. Without hotwords the values are the same as before.
+- `--prompt` is described as free-text context. It still works as before.
+
 ## 0.5.0 (2026-11-24)
 
 - `rumblex.align` / `--text`: word ends on text without punctuation are no longer early. The CTC path may

@@ -26,6 +26,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [align_text_eval.md](align_text_eval.md) | Word timing accuracy of `rumblex.align` on a given transcript, per utterance and as one long file; optional punctuation for text without it | `scripts/eval_align_text.py`, `scripts/sweep_text_punct.py` |
 | [fabench_eval.md](fabench_eval.md) | Word timing accuracy of `rumblex.align` and WhisperX against Buckeye's human word labels, scored by FA-Bench | `scripts/fabench_worker.py`, `scripts/fabench.patch` |
 | [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
+| [hotwords.md](hotwords.md) | How hotwords work and what they change on Earnings-21 clips with Rev's biasing list: WER, recall of list words, false triggers, decode time | `scripts/eval_hotwords.py` |
 | [chunk_context_eval.md](chunk_context_eval.md) | Whether giving the model the previous chunk's text as context helps on long recordings (TED-LIUM long-form, dev split): it doesn't | `scripts/eval_chunk_context.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
 | [bench_2026-11-20_rtx4090_tune](bench_2026-11-20_rtx4090_tune/README.md) | Batch size, chunk length and vLLM settings; found VAD to be the bottleneck | `scripts/runpod_tune.sh` |
@@ -43,6 +44,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `inspection_cpu.json`, `inspection_gpu_fp32.json` | Raw output behind `model_inspection.md` | `scripts/inspect_rumble_ctc.py` |
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
 | `confidence_eval.json` | Raw output behind `confidence_eval.md`, with calibration bins for every score | `scripts/eval_confidence.py` |
+| `hotwords_eval.json` | Raw output behind `hotwords.md` (no transcripts) | `scripts/eval_hotwords.py score` |
 | `chunk_context_eval.json` | Raw output behind `chunk_context_eval.md` (numbers only, no transcripts) | `scripts/eval_chunk_context.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |
 | `text_punct_sweep.json` | Raw output of the optional punctuation sweep in `align_text_eval.md` | `scripts/sweep_text_punct.py` |
