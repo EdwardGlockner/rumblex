@@ -50,7 +50,7 @@ PENALTY = 5.0
 HALF = 3  # frames kept on each side of a word's first and last frame
 CLIP_MS = 150.0  # training targets are clipped here, so misplaced words don't drive the fit
 WIDTHS = (0, 1, 2, 3)
-LAMBDAS = (300.0, 1000.0, 3000.0, 10000.0, 30000.0)
+LAMBDAS = (1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0, 3000.0, 10000.0, 30000.0)
 DIPS = ((0.0, 1), (0.01, 7), (0.02, 7))
 
 
