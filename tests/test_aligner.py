@@ -13,9 +13,11 @@ from rumblex.aligner import (
     ctc_viterbi,
     frame_times,
     group_words,
+    in_common,
     proportional_words,
     split_sentences,
     token_spans,
+    word_key,
 )
 from rumblex.types import Segment, WordSegment
 
@@ -113,6 +115,13 @@ def test_group_words():
     assert [w.score for w in words] == pytest.approx([0.5, 0.6, 1.0])
 
 
+def test_word_key_and_in_common():
+    assert word_key("Don't,") == "dont" and word_key("STRASSE") == word_key("straße") and word_key("-") == ""
+    assert in_common(["we", "will", "go", "their"], ["we", "will", "not", "go", "there"]) == [1, 1, 1, 0]
+    assert in_common(["a", "b", "a"], ["a"]).count(True) == 1  # a word of the other list is used once
+    assert in_common([], ["a"]) == [] and in_common(["a"], []) == [False]
+
+
 def test_end_rules():
     starts = np.array([0.0, 0.5, 3.0])
     spike_end = np.array([0.1, 0.6, 3.1])
@@ -134,6 +143,9 @@ class FakeHead:
         for k in range(min(L, (T - 2) // 3 + 1)):  # only spikes that fit
             em[3 * k + 1, k + 1], em[3 * k + 1, 0] = np.log(0.98), np.log(0.01)
         return em
+
+    def greedy(self, states):  # the head's own text: "The cat. sat"
+        return [7, 8, 9, 11]
 
 
 class FakeTokenizer:
@@ -160,10 +172,15 @@ def test_align_tokens_and_sentence_split():
     assert [s.text for s in segs] == ["The cat.", "It sat"]
     assert al.align_tokens([7] * 30, torch.zeros(5, 4), 0.0) is None  # can't fit
     assert all(w.probability is None for w in words)  # no decoder log-probs given
+    assert all(w.ctc_match is None for w in words)
     lps = [-0.1, -0.3, -2.0, -0.2, 0.0]
     words = al.align_tokens([7, 8, 9, 10, 11], torch.zeros(20, 4), chunk_start=10.0, token_logprobs=lps)
     # "cat." averages its two tokens, punctuation included
     assert [w.probability for w in words] == pytest.approx(np.round(np.exp([-0.1, -1.15, -0.2, 0.0]), 3))
+    assert [w.ctc_match for w in words] == [True, True, False, True]  # the head's text has no "It"
+    off = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(blank_penalty=0.0, ctc_match=False))
+    words = off.align_tokens([7, 8, 9, 10, 11], torch.zeros(20, 4), 0.0, token_logprobs=lps)
+    assert all(w.ctc_match is None for w in words)
     with pytest.raises(ValueError, match="one value per token"):
         al.align_tokens([7, 8], torch.zeros(20, 4), 0.0, token_logprobs=[-0.1])
 
@@ -259,6 +276,9 @@ def test_refine_starts_moves_to_onset():
 
 def test_align_tokens_uses_audio_when_given():
     class Head:  # spikes at frames 1 and 14 (0.08 s and 1.04 s)
+        def greedy(self, states):
+            return []
+
         def emissions(self, states, classes):
             em = np.full((states.shape[0], len(classes)), np.log(0.01))
             em[:, 0] = np.log(0.98)
@@ -332,6 +352,9 @@ def test_ctc_head_from_local_folder(tmp_path, monkeypatch):
 
 def test_blank_penalty_widens_token_spans():
     class Head:  # token 0 clearly at frame 2, token 1 at frame 6; frames 3 and 7 lean blank only slightly
+        def greedy(self, states):
+            return []
+
         def emissions(self, states, classes):
             em = np.full((10, 3), np.log(0.01))
             em[:, 0] = np.log(0.98)
@@ -413,6 +436,9 @@ def test_optional_punctuation_extends_the_word_before_it():
             return [{".": 9}.get(t) for t in tokens]
 
     class Head:  # "The" at frame 1, a full stop at frame 2 (when asked for), "cat" at frame 6
+        def greedy(self, states):
+            return []
+
         def emissions(self, states, classes):
             em = np.full((10, len(classes)), np.log(0.001))
             em[:, 0] = np.log(0.98)

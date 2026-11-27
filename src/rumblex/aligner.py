@@ -272,6 +272,31 @@ def group_words(
     return words
 
 
+def word_key(text: str) -> str:
+    """A word reduced to its letters and digits, case-folded, for comparing two spellings of it."""
+    return "".join(ch for ch in text.casefold() if ch.isalnum())
+
+
+def in_common(a: Sequence[str], b: Sequence[str]) -> list[bool]:
+    """For each item of `a`, whether it is part of a longest common subsequence of `a` and `b`."""
+    n, m = len(a), len(b)
+    d = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n - 1, -1, -1):
+        for j in range(m - 1, -1, -1):
+            d[i][j] = d[i + 1][j + 1] + 1 if a[i] == b[j] else max(d[i + 1][j], d[i][j + 1])
+    out = [False] * n
+    i = j = 0
+    while i < n and j < m:
+        if a[i] == b[j]:
+            out[i] = True
+            i, j = i + 1, j + 1
+        elif d[i + 1][j] >= d[i][j + 1]:
+            i += 1
+        else:
+            j += 1
+    return out
+
+
 # Each rule maps word starts and spike ends (seconds, [n]) plus the chunk's speech regions to word ends.
 
 
@@ -598,6 +623,10 @@ class AlignOptions:
     # word, as it does when the model's own punctuated text is aligned. Subtracted from that token's
     # log-prob, as blank_penalty is from the blank's.
     punct_penalty: float = 2.5  # chosen on dev_clean, see docs/align_text_eval.md
+    # Mark each transcribed word with whether the CTC head's own greedy text has it too (`ctc_match`).
+    # Costs a second pass of the head over the chunk's frames. Not done for text that was given, like
+    # `probability`. See docs/word_trust_eval.md.
+    ctc_match: bool = True
 
 
 PUNCTUATION = (",", ".", "?", "!")
@@ -632,8 +661,8 @@ class Aligner:
     ) -> list[WordSegment] | None:
         """Word timings (global seconds) for one chunk's tokens, or None if CTC alignment fails.
         `regions` are the chunk's speech regions in global seconds. With the decoder's `token_logprobs`
-        (one per token) words also get a `probability`. `optional_punct` lets the path put a punctuation
-        mark after words that have none (for text that was given without punctuation)."""
+        (one per token) words also get a `probability` and a `ctc_match`. `optional_punct` lets the path
+        put a punctuation mark after words that have none (for text that was given without punctuation)."""
         token_ids = list(token_ids)
         if token_logprobs is not None and len(token_logprobs) != len(token_ids):
             raise ValueError("token_logprobs must have one value per token")
@@ -684,6 +713,9 @@ class Aligner:
         words = group_words(token_ids, spans, probs, tokens, self._decode, token_logprobs)
         if not words:
             return None
+        match: list[bool | None] = [None] * len(words)
+        if o.ctc_match and token_logprobs is not None:  # only for the model's own text
+            match = self._ctc_match(states, words)
         loudness = None
         shift = o.start_shift
         boundary = self.boundary
@@ -716,9 +748,26 @@ class Aligner:
                 round(float(e), 3),
                 round(w.score, 3),
                 probability=None if w.probability is None else round(w.probability, 3),
+                ctc_match=m,
             )
-            for w, s, e in zip(words, starts, ends)
+            for w, s, e, m in zip(words, starts, ends, match)
         ]
+
+    def _ctc_match(self, states: torch.Tensor, words: Sequence[AlignedWord]) -> list[bool | None]:
+        """For each word, whether the head's greedy text has it too: the word is part of a longest common
+        subsequence of the two word lists, compared by `word_key`. None for a word without letters or
+        digits."""
+        ids = self.head.greedy(states)
+        groups: list[list[int]] = []
+        for i, tok in zip(ids, self.tokenizer.convert_ids_to_tokens(ids)):
+            if not groups or tok.startswith("Ġ"):
+                groups.append([i])
+            else:
+                groups[-1].append(i)
+        heard = [k for k in (word_key(self._decode(g)) for g in groups) if k]
+        keys = [word_key(w.text) for w in words]
+        hit = iter(in_common([k for k in keys if k], heard))
+        return [next(hit) if k else None for k in keys]
 
     def align(
         self, result: TranscriptResult, audio: np.ndarray | None = None, optional_punct: bool = False

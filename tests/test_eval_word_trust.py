@@ -47,6 +47,12 @@ def test_utterance_row_labels_words_and_gaps(wt):
     assert wt.deletion_stats([row], 0.7)["gaps_flagged"] == 0
 
 
+def test_match_stats(wt):
+    s = wt.match_stats(np.array([1.0, 0.0, 0.0, 1.0]), np.array([False, True, False, True]))
+    assert s["unmatched"] == 2 and s["wrong_among_unmatched"] == 0.5 and s["wrong_among_matched"] == 0.5
+    assert s["share_of_errors_unmatched"] == 0.5
+
+
 def test_auc_counts_ties_as_half(wt):
     wrong = np.array([True, False, True, False])
     assert wt.auc(np.array([0.1, 0.9, 0.2, 0.8]), wrong) == 1.0

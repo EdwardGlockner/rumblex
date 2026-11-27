@@ -90,6 +90,8 @@ def _word(w: WordSegment) -> dict[str, Any]:
     d: dict[str, Any] = {"word": w.word, "start": w.start, "end": w.end, "score": w.score}
     if w.probability is not None:
         d["probability"] = w.probability
+    if w.ctc_match is not None:
+        d["ctc_match"] = w.ctc_match
     if w.speaker is not None:
         d["speaker"] = w.speaker
     return d

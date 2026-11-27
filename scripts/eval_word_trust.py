@@ -13,6 +13,8 @@ scores rumblex already writes (`dec_mean` = `probability`, `ctc_peak_min` = `sco
                   the forced path's class). 0 when the forced path is the greedy path
   ctc_word_match  1 when the word is matched on an alignment of the decoder's words to the words of the
                   greedy CTC text (both normalised), else 0
+  ctc_match       the same question the way rumblex answers it for a word's `ctc_match`: per chunk, words
+                  compared by their letters and digits, matched when part of a longest common subsequence
 It also keeps the reference words, the decoder's words and the greedy CTC words of every utterance.
 
 `score` then reports, with everything fitted or chosen on dev and applied to test:
@@ -21,6 +23,8 @@ It also keeps the reference words, the decoder's words and the greedy CTC words 
   - the same among words the decoder is sure of (`dec_mean` >= 0.95), where `probability` has little left
   - deleted words: places where the greedy CTC text has a word the decoder's text lacks, against places
     where the reference has one
+  - for `ctc_match`: how often words with and without a match are wrong, among all words and among the
+    words the decoder is sure of
 
 Words are labelled as in scripts/eval_confidence.py.
 
@@ -39,12 +43,13 @@ from pathlib import Path
 import numpy as np
 from eval_confidence import BLANK_PENALTY, fit_logistic, normalize
 
-SINGLES = ("dec_mean", "ctc_peak_min", "ctc_margin_min", "ctc_top1", "ctc_gap", "ctc_word_match")
+SINGLES = ("dec_mean", "ctc_peak_min", "ctc_margin_min", "ctc_top1", "ctc_gap", "ctc_word_match", "ctc_match")
 COMBOS = {
     "dec+peak": ("dec_mean", "ctc_peak_min"),
     "dec+margin": ("dec_mean", "ctc_margin_min"),
     "dec+gap": ("dec_mean", "ctc_gap"),
     "dec+match": ("dec_mean", "ctc_word_match"),
+    "dec+ctc_match": ("dec_mean", "ctc_match"),
     "dec+all": ("dec_mean", "ctc_peak_min", "ctc_margin_min", "ctc_top1", "ctc_gap", "ctc_word_match"),
     "ctc_all": ("ctc_peak_min", "ctc_margin_min", "ctc_top1", "ctc_gap", "ctc_word_match"),
 }
@@ -88,7 +93,7 @@ def chunk_features(c: dict, head, tok) -> tuple[list[dict], list[dict]]:
     """(the decoder's words with their scores, the words of the greedy CTC text) for one chunk."""
     import torch
 
-    from rumblex.aligner import BLANK, ctc_viterbi, token_spans
+    from rumblex.aligner import BLANK, ctc_viterbi, in_common, token_spans, word_key
 
     ids = list(c["token_ids"])
     lp = head.log_probs(c["states"].float())
@@ -163,6 +168,11 @@ def chunk_features(c: dict, head, tok) -> tuple[list[dict], list[dict]]:
             "ctc_top1": float(np.mean([top1[k] for k in g])),
             "ctc_gap": -float(gap[spans[g[0]][0] : spans[g[-1]][1] + 1].mean()),
         })  # fmt: skip
+    keys = [word_key(w["text"]) for w in words]
+    heard = [k for k in (word_key(w["text"]) for w in ctc_words) if k]
+    hit = iter(in_common([k for k in keys if k], heard))
+    for w, k in zip(words, keys):
+        w["ctc_match"] = float(next(hit)) if k else 0.0
     return words, ctc_words
 
 
@@ -303,6 +313,19 @@ def deletion_stats(utts: list[dict], threshold: float) -> dict:
     }
 
 
+def match_stats(match: np.ndarray, wrong: np.ndarray) -> dict:
+    """How often words without and with a CTC match are wrong, and where the errors are."""
+    no = match == 0
+    return {
+        "words": len(wrong),
+        "unmatched": int(no.sum()),
+        "share_unmatched": round(float(no.mean()), 4),
+        "wrong_among_unmatched": round(float(wrong[no].mean()), 4) if no.any() else None,
+        "wrong_among_matched": round(float(wrong[~no].mean()), 4) if (~no).any() else None,
+        "share_of_errors_unmatched": round(float(wrong[no].sum() / wrong.sum()), 4) if wrong.any() else None,
+    }
+
+
 def cmd_score(args) -> None:
     data = {n: json.loads((Path(args.features) / f"{n}.json").read_text(encoding="utf-8")) for n in args.sets}
     tables: dict[tuple[str, str], dict[str, np.ndarray]] = {}
@@ -358,11 +381,14 @@ def cmd_score(args) -> None:
                 "auc": {v: round(auc(t[v][sure], wrong[sure]), 4)
                         for v in (*SINGLES, "ctc_all", "ctc_all_fitted_on_sure")},
             }  # fmt: skip
+            e["ctc_match"] = {"all": match_stats(t["ctc_match"], wrong),
+                              "sure": match_stats(t["ctc_match"][sure], wrong[sure])}  # fmt: skip
             us = [u for u in d["utterances"] if u["split"] == split]
             e["deletions"] = [deletion_stats(us, th) for th in EXTRA_THRESHOLDS]
             entry[split] = e
             print(name, split, e["words"], "words", e["wrong"], "wrong", e["auc"], flush=True)
             print("   sure:", e["sure"], flush=True)
+            print("   ctc_match:", e["ctc_match"], flush=True)
             for row in e["deletions"]:
                 print("   del:", row, flush=True)
             if split == "test":

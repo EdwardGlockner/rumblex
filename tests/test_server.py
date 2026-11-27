@@ -33,7 +33,7 @@ class FakeTr:
             raise ValueError("unknown language 'xx'")
         words = [
             WordSegment("Hello", 0.1, 0.5, 0.9, probability=0.99),
-            WordSegment("world.", 0.6, 1.0, 0.2, probability=0.5),
+            WordSegment("world.", 0.6, 1.0, 0.2, probability=0.5, ctc_match=False),
         ]
         seg = Segment(0.1, 1.0, "Hello world.", words, language="English")
         return TranscriptResult([seg], "English", {"duration": len(wav) / 16000, "chunk_transcripts": []})
@@ -78,6 +78,7 @@ def test_verbose_json_words_and_segments():
     assert r.language == "english" and r.duration == 2.0 and r.text == "Hello world."
     assert [(w.word, w.start, w.end) for w in r.words] == [("Hello", 0.1, 0.5), ("world.", 0.6, 1.0)]
     assert r.words[1].probability == 0.5 and r.words[1].score == 0.2  # rumblex's extra fields
+    assert r.words[1].ctc_match is False and not hasattr(r.words[0], "ctc_match")
     seg = r.segments[0]
     assert seg.text == " Hello world." and seg.tokens == [5, 6] and seg.temperature == 0.0
     assert seg.avg_logprob == pytest.approx(round((np.log(0.99) + np.log(0.5)) / 2, 4))
