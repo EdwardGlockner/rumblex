@@ -64,7 +64,7 @@ def test_transcribe_ignores_the_transcript_and_asks_for_raw_words(worker, tmp_pa
     assert mod.main([write_jobs(tmp_path, jobs), "some/model", "cpu", "transcribe"]) == 0
     rec = json.loads(capsys.readouterr().out.splitlines()[0])
     assert [w[0] for w in rec["words"]] == ["heard", "this"]
-    options = {"language": "en", "digits": False, "filler": True, "verbatim": True}
+    options = {"language": "en", "digits": False, "filler": False, "verbatim": True}
     assert calls == [("transcribe", "a.wav", options)]
 
 
@@ -77,12 +77,12 @@ def test_transcribe_strips_punctuation_at_word_edges_and_drops_empty_words(worke
                             ["it's", 2.0, 2.4, 0.9]]
 
 
-def test_fillers_can_be_turned_off_from_the_environment(worker, tmp_path, capsys, monkeypatch):
+def test_fillers_can_be_kept_from_the_environment(worker, tmp_path, capsys, monkeypatch):
     mod, calls = worker
-    monkeypatch.setenv("FABENCH_RUMBLEX_FILLER", "0")
+    monkeypatch.setenv("FABENCH_RUMBLEX_FILLER", "1")
     jobs = [{"item_id": "a", "audio_path": "a.wav"}]
     assert mod.main([write_jobs(tmp_path, jobs), "some/model", "cpu", "transcribe"]) == 0
-    assert calls[0][2]["filler"] is False
+    assert calls[0][2]["filler"] is True
 
 
 def test_unknown_task_is_refused(worker, tmp_path):

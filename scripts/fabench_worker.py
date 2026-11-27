@@ -8,9 +8,9 @@ JSON object per line from stdout:
          {"item_id": ..., "error": "..."}
 
 Task `align` gives the reference transcript to `rumblex.align` (FA-Bench track 1). Task `transcribe` runs
-`rumblex.transcribe` on the audio alone (track 2), in English, with numbers spelled out and fillers kept,
-since the references spell numbers out and include "um" and "uh". Everything else is the package default.
-Set FABENCH_RUMBLEX_FILLER=0 in the recipe's `env` to turn fillers off. Punctuation at the edges of a
+`rumblex.transcribe` on the audio alone (track 2), in English, with numbers spelled out since the
+references spell them out. Everything else is the package default, which leaves fillers ("uh", "um") out;
+set FABENCH_RUMBLEX_FILLER=1 in the recipe's `env` to keep them. Punctuation at the edges of a
 transcribed word (quotation marks and what is inside them, like `want."`) is removed, since FA-Bench
 compares the labels as they come.
 
@@ -46,7 +46,7 @@ def main(argv: list[str]) -> int:
 
     if not (device.startswith("cuda") and torch.cuda.is_available()):
         device = "cpu"
-    filler = os.environ.get("FABENCH_RUMBLEX_FILLER", "1") != "0"
+    filler = os.environ.get("FABENCH_RUMBLEX_FILLER", "0") == "1"
     model = rumblex.load_model(model_id, device=device)
     with open(jobs_path, encoding="utf-8") as f:
         jobs = [json.loads(line) for line in f if line.strip()]

@@ -18,7 +18,7 @@ Qwen3-ForcedAligner-0.6B was added on 2026-11-27 through FA-Bench's own `qwen3_f
 and same data, on a GTX 1070. Its two rows have an empty `run` column, like WhisperX's.
 
 This is FA-Bench's track 1: the tools are handed the reference words and only have to place them.
-Transcribing from audio alone (track 2) has been run once for rumblex, on dev only; see
+Transcribing from audio alone (track 2) has been run for rumblex on dev only; see
 [Track 2](#track-2-dev-only) below.
 
 ## Setup
@@ -115,30 +115,35 @@ behind the aligners built on phone models.
 
 ## Track 2 (dev only)
 
-A first run of `rumblex.transcribe` on the dev split, 2026-11-27, rumblex 0.6.1 at commit `deb1d8c`, GTX
-1070, float32, with the worker options listed further down and nothing adjusted afterwards. The row is
-`track 2` in the CSV.
+`rumblex.transcribe` on the dev split, 2026-11-27, rumblex 0.6.1 at commit `deb1d8c` with the worker of
+this branch, GTX 1070, float32. Three results, `track 2 first run`, `track 2 fillers kept` and `track 2`
+in the CSV:
 
-| split | WER | words matched | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
+| dev | WER | words matched | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
 |---|---|---|---|---|---|---|---|
-| dev | 11.2% | 43,621 of 47,401 | 24.9 ms | 33.6 ms | 29.2 ms | 32.4 ms | 0.496 |
+| first run, fillers kept | 11.2% | 43,621 of 47,401 | 24.9 ms | 33.6 ms | 29.2 ms | 32.4 ms | 0.496 |
+| same output, edge punctuation removed | 10.9% | 43,798 | 24.9 ms | 33.7 ms | 29.3 ms | 32.4 ms | 0.498 |
+| second run, fillers left out | 10.7% | 43,282 | 23.4 ms | 30.0 ms | 26.7 ms | 28.5 ms | 0.507 |
 
-The MAE columns cover only the words that matched the reference. On those, starts are as close as in
-track 1 (24.9 against 24.5 ms) and ends are 4 ms worse (33.6 against 29.7 ms). F1 also counts the words
-that were missed or added, which is why it drops from 0.540 to 0.496.
+The first run asked the model to keep fillers (`filler=True`), a guess made before any run. Its output
+had a few hundred words with a quotation mark or the punctuation inside one attached (`"well`, `want."`),
+which FA-Bench compares as they come; the worker now removes punctuation at the edges of a word, and the
+second row is the first run's output rescored with that applied. The second run leaves fillers out, which
+is the package default. It has the lower WER and the better timing, so it is the setting kept, and the
+only choice made on dev. With fillers kept the model wrote "uh" 886 times, "um" 265 times and "mm-hmm"
+308 times; many of those are not in the reference as words.
 
-A rough count of the word errors (difflib alignment of the output against the reference words, not
-FA-Bench's scorer; it gives 11.3%) says a good part of the 11.2% is spelling convention and not
-recognition:
+The MAE columns cover only the words that matched the reference. On those, with fillers left out, timing
+is as good as in track 1 (start 23.4 against 24.5 ms, end 30.0 against 29.7 ms). F1 also counts the
+words that were missed or added, which is why it is lower than track 1's 0.540.
 
-- Buckeye writes `yknow`; rumblex writes "you know" 251 times where the reference has it, each counted
-  as two errors. The same for `gonna` / "going to" (85) and `wanna` / "want to" (49).
-- rumblex adds "mm-hmm" 282 times and "uh" 201 times where the reference has no word.
-- A few dozen words come out with a quotation mark attached (`"well`), which the worker should strip.
+A rough count of the first run's word errors (difflib alignment of the output against the reference
+words, not FA-Bench's scorer) says part of the WER is spelling convention and not recognition: Buckeye
+writes `yknow`, `gonna` and `wanna` where rumblex writes "you know" (251 times), "going to" (85) and
+"want to" (49), each counted as two errors. That has been left as it is.
 
-None of this has been changed, because any change would be a choice made on dev. The test split and the
-WhisperX side (`whisperx_asr`) have not been run. The run took 79 minutes on a shared card and is not a
-speed measurement.
+The test split is to be run once with the kept setting. The WhisperX side (`whisperx_asr`) has not been
+run. The runs took 61 to 79 minutes on a shared card and are not speed measurements.
 
 Background and how to run it:
 
@@ -155,11 +160,10 @@ reasonable time.
 
 What is in place:
 
-- `scripts/fabench_worker.py` has a `transcribe` task: English forced, numbers spelled out
-  (`digits=False`), fillers kept (`filler=True`, `verbatim=True`), since Buckeye's transcripts spell
-  numbers out and include "um" and "uh". Otherwise package defaults. Utterances here are under 20 s, so
-  they go in whole without VAD. These options are a first guess; the dev run above used them as they
-  are.
+- `scripts/fabench_worker.py` has a `transcribe` task: English forced and numbers spelled out
+  (`digits=False`), since Buckeye's transcripts spell them out. Otherwise package defaults; setting
+  `FABENCH_RUMBLEX_FILLER: "1"` under `env` in the recipe keeps fillers. Utterances here are under 20 s,
+  so they go in whole without VAD.
 - `scripts/fabench.patch` adds the `rumblex_asr` adapter and its recipe
   (`evals/timestamp_asrs/rumblex_asr/config.yaml`).
 - The worker's `transcribe` task is covered by a unit test with the model mocked. The `rumblex_asr`
