@@ -18,7 +18,8 @@ Qwen3-ForcedAligner-0.6B was added on 2026-11-27 through FA-Bench's own `qwen3_f
 and same data, on a GTX 1070. Its two rows have an empty `run` column, like WhisperX's.
 
 This is FA-Bench's track 1: the tools are handed the reference words and only have to place them.
-Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2-not-run) below.
+Transcribing from audio alone (track 2) has been run once for rumblex, on dev only; see
+[Track 2](#track-2-dev-only) below.
 
 ## Setup
 
@@ -112,7 +113,34 @@ MMS-FA 0.344 / 37.1 ms. rumblex 0.5.0, at 0.358 / 42.5 ms on test, sat next to M
 WhisperX on MAE. 0.6.0, at 0.536 / 30.3 ms, is ahead of MMS-FA and WhisperX on both and still clearly
 behind the aligners built on phone models.
 
-## Track 2 (not run)
+## Track 2 (dev only)
+
+A first run of `rumblex.transcribe` on the dev split, 2026-11-27, rumblex 0.6.1 at commit `deb1d8c`, GTX
+1070, float32, with the worker options listed further down and nothing adjusted afterwards. The row is
+`track 2` in the CSV.
+
+| split | WER | words matched | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
+|---|---|---|---|---|---|---|---|
+| dev | 11.2% | 43,621 of 47,401 | 24.9 ms | 33.6 ms | 29.2 ms | 32.4 ms | 0.496 |
+
+The MAE columns cover only the words that matched the reference. On those, starts are as close as in
+track 1 (24.9 against 24.5 ms) and ends are 4 ms worse (33.6 against 29.7 ms). F1 also counts the words
+that were missed or added, which is why it drops from 0.540 to 0.496.
+
+A rough count of the word errors (difflib alignment of the output against the reference words, not
+FA-Bench's scorer; it gives 11.3%) says a good part of the 11.2% is spelling convention and not
+recognition:
+
+- Buckeye writes `yknow`; rumblex writes "you know" 251 times where the reference has it, each counted
+  as two errors. The same for `gonna` / "going to" (85) and `wanna` / "want to" (49).
+- rumblex adds "mm-hmm" 282 times and "uh" 201 times where the reference has no word.
+- A few dozen words come out with a quotation mark attached (`"well`), which the worker should strip.
+
+None of this has been changed, because any change would be a choice made on dev. The test split and the
+WhisperX side (`whisperx_asr`) have not been run. The run took 79 minutes on a shared card and is not a
+speed measurement.
+
+Background and how to run it:
 
 FA-Bench scores tools in two ways. Track 1, above, hands the tool the audio and the correct words and
 asks only when each word was said. Track 2 hands it the audio alone: the tool transcribes and times its
@@ -120,23 +148,22 @@ own words, which for rumblex is the normal `rumblex.transcribe` and for WhisperX
 large-v3 followed by its aligner. A word the tool gets wrong has no label to match, so the track 2
 score mixes recognition errors with timing errors, and FA-Bench reports WER next to it.
 
-It was left out for now because it would mostly combine two things already measured separately: timing
-against human labels (above; the timing code is the same in both modes) and recognition (WER on other
-sets, in the top-level README). It would add one number for normal use on spontaneous speech. The
-WhisperX side also needs a GPU to finish in reasonable time.
+It mostly combines two things already measured separately: timing against human labels (above; the
+timing code is the same in both modes) and recognition (WER on other sets, in the top-level README). What
+it adds is one number for normal use on spontaneous speech. The WhisperX side needs a GPU to finish in
+reasonable time.
 
-What is in place, and what has and hasn't been tried:
+What is in place:
 
 - `scripts/fabench_worker.py` has a `transcribe` task: English forced, numbers spelled out
   (`digits=False`), fillers kept (`filler=True`, `verbatim=True`), since Buckeye's transcripts spell
   numbers out and include "um" and "uh". Otherwise package defaults. Utterances here are under 20 s, so
-  they go in whole without VAD. These options are a first guess and have not been checked against the
-  dev split.
+  they go in whole without VAD. These options are a first guess; the dev run above used them as they
+  are.
 - `scripts/fabench.patch` adds the `rumblex_asr` adapter and its recipe
   (`evals/timestamp_asrs/rumblex_asr/config.yaml`).
 - The worker's `transcribe` task is covered by a unit test with the model mocked. The `rumblex_asr`
-  recipe has not been run inside FA-Bench, not even on a few utterances, so expect to fix something on
-  the first try.
+  recipe ran inside FA-Bench without changes, with `device: cuda` set in the generated config.
 - FA-Bench's WhisperX counterpart is `whisperx_asr`. It shares the venv of the track 1 `whisperx`
   recipe and its recipe is set to `device: cuda`.
 
