@@ -22,6 +22,11 @@
    "dec_mean": 3.9837,
    "ctc_word_match": 1.6826
   },
+  "dec+ctc_match": {
+   "bias": 1.9527,
+   "dec_mean": 3.9222,
+   "ctc_match": 1.5624
+  },
   "dec+all": {
    "bias": 1.899,
    "dec_mean": 3.4657,
@@ -55,10 +60,12 @@
      "ctc_top1": 0.7448,
      "ctc_gap": 0.7218,
      "ctc_word_match": 0.747,
+     "ctc_match": 0.7393,
      "dec+peak": 0.8477,
      "dec+margin": 0.8369,
      "dec+gap": 0.8166,
      "dec+match": 0.8585,
+     "dec+ctc_match": 0.8556,
      "dec+all": 0.8481,
      "ctc_all": 0.8179
     },
@@ -93,6 +100,11 @@
       "errors_caught": 0.0,
       "flagged_wrong": null
      },
+     "ctc_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
      "dec+peak": {
       "flagged": 0.1274,
       "errors_caught": 0.5885,
@@ -112,6 +124,11 @@
       "flagged": 0.1336,
       "errors_caught": 0.6049,
       "flagged_wrong": 0.2946
+     },
+     "dec+ctc_match": {
+      "flagged": 0.1322,
+      "errors_caught": 0.5885,
+      "flagged_wrong": 0.2895
      },
      "dec+all": {
       "flagged": 0.1314,
@@ -136,8 +153,27 @@
       "ctc_top1": 0.6502,
       "ctc_gap": 0.632,
       "ctc_word_match": 0.6332,
+      "ctc_match": 0.6256,
       "ctc_all": 0.7387,
       "ctc_all_fitted_on_sure": 0.7368
+     }
+    },
+    "ctc_match": {
+     "all": {
+      "words": 3736,
+      "unmatched": 696,
+      "share_unmatched": 0.1863,
+      "wrong_among_unmatched": 0.2213,
+      "wrong_among_matched": 0.0293,
+      "share_of_errors_unmatched": 0.6337
+     },
+     "sure": {
+      "words": 2965,
+      "unmatched": 339,
+      "share_unmatched": 0.1143,
+      "wrong_among_unmatched": 0.0826,
+      "wrong_among_matched": 0.019,
+      "share_of_errors_unmatched": 0.359
      }
     },
     "deletions": [
@@ -210,10 +246,12 @@
      "ctc_top1": 0.79,
      "ctc_gap": 0.7533,
      "ctc_word_match": 0.7965,
+     "ctc_match": 0.7894,
      "dec+peak": 0.8871,
      "dec+margin": 0.8805,
      "dec+gap": 0.8605,
      "dec+match": 0.9018,
+     "dec+ctc_match": 0.8992,
      "dec+all": 0.8924,
      "ctc_all": 0.8609
     },
@@ -248,6 +286,11 @@
       "errors_caught": 0.0,
       "flagged_wrong": null
      },
+     "ctc_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
      "dec+peak": {
       "flagged": 0.1247,
       "errors_caught": 0.6108,
@@ -267,6 +310,11 @@
       "flagged": 0.1342,
       "errors_caught": 0.7192,
       "flagged_wrong": 0.2949
+     },
+     "dec+ctc_match": {
+      "flagged": 0.1309,
+      "errors_caught": 0.7044,
+      "flagged_wrong": 0.2961
      },
      "dec+all": {
       "flagged": 0.1347,
@@ -296,6 +344,10 @@
       0.0083,
       0.0318
      ],
+     "dec+ctc_match": [
+      0.0059,
+      0.0294
+     ],
      "dec+all": [
       -0.0043,
       0.0257
@@ -317,8 +369,27 @@
       "ctc_top1": 0.696,
       "ctc_gap": 0.6642,
       "ctc_word_match": 0.725,
+      "ctc_match": 0.7138,
       "ctc_all": 0.8031,
       "ctc_all_fitted_on_sure": 0.8028
+     }
+    },
+    "ctc_match": {
+     "all": {
+      "words": 3689,
+      "unmatched": 690,
+      "share_unmatched": 0.187,
+      "wrong_among_unmatched": 0.2159,
+      "wrong_among_matched": 0.018,
+      "share_of_errors_unmatched": 0.734
+     },
+     "sure": {
+      "words": 2916,
+      "unmatched": 324,
+      "share_unmatched": 0.1111,
+      "wrong_among_unmatched": 0.0772,
+      "wrong_among_matched": 0.0085,
+      "share_of_errors_unmatched": 0.5319
      }
     },
     "deletions": [
@@ -394,10 +465,12 @@
      "ctc_top1": 0.7332,
      "ctc_gap": 0.7032,
      "ctc_word_match": 0.7076,
+     "ctc_match": 0.7046,
      "dec+peak": 0.8507,
      "dec+margin": 0.8399,
      "dec+gap": 0.8096,
      "dec+match": 0.8458,
+     "dec+ctc_match": 0.8406,
      "dec+all": 0.845,
      "ctc_all": 0.8262
     },
@@ -432,6 +505,11 @@
       "errors_caught": 0.0,
       "flagged_wrong": null
      },
+     "ctc_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
      "dec+peak": {
       "flagged": 0.0866,
       "errors_caught": 0.4792,
@@ -451,6 +529,11 @@
       "flagged": 0.0835,
       "errors_caught": 0.4867,
       "flagged_wrong": 0.406
+     },
+     "dec+ctc_match": {
+      "flagged": 0.0842,
+      "errors_caught": 0.4773,
+      "flagged_wrong": 0.395
      },
      "dec+all": {
       "flagged": 0.0846,
@@ -475,8 +558,27 @@
       "ctc_top1": 0.6168,
       "ctc_gap": 0.6117,
       "ctc_word_match": 0.6019,
+      "ctc_match": 0.5877,
       "ctc_all": 0.7255,
       "ctc_all_fitted_on_sure": 0.7263
+     }
+    },
+    "ctc_match": {
+     "all": {
+      "words": 7578,
+      "unmatched": 990,
+      "share_unmatched": 0.1306,
+      "wrong_among_unmatched": 0.2727,
+      "wrong_among_matched": 0.0392,
+      "share_of_errors_unmatched": 0.5114
+     },
+     "sure": {
+      "words": 6438,
+      "unmatched": 507,
+      "share_unmatched": 0.0788,
+      "wrong_among_unmatched": 0.0986,
+      "wrong_among_matched": 0.0255,
+      "share_of_errors_unmatched": 0.2488
      }
     },
     "deletions": [
@@ -549,10 +651,12 @@
      "ctc_top1": 0.7491,
      "ctc_gap": 0.7146,
      "ctc_word_match": 0.7208,
+     "ctc_match": 0.7131,
      "dec+peak": 0.8475,
      "dec+margin": 0.8404,
      "dec+gap": 0.8042,
      "dec+match": 0.8546,
+     "dec+ctc_match": 0.8479,
      "dec+all": 0.8456,
      "ctc_all": 0.8283
     },
@@ -587,6 +691,11 @@
       "errors_caught": 0.0,
       "flagged_wrong": null
      },
+     "ctc_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
      "dec+peak": {
       "flagged": 0.0821,
       "errors_caught": 0.4766,
@@ -606,6 +715,11 @@
       "flagged": 0.0763,
       "errors_caught": 0.4824,
       "flagged_wrong": 0.4427
+     },
+     "dec+ctc_match": {
+      "flagged": 0.0754,
+      "errors_caught": 0.4688,
+      "flagged_wrong": 0.4348
      },
      "dec+all": {
       "flagged": 0.0782,
@@ -635,6 +749,10 @@
       0.0084,
       0.0267
      ],
+     "dec+ctc_match": [
+      0.0031,
+      0.0187
+     ],
      "dec+all": [
       -0.0063,
       0.0223
@@ -656,8 +774,27 @@
       "ctc_top1": 0.6236,
       "ctc_gap": 0.6094,
       "ctc_word_match": 0.613,
+      "ctc_match": 0.5986,
       "ctc_all": 0.7359,
       "ctc_all_fitted_on_sure": 0.7369
+     }
+    },
+    "ctc_match": {
+     "all": {
+      "words": 7318,
+      "unmatched": 858,
+      "share_unmatched": 0.1172,
+      "wrong_among_unmatched": 0.3065,
+      "wrong_among_matched": 0.0385,
+      "share_of_errors_unmatched": 0.5137
+     },
+     "sure": {
+      "words": 6231,
+      "unmatched": 444,
+      "share_unmatched": 0.0713,
+      "wrong_among_unmatched": 0.1239,
+      "wrong_among_matched": 0.0268,
+      "share_of_errors_unmatched": 0.2619
      }
     },
     "deletions": [

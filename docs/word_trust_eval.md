@@ -105,6 +105,43 @@ CTC word to be confident flags fewer places without becoming dependable: at 0.7 
 flagged on AMI and none has a deletion, and 23 on Earnings-22 of which 26.1% do. The other thresholds are
 in the JSON.
 
+## What ships: `ctc_match`
+
+Each transcribed word has `ctc_match`: true when the word is also in the CTC head's greedy text for its
+chunk, false when it isn't. It is `ctc_word_match` in a form the library can compute without a
+reference: words are compared as casefolded letters and digits, and a word counts as matched when it is
+part of a longest common run of words between the two texts. Words without a letter or digit have no
+value. The numbers below are for this definition (`ctc_match` and `dec+ctc_match` in the JSON), from a
+second `features` run (gpushift job 427, 317 s) with the code that ships.
+
+| | words | not matched | wrong among not matched | wrong among matched | share of all errors that are not matched |
+|---|---|---|---|---|---|
+| AMI dev | 3,736 | 18.6% | 22.1% | 2.9% | 63.4% |
+| Earnings-22 dev | 7,578 | 13.1% | 27.3% | 3.9% | 51.1% |
+| AMI test | 3,689 | 18.7% | 21.6% | 1.8% | 73.4% |
+| Earnings-22 test | 7,318 | 11.7% | 30.7% | 3.9% | 51.4% |
+
+A word the head doesn't confirm is wrong about a quarter of the time; one it confirms is wrong 2 to 4%
+of the time. Most unmatched words are still right, so the flag is a reason to look, not a verdict.
+
+Together with `probability` it does slightly less than `ctc_word_match` did above:
+
+| | AMI test | Earnings-22 test | gain, AMI | gain, Earnings-22 |
+|---|---|---|---|---|
+| `dec_mean` | 0.882 | 0.837 | | |
+| `dec_mean` + `ctc_match` | 0.899 | 0.848 | 0.006 to 0.029 | 0.003 to 0.019 |
+
+At the 10% dev threshold it flags 13.1% of AMI test words and catches 70.4% of the errors (29.6% of the
+flagged words are wrong), and 7.5% of Earnings-22 test words, catching 46.9% (43.5% wrong).
+
+Among words with `probability` of 0.95 or more the flag still separates: on test, 7.7% of the unmatched
+ones are wrong on AMI against 0.9% of the matched, and 12.4% against 2.7% on Earnings-22. That is no
+better a ranking than `dec_mean` gives inside that group (AUC 0.714 and 0.599 for the flag alone), but it
+is a yes or no that needs no threshold.
+
+The flag needs the model's own transcript, so it is empty for `--text`, and for words with proportional
+times.
+
 ## What this says
 
 - Whether the greedy CTC text contains the word is a small, real addition to `probability` for finding
@@ -112,6 +149,7 @@ in the JSON.
 - The finer CTC features don't add to it, and nothing separates right from wrong among the words the
   decoder is already sure of.
 - The CTC head can't be used to find words the decoder dropped.
+- rumblex writes the first of these as `ctc_match` on each transcribed word.
 
 ## Limits
 

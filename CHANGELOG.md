@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Transcribed words have `ctc_match`: false when the CTC head's greedy text for the chunk doesn't
+  contain the word, compared as casefolded letters and digits. On AMI and Earnings-22 test words,
+  unmatched words were wrong 21.6% and 30.7% of the time and matched ones 1.8% and 3.9%; added to
+  `probability` it raises AUC for wrong words from 0.882 to 0.899 and from 0.837 to 0.848
+  (`docs/word_trust_eval.md`, `scripts/eval_word_trust.py`). It is in the JSON output and in the
+  server's `verbose_json`, and empty for `--text` and for words with proportional times. It costs one
+  more pass of the CTC head per chunk; `AlignOptions(ctc_match=False)` turns it off.
+
 ## 0.6.0 (2026-11-26)
 
 - Word starts and ends are corrected by a small learned head on the encoder states around each word

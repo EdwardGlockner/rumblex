@@ -26,6 +26,9 @@ them (below). You can try it in the browser with the [demo Space](https://huggin
 - Two per-word confidences: `probability` from the decoder and `score` from the CTC head. `probability` is
   the better at telling wrong words from right ones ([eval](docs/confidence_eval.md)); it is empty for
   `--text` and for words with proportional times.
+- `ctc_match` on each transcribed word: false when the CTC head's own greedy text doesn't contain the
+  word. On two English test sets such words were wrong 22% and 31% of the time, against 2% and 4% for
+  the rest ([eval](docs/word_trust_eval.md)).
 - Alignment of a transcript you already have (`--text`, `rumblex.align`): no decoding, only the encoder
   and the CTC head.
 - Optional per-word speaker labels via pyannote.
