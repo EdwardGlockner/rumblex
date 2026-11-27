@@ -1,0 +1,7 @@
+## .venv
+torch                    2.14.1+cu126
+transformers             5.24.1
+## .venv-qwen
+qwen-asr               0.0.6
+torch                  2.15.0
+transformers           4.57.6

@@ -41,6 +41,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [bench_2026-11-22_rtx4090_timing](bench_2026-11-22_rtx4090_timing/README.md) | LibriSpeech word timings for rumblex with the blank penalty and WhisperX | `scripts/runpod_timing.sh` |
 | [bench_2026-11-23_rtx4090_timing](bench_2026-11-23_rtx4090_timing/README.md) | LibriSpeech word timings for rumblex with loudness-dip starts and WhisperX | `scripts/runpod_timing.sh` |
 | [bench_2026-11-22_rtx4090_languages](bench_2026-11-22_rtx4090_languages/README.md) | FLEURS in 13 languages, rumblex vs WhisperX: WER under both scorings, speed, CTC alignment coverage | `scripts/runpod_languages.sh` |
+| [bench_2026-11-27_rtx4090_qwen_aligner](bench_2026-11-27_rtx4090_qwen_aligner/README.md) | `rumblex.align` 0.6.1 vs Qwen3-ForcedAligner-0.6B on LibriSpeech: word times, speed, memory | `scripts/runpod_qwen_aligner.sh`, `scripts/eval_qwen_aligner.py` |
 | [bench_2026-11-23_a40_logprobs](bench_2026-11-23_a40_logprobs/README.md) | vLLM returns a decoder log-prob for every token, matching the transformers backend's | `scripts/runpod_logprobs.sh` |
 | [server.md](server.md) | `rumblex serve`: the OpenAI-compatible endpoint, its formats and flags | |
 | [runpod_session.md](runpod_session.md) | How to run the benchmark scripts on a rented GPU | |

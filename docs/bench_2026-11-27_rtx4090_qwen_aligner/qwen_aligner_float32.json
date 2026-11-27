@@ -1,0 +1,94 @@
+{
+  "utterances": 200,
+  "utterances_scored": 199,
+  "not_scored": [
+    {
+      "id": "61-70970-0004",
+      "rumblex": "MFA words differ from the transcript",
+      "qwen": "MFA words differ from the transcript"
+    }
+  ],
+  "rumblex": {
+    "meta": {
+      "system": "rumblex.align",
+      "rumblex": "0.6.1",
+      "device": "cuda:0",
+      "dtype": "float32",
+      "gpu": "NVIDIA GeForce RTX 4090",
+      "torch": "2.14.1+cu126",
+      "peak_gpu_memory_mb": 2830
+    },
+    "words": 4043,
+    "start_mae_ms": 20.1,
+    "start_median_ae_ms": 13.0,
+    "start_mean_signed_ms": 4.5,
+    "starts_within_20ms": 0.6686,
+    "starts_within_50ms": 0.9396,
+    "starts_within_100ms": 0.981,
+    "end_mae_ms": 28.9,
+    "end_median_ae_ms": 17.0,
+    "end_mean_signed_ms": -22.3,
+    "ends_within_20ms": 0.5531,
+    "ends_within_50ms": 0.8766,
+    "ends_within_100ms": 0.9503,
+    "zero_duration_words": 0,
+    "speed": {
+      "utterances_timed": 200,
+      "audio_seconds": 1514.8,
+      "seconds": 11.8,
+      "times_real_time": 128.6
+    }
+  },
+  "qwen": {
+    "meta": {
+      "system": "Qwen3-ForcedAligner-0.6B",
+      "model": "Qwen/Qwen3-ForcedAligner-0.6B",
+      "language": "English",
+      "device": "cuda:0",
+      "dtype": "float32",
+      "gpu": "NVIDIA GeForce RTX 4090",
+      "torch": "2.15.0+cu132",
+      "transformers": "4.57.6",
+      "qwen_asr": "0.0.6",
+      "parameters": 917728896,
+      "load_seconds": 7.9,
+      "peak_gpu_memory_mb": 3937
+    },
+    "words": 4043,
+    "start_mae_ms": 28.6,
+    "start_median_ae_ms": 20.0,
+    "start_mean_signed_ms": 3.6,
+    "starts_within_20ms": 0.3913,
+    "starts_within_50ms": 0.8659,
+    "starts_within_100ms": 0.981,
+    "end_mae_ms": 26.0,
+    "end_median_ae_ms": 20.0,
+    "end_mean_signed_ms": -7.9,
+    "ends_within_20ms": 0.4133,
+    "ends_within_50ms": 0.8961,
+    "ends_within_100ms": 0.9908,
+    "zero_duration_words": 59,
+    "speed": {
+      "utterances_timed": 200,
+      "audio_seconds": 1514.8,
+      "seconds": 4.3,
+      "times_real_time": 352.9
+    }
+  },
+  "rumblex_minus_qwen": {
+    "start_mae": {
+      "difference_ms": -8.5,
+      "ci95_ms": [
+        -9.6,
+        -7.4
+      ]
+    },
+    "end_mae": {
+      "difference_ms": 2.9,
+      "ci95_ms": [
+        1.1,
+        4.7
+      ]
+    }
+  }
+}

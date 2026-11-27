@@ -1,0 +1,8 @@
+[10:31:59] env
+[10:32:22] ok: prepare
+[10:32:40] ok: rumblex_float32
+[10:33:05] ok: qwen_float32
+[10:33:06] ok: score_float32
+[10:33:22] ok: rumblex_bfloat16
+[10:33:35] ok: qwen_bfloat16
+[10:33:36] ok: score_bfloat16
