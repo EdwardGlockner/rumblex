@@ -70,6 +70,21 @@ index 87714d5..eb09e18 100644
      "mfa": "fabench.aligners.mfa:MFA",
      "bfa": "fabench.aligners.bfa:BFA",
      "maps": "fabench.aligners.maps:MAPS",
+diff --git a/fabench/aligners/qwen3_fa/adapter.py b/fabench/aligners/qwen3_fa/adapter.py
+index a57bb2f..f03e017 100644
+--- a/fabench/aligners/qwen3_fa/adapter.py
++++ b/fabench/aligners/qwen3_fa/adapter.py
+@@ -76,6 +76,10 @@ class Qwen3FA(AlignerAdapter):
+                 "evals/aligners/qwen3_fa/download_and_install.sh."
+             )
+         self.python = Path(venv) / "bin" / "python"
++        if not self.python.exists():  # a venv made on Windows
++            win = Path(venv) / "Scripts" / "python.exe"
++            if win.exists():
++                self.python = win
+         self.worker = Path(venv).parent / "worker.py"
+         for p, what in ((self.python, "interpreter"), (self.worker, "worker")):
+             if not p.exists():
 diff --git a/fabench/aligners/rumblex/__init__.py b/fabench/aligners/rumblex/__init__.py
 new file mode 100644
 index 0000000..a2563b0

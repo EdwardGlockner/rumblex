@@ -14,7 +14,10 @@ the commit that added the boundary head ([boundary_head.md](boundary_head.md)), 
 0.6.0. The rows FA-Bench wrote are in [fabench_eval.csv](fabench_eval.csv); its `run` column tells the
 three rumblex runs apart.
 
-This is FA-Bench's track 1: both tools are handed the reference words and only have to place them.
+Qwen3-ForcedAligner-0.6B was added on 2026-11-27 through FA-Bench's own `qwen3_fa` recipe, same checkout
+and same data, on a GTX 1070. Its two rows have an empty `run` column, like WhisperX's.
+
+This is FA-Bench's track 1: the tools are handed the reference words and only have to place them.
 Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2-not-run) below.
 
 ## Setup
@@ -28,6 +31,9 @@ Transcribing from audio alone (track 2) has not been run; see [Track 2](#track-2
   Transcripts are lower case without punctuation.
 - WhisperX 3.8.6: FA-Bench's own recipe and worker, unchanged except for `device: cpu`. It aligns with
   `WAV2VEC2_ASR_BASE_960H`.
+- Qwen3-ForcedAligner-0.6B: FA-Bench's `qwen3_fa` recipe and worker, with qwen-asr 0.0.6 and
+  torch 2.14.1+cu126 in a venv of its own, the model read from a local copy, language `English`, float32
+  on a GTX 1070 (8 GB).
 - Nothing was tuned on either split. Dev and test are both reported. The penalty on the optional
   punctuation was chosen on LibriSpeech `dev_clean` before the second run. The boundary head was fitted
   on LibriSpeech training utterances against Montreal Forced Aligner times and its settings chosen on
@@ -48,10 +54,12 @@ FA-Bench's columns, as used below:
 | split | tool | words | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
 |---|---|---|---|---|---|---|---|
 | dev | rumblex 0.6.0 | 47,401 | 24.5 ms | 29.7 ms | 27.1 ms | 29.8 ms | 0.540 |
+| dev | Qwen3-ForcedAligner | 47,401 | 31.3 ms | 35.6 ms | 33.4 ms | 34.7 ms | 0.425 |
 | dev | rumblex 0.5.0 | 47,401 | 42.6 ms | 40.4 ms | 41.5 ms | 41.5 ms | 0.356 |
 | dev | WhisperX | 47,386 | 58.8 ms | 36.7 ms | 47.8 ms | 40.3 ms | 0.284 |
 | dev | rumblex 0.4.1 | 47,401 | 42.9 ms | 57.4 ms | 50.2 ms | 56.8 ms | 0.331 |
 | test | rumblex 0.6.0 | 45,921 | 25.1 ms | 29.6 ms | 27.4 ms | 30.3 ms | 0.536 |
+| test | Qwen3-ForcedAligner | 45,921 | 30.9 ms | 34.0 ms | 32.5 ms | 33.8 ms | 0.426 |
 | test | rumblex 0.5.0 | 45,921 | 42.1 ms | 41.1 ms | 41.6 ms | 42.5 ms | 0.358 |
 | test | WhisperX | 45,921 | 58.4 ms | 38.1 ms | 48.2 ms | 41.7 ms | 0.281 |
 | test | rumblex 0.4.1 | 45,921 | 42.4 ms | 56.5 ms | 49.5 ms | 56.0 ms | 0.332 |
@@ -60,7 +68,16 @@ In the CSV, 0.6.0 is the run `boundary head` and 0.5.0 is `optional punctuation`
 
 "words" is the number of words scored (timestamps matched, divided by two), out of 47,401 in dev and
 45,922 in test. WhisperX returned nothing for one dev utterance (15 words), and one test word is missing
-from both tools' output.
+from every tool's output.
+
+Qwen3-ForcedAligner sits between rumblex 0.6.0 and the rest. rumblex 0.6.0 is ahead of it on every
+column: 6 to 7 ms on starts, 4 to 6 ms on ends, 3.5 to 5 ms on boundary MAE, and 0.54 against 0.43 on F1
+at 20 ms. There are no intervals on these differences; FA-Bench reports one number per split. Qwen is
+ahead of rumblex 0.5.0 and of WhisperX on every column. Its worker counted 3,133 of 47,530 output items
+in dev and 2,731 of 46,004 in test with the same start and end time (6.6% and 5.9%); FA-Bench scores
+them as they are. On LibriSpeech against Montreal Forced Aligner times
+([bench_2026-11-27_rtx4090_qwen_aligner](bench_2026-11-27_rtx4090_qwen_aligner/README.md)) Qwen's ends
+were 2.9 ms closer than rumblex's; against hand labels on spontaneous speech they are not.
 
 With the boundary head (0.6.0), starts are 17 to 18 ms better than in 0.5.0 and ends about 11 ms better,
 and the share of starts and ends within 20 ms goes from 0.36 to 0.54. Against WhisperX that is 33 to
@@ -154,9 +171,17 @@ python -m fabench.cli align --config $C --aligner rumblex
 python -m fabench.cli score --config $C
 ```
 
-The same with `--subset test` and with `whisperx` in place of `rumblex`. The patch adds the rumblex
-adapter and recipe, lets FA-Bench find the interpreter of a venv made on Windows, and sets WhisperX to
-CPU; on Windows the commands also need `PYTHONUTF8=1`.
+The same with `--subset test` and with `whisperx` or `qwen3_fa` in place of `rumblex`. The patch adds the
+rumblex adapter and recipe, lets FA-Bench find the interpreter of a venv made on Windows (also for the
+`qwen3_fa` adapter), and sets WhisperX to CPU; on Windows the commands also need `PYTHONUTF8=1`.
+
+For `qwen3_fa`, make a venv with qwen-asr at `evals/aligners/qwen3_fa/venv` (FA-Bench's
+`download_and_install.sh` does this on Linux). On Windows, with that path a junction to a venv elsewhere,
+`gen_config.py` wrote the junction's target into the config and the adapter then could not find its
+worker; the `venv` line of the two generated configs was set back to the path under
+`evals/aligners/qwen3_fa/` by hand, and `model` to the local copy. `ingest` exits with code 1 on Buckeye
+because some labels end a few milliseconds outside their clip; it still writes its output, so carry on.
 
 Each split took about an hour per tool on this CPU, with the two tools running at the same time, so
-these are not speed measurements. The 0.6.0 run took about the same, 115 minutes for both splits.
+these are not speed measurements. The 0.6.0 run took about the same, 115 minutes for both splits. The
+Qwen run took 52 minutes for both splits on the GTX 1070, scoring included.

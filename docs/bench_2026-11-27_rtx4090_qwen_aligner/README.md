@@ -47,7 +47,10 @@ Limits:
   other languages, long files, or transcripts with errors.
 - The reference is MFA's output, not hand labels. rumblex's boundary head was fitted on MFA times of
   LibriSpeech training utterances ([boundary_head.md](../boundary_head.md)), so this reference favours
-  rumblex in a way a hand-labelled set would not.
+  rumblex in a way a hand-labelled set would not. Both aligners have since been scored against Buckeye's
+  hand-labelled word times ([fabench_eval.md](../fabench_eval.md)): there rumblex 0.6.0 is ahead on
+  starts by 6 to 7 ms and also on ends, by 4 to 6 ms. That is spontaneous speech and rumblex 0.6.0 on
+  CPU, so it is a second data point and not a rerun of this table.
 - The environments differ: rumblex with torch 2.14.1+cu126 and transformers 5.24.1, Qwen with torch 2.15.0
   and transformers 4.57.6, which qwen-asr pins (`envs.txt`).
 - Speed is one pass over 200 short files with no batching for either; the first utterance is aligned once
