@@ -56,6 +56,27 @@ Limits:
 - Speed is one pass over 200 short files with no batching for either; the first utterance is aligned once
   before timing starts.
 
+## The same on a GTX 1070
+
+The same 200 utterances and scripts on a local GTX 1070 (8 GB), float32, the same day, with rumblex 0.6.1
+and qwen-asr 0.0.6 as above. torch differs: 2.14.0+cu126 for rumblex and 2.14.1+cu126 for Qwen.
+
+| | rumblex.align | Qwen3-ForcedAligner | rumblex minus Qwen (95% interval) |
+|---|---|---|---|
+| word start MAE | 20.0 ms | 28.6 ms | -8.6 ms (-9.7 to -7.4) |
+| word end MAE | 29.0 ms | 26.0 ms | 3.0 ms (1.3 to 4.8) |
+| words with zero length | 0 | 59 | |
+| times real time, one utterance per call | 35× | 51× | |
+| peak GPU memory | 2.8 GB | 3.9 GB | |
+
+The errors match the RTX 4090 run to within 0.1 ms for rumblex and exactly for Qwen. Qwen is about 1.5
+times faster per utterance on this card, against 2.7 times on the 4090. The two ran as separate jobs in
+a shared queue without the card reserved, so the speeds are rougher than the ones above. Scores are in
+`qwen_aligner_gtx1070_float32.json`, each system's words in the two `*_words_gtx1070_float32.json`
+files.
+
+## Files
+
 Raw output of `scripts/runpod_qwen_aligner.sh` at commit `650846e` (a commit on the branch before it was
 rebased onto main; the scripts are the same as in the commit that added this file): the two score files
 (`qwen_aligner_float32.json`, `qwen_aligner_bfloat16.json`), each system's words and seconds per
