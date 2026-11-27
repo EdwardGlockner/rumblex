@@ -20,8 +20,8 @@ result = client.audio.transcriptions.create(
 print(result.words[0].word, result.words[0].start, result.words[0].probability)
 ```
 
+It supports the `json`, `text`, `srt`, `vtt` and `verbose_json` formats, and `diarized_json` with
 `--diarize`. Words in `verbose_json` also have rumblex's `probability`, `score` and `ctc_match`. The server
-`--diarize`. Words in `verbose_json` also have rumblex's `probability`, `score` and `ctc_match`. The server listens on
-127.0.0.1 unless you pass `--host`; set `--api_key` (or `RUMBLEX_API_KEY`) before exposing it. Requests run
+listens on 127.0.0.1 unless you pass `--host`; set `--api_key` (or `RUMBLEX_API_KEY`) before exposing it. Requests run
 one at a time. `model` and `temperature` are accepted and ignored. Hotwords are not available through the
 server yet.
