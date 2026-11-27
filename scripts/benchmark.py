@@ -1,10 +1,11 @@
-"""Compare rumblex with WhisperX on the same audio: WER, word timestamp error, long-file speed, GPU memory.
+"""Compare rumblex with WhisperX or Parakeet on the same audio: WER, word timestamp error, long-file speed, GPU memory.
 
 Run one system per process (no shared GPU memory or warm caches), then merge:
 
     python scripts/benchmark.py run --system rumblex  --out results/rumblex.json
     python scripts/benchmark.py run --system whisperx --out results/whisperx.json
     python scripts/benchmark.py run --system rumblex-vllm --out results/rumblex_vllm.json   # vllm serve running
+    python scripts/benchmark.py run --system parakeet --out results/parakeet.json
     python scripts/benchmark.py report results/*.json > results/table.md
 
 Data: a fixed sample of LibriSpeech test_clean (seed 0) with MFA word alignments for accuracy, and real
@@ -25,6 +26,7 @@ from pathlib import Path
 
 from rumblex.bench import (
     EVAL_SETS,
+    ParakeetSystem,
     RumbleXSystem,
     RumbleXVLLMSystem,
     WhisperXSystem,
@@ -89,6 +91,14 @@ def make_system(args):
             compute_type=args.compute_type or "float16",
             batch_size=args.batch_size or 16,
         )
+    if args.system == "parakeet":
+        return ParakeetSystem(
+            model=args.parakeet_model,
+            device=args.device,
+            compute_type=args.compute_type,
+            batch_size=args.batch_size or 16,
+            max_chunk_s=args.max_chunk,
+        )
     raise SystemExit(f"unknown system {args.system}")
 
 
@@ -129,8 +139,9 @@ def cmd_run(args) -> None:
         result["accuracy"] = run_accuracy(
             system, utts, args.language, norm, keep_transcripts=args.save_transcripts
         )
-    print(f"[{system.name}] speed on {len(long_audio) / 16000:.0f} s", file=sys.stderr, flush=True)
-    result["speed"] = run_speed(system, long_audio, args.language)
+    if not args.accuracy_only:
+        print(f"[{system.name}] speed on {len(long_audio) / 16000:.0f} s", file=sys.stderr, flush=True)
+        result["speed"] = run_speed(system, long_audio, args.language)
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(result, indent=1), encoding="utf-8")
     print(json.dumps({k: result.get(k) for k in ("system", "load_seconds", "accuracy", "speed")}, indent=1))
@@ -153,12 +164,13 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--system", required=True, choices=["rumblex", "rumblex-vllm", "whisperx"])
+    r.add_argument("--system", required=True, choices=["rumblex", "rumblex-vllm", "whisperx", "parakeet"])
     r.add_argument("--out", required=True)
     r.add_argument("--device", default=None)
     r.add_argument("--compute-type", default=None)
     r.add_argument("--batch-size", type=int, default=None)
     r.add_argument("--whisperx-model", default="large-v3")
+    r.add_argument("--parakeet-model", default="nvidia/parakeet-tdt-0.6b-v3", help="repo id or local folder")
     r.add_argument("--vllm-url", default="http://localhost:8000/v1")
     r.add_argument("--vllm-concurrency", type=int, default=32)
     r.add_argument("--language", default=None, help="default: the dataset's language")
@@ -168,8 +180,9 @@ def main() -> None:
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--long-seconds", type=float, default=3600.0)
     r.add_argument("--long-utts", type=int, default=None, help="limit utterances read for the long file")
-    r.add_argument("--max-chunk", type=float, default=20.0, help="rumblex: max seconds per model input")
+    r.add_argument("--max-chunk", type=float, default=20.0, help="rumblex, parakeet: max seconds per input")
     r.add_argument("--speed-only", action="store_true", help="skip the per-utterance accuracy pass")
+    r.add_argument("--accuracy-only", action="store_true", help="skip the long-file speed pass")
     r.add_argument(
         "--save-transcripts", action="store_true",
         help="also write every reference and transcript (accuracy.ids/refs/hyps), for rescoring",

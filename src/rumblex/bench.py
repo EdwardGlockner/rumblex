@@ -7,7 +7,7 @@
 - WER-only evaluation sets (`EVAL_SETS`): AMI and Earnings-22 from the Open ASR Leaderboard's test sets,
   FLEURS Dutch. Revisions are pinned.
 - WER with Whisper's normalizers (`normalizer_for`), as the Open ASR Leaderboard does.
-- The systems under test (rumblex, rumblex with vLLM, WhisperX) behind one `System.run` interface, and
+- The systems under test (rumblex, rumblex with vLLM, WhisperX, Parakeet) behind one `System.run` interface, and
   the accuracy and long-file speed runs.
 
 pyarrow, jiwer and whisper-normalizer come with the `[dev]` extra; WhisperX is not a rumblex dependency.
@@ -468,6 +468,86 @@ class WhisperXSystem(System):
         import importlib.metadata as md
 
         return {**self.kw, "whisperx": md.version("whisperx")}
+
+
+def words_from_pieces(pieces: Sequence[dict], offset: float = 0.0) -> list[TimedWord]:
+    """Token pieces with times ({"token", "start", "end"}, seconds) to words. A piece that starts with a
+    space opens a word; the word runs from its first piece's start to its last piece's end."""
+    words: list[list] = []  # [text, start, end]
+    for p in pieces:
+        text = p["token"]
+        if not words or text[:1].isspace():
+            if text.strip():
+                words.append([text.strip(), p["start"], p["end"]])
+            continue
+        words[-1][0] += text.strip()
+        words[-1][2] = max(words[-1][2], p["end"])
+    return [TimedWord(w, offset + a, offset + b) for w, a, b in words]
+
+
+class ParakeetSystem(System):
+    """NVIDIA Parakeet TDT through transformers' `ParakeetForTDT`, greedy. Word times are the model's own:
+    each token starts at the frame it was emitted on and lasts its predicted duration, as in NeMo, and a
+    word runs from its first token to its last. Audio is cut the way rumblex cuts it (`speech_chunks`), so
+    both systems get the same inputs. Needs a transformers with Parakeet, and librosa."""
+
+    name = "parakeet"
+
+    def __init__(
+        self,
+        model: str = "nvidia/parakeet-tdt-0.6b-v3",
+        device: str | None = None,
+        compute_type: str | None = None,
+        batch_size: int = 16,
+        max_chunk_s: float = 20.0,
+    ):
+        self.kw = {"model": model, "device": device, "compute_type": compute_type, "batch_size": batch_size}
+        self.max_chunk_s = max_chunk_s
+
+    def load(self) -> None:
+        import torch
+        from transformers import AutoProcessor, ParakeetForTDT
+
+        self.device = self.kw["device"] or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.dtype = getattr(torch, self.kw["compute_type"] or "float32")
+        self.processor = AutoProcessor.from_pretrained(self.kw["model"])
+        self.model = ParakeetForTDT.from_pretrained(self.kw["model"], dtype=self.dtype).to(self.device).eval()
+
+    def run(self, audio: np.ndarray, language: str | None) -> SystemOutput:
+        import torch
+
+        from rumblex.transcriber import make_batches, speech_chunks
+
+        t0 = _now()
+        chunks = speech_chunks(audio, self.max_chunk_s, self.device)
+        texts: list[str] = [""] * len(chunks)
+        words: list[list[TimedWord]] = [[] for _ in chunks]
+        for idx in make_batches([c.duration for c in chunks], self.kw["batch_size"]):
+            inputs = self.processor(
+                [chunks[k].slice(audio) for k in idx], sampling_rate=SAMPLE_RATE, return_tensors="pt"
+            ).to(self.device, self.dtype)
+            with torch.inference_mode():
+                gen = self.model.generate(**inputs, return_dict_in_generate=True)
+            decoded, pieces = self.processor.decode(
+                gen.sequences.cpu(), durations=gen.durations.cpu(), skip_special_tokens=True
+            )
+            for k, text, ps in zip(idx, decoded, pieces):
+                texts[k] = text.strip()
+                words[k] = words_from_pieces(ps, chunks[k].start_s)
+        t1 = _now()
+        return SystemOutput(
+            " ".join(t for t in texts if t), [w for ws in words for w in ws], {"transcribe": t1 - t0}
+        )
+
+    def info(self) -> dict:
+        import importlib.metadata as md
+
+        return {
+            **self.kw,
+            "dtype": str(self.dtype),
+            "max_chunk_s": self.max_chunk_s,
+            "transformers": md.version("transformers"),
+        }
 
 
 _ISO = {name.lower(): code for code, (_, name) in FLEURS_LANGUAGES.items()}

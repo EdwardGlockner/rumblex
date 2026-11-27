@@ -86,6 +86,22 @@ def test_fleurs_sets_use_the_model_language_names():
         assert _iso(name) == code
 
 
+def test_words_from_pieces():
+    from rumblex.bench import words_from_pieces
+
+    pieces = [
+        {"token": "He", "start": 0.08, "end": 0.16},
+        {"token": "llo", "start": 0.16, "end": 0.4},
+        {"token": ",", "start": 0.4, "end": 0.4},
+        {"token": " world", "start": 0.56, "end": 0.88},
+        {"token": " ", "start": 0.9, "end": 0.9},
+    ]
+    words = words_from_pieces(pieces, offset=10.0)
+    assert [w.word for w in words] == ["Hello,", "world"]
+    assert [x for w in words for x in (w.start, w.end)] == pytest.approx([10.08, 10.4, 10.56, 10.88])
+    assert words_from_pieces([]) == []
+
+
 def test_rumblex_stats_count_chunks_and_fallbacks():
     from types import SimpleNamespace
 
