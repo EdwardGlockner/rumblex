@@ -1,0 +1,6 @@
+[10:27:00] env
+[10:28:26] ok: rumblex_bfloat16
+[10:29:50] ok: parakeet_bfloat16
+[10:30:37] ok: rumblex_float32
+[10:31:56] ok: parakeet_float32
+[10:31:57] done: results.tar.gz

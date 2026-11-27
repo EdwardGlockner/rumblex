@@ -550,6 +550,58 @@ class ParakeetSystem(System):
         }
 
 
+class ParakeetNemoSystem(System):
+    """NVIDIA Parakeet TDT through NeMo, the toolkit it was released with. Word times are NeMo's own
+    (`timestamps=True`). Audio is cut the way rumblex cuts it (`speech_chunks`) and the chunks go to
+    `transcribe` as arrays. Needs `nemo_toolkit[asr]`, which wants its own environment."""
+
+    name = "parakeet-nemo"
+
+    def __init__(
+        self,
+        model: str = "nvidia/parakeet-tdt-0.6b-v3",
+        device: str | None = None,
+        compute_type: str | None = None,
+        batch_size: int = 16,
+        max_chunk_s: float = 20.0,
+    ):
+        self.kw = {"model": model, "device": device, "compute_type": compute_type, "batch_size": batch_size}
+        self.max_chunk_s = max_chunk_s
+
+    def load(self) -> None:
+        import nemo.collections.asr as nemo_asr
+        import torch
+
+        self.device = self.kw["device"] or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = nemo_asr.models.ASRModel.from_pretrained(self.kw["model"]).to(self.device).eval()
+
+    def run(self, audio: np.ndarray, language: str | None) -> SystemOutput:
+        import torch
+
+        from rumblex.transcriber import speech_chunks
+
+        t0 = _now()
+        chunks = speech_chunks(audio, self.max_chunk_s, self.device)
+        clips = [np.ascontiguousarray(c.slice(audio), dtype=np.float32) for c in chunks]
+        half = self.kw["compute_type"] in ("bfloat16", "float16")
+        with torch.autocast("cuda", dtype=getattr(torch, self.kw["compute_type"] or "float32"), enabled=half):
+            outs = self.model.transcribe(
+                clips, batch_size=self.kw["batch_size"], timestamps=True, verbose=False
+            )
+        texts, words = [], []
+        for c, o in zip(chunks, outs):
+            texts.append(o.text.strip())
+            for w in o.timestamp["word"]:
+                words.append(TimedWord(w["word"], c.start_s + float(w["start"]), c.start_s + float(w["end"])))
+        t1 = _now()
+        return SystemOutput(" ".join(t for t in texts if t), words, {"transcribe": t1 - t0})
+
+    def info(self) -> dict:
+        import importlib.metadata as md
+
+        return {**self.kw, "max_chunk_s": self.max_chunk_s, "nemo": md.version("nemo_toolkit")}
+
+
 _ISO = {name.lower(): code for code, (_, name) in FLEURS_LANGUAGES.items()}
 
 

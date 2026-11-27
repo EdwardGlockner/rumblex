@@ -36,6 +36,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [bench_2026-11-20_rtx4090_dutch](bench_2026-11-20_rtx4090_dutch/README.md) | FLEURS Dutch re-run with digits on; batched VAD on GPU vs CPU | `scripts/runpod_dutch.sh` |
 | [bench_2026-11-20_rtx4090_diagnose](bench_2026-11-20_rtx4090_diagnose/README.md) | Where the Dutch WER gap comes from: pipeline variants, error analysis, leaderboard rescoring | `scripts/runpod_diagnose.sh`, `scripts/rescore_leaderboard.py` |
 | [bench_2026-11-20_rtx4090_release](bench_2026-11-20_rtx4090_release/README.md) | rumblex 0.1.0 vs WhisperX on LibriSpeech, AMI, Earnings-22, FLEURS Dutch: the README's numbers | `scripts/runpod_release.sh` |
+| [bench_2026-11-27_rtx4090_parakeet](bench_2026-11-27_rtx4090_parakeet/README.md) | rumblex 0.6.1 vs Parakeet TDT 0.6b v3 (NeMo and transformers) on LibriSpeech: WER, word times, speed | `scripts/runpod_parakeet.sh` |
 | [bench_2026-11-21_rtx4090_leaderboard](bench_2026-11-21_rtx4090_leaderboard/README.md) | FLEURS Dutch for rumblex and WhisperX with transcripts saved, rescored with the Open ASR Leaderboard's scoring | `scripts/runpod_leaderboard.sh` |
 | [bench_2026-11-22_rtx4090_timing](bench_2026-11-22_rtx4090_timing/README.md) | LibriSpeech word timings for rumblex with the blank penalty and WhisperX | `scripts/runpod_timing.sh` |
 | [bench_2026-11-23_rtx4090_timing](bench_2026-11-23_rtx4090_timing/README.md) | LibriSpeech word timings for rumblex with loudness-dip starts and WhisperX | `scripts/runpod_timing.sh` |

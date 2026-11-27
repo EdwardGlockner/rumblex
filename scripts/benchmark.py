@@ -26,6 +26,7 @@ from pathlib import Path
 
 from rumblex.bench import (
     EVAL_SETS,
+    ParakeetNemoSystem,
     ParakeetSystem,
     RumbleXSystem,
     RumbleXVLLMSystem,
@@ -90,6 +91,14 @@ def make_system(args):
             device=args.device or "cuda",
             compute_type=args.compute_type or "float16",
             batch_size=args.batch_size or 16,
+        )
+    if args.system == "parakeet-nemo":
+        return ParakeetNemoSystem(
+            model=args.parakeet_model,
+            device=args.device,
+            compute_type=args.compute_type,
+            batch_size=args.batch_size or 16,
+            max_chunk_s=args.max_chunk,
         )
     if args.system == "parakeet":
         return ParakeetSystem(
@@ -164,7 +173,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--system", required=True, choices=["rumblex", "rumblex-vllm", "whisperx", "parakeet"])
+    r.add_argument(
+        "--system",
+        required=True,
+        choices=["rumblex", "rumblex-vllm", "whisperx", "parakeet", "parakeet-nemo"],
+    )
     r.add_argument("--out", required=True)
     r.add_argument("--device", default=None)
     r.add_argument("--compute-type", default=None)
