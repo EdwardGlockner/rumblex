@@ -13,6 +13,7 @@ the best CTC alignment score. Each chunk's words are then force-aligned with the
 from __future__ import annotations
 
 import re
+import unicodedata
 from bisect import bisect_left
 from collections.abc import Callable, Sequence
 from difflib import SequenceMatcher
@@ -31,8 +32,9 @@ BOUNDARY_SHIFT = 2  # words a chunk boundary may move when refined on the CTC sc
 
 
 def word_key(w: str) -> str:
-    """Lowercase, no punctuation: what two spellings of a word are compared on."""
-    return _NOT_WORD.sub("", w.lower()).strip("'")
+    """Lowercase, no punctuation or combining marks/tatweel: what two spellings of a word are compared on."""
+    s = unicodedata.normalize("NFC", w).replace("\u0640", "").lower()
+    return _NOT_WORD.sub("", s).strip("'")
 
 
 def assign_words(words: Sequence[str], chunk_words: Sequence[Sequence[str]], min_block: int = 2) -> list[int]:

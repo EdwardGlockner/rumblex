@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from itertools import pairwise
@@ -213,7 +214,15 @@ def token_spans(path: np.ndarray, n_tokens: int) -> list[tuple[int, int]]:
 
 
 _HAS_ALNUM = re.compile(r"\w")
-_ENDS_ALNUM = re.compile(r"\w$")
+
+
+def _ends_alnum(text: str) -> bool:
+    """True when `text` ends in a letter or digit (ignoring trailing combining marks like Arabic tanwin
+    or Indic vowel signs, and Arabic tatweel)."""
+    s = unicodedata.normalize("NFC", text).rstrip("\u0640")
+    while s and unicodedata.category(s[-1]).startswith("M"):
+        s = s[:-1]
+    return bool(s) and s[-1].isalnum()
 
 
 @dataclass
@@ -273,8 +282,10 @@ def group_words(
 
 
 def word_key(text: str) -> str:
-    """A word reduced to its letters and digits, case-folded, for comparing two spellings of it."""
-    return "".join(ch for ch in text.casefold() if ch.isalnum())
+    """A word reduced to its letters and digits (combining marks and tatweel dropped), case-folded."""
+    return "".join(
+        ch for ch in unicodedata.normalize("NFC", text).casefold() if ch.isalnum() and ch != "\u0640"
+    )
 
 
 def in_common(a: Sequence[str], b: Sequence[str]) -> list[bool]:
@@ -827,7 +838,7 @@ class Aligner:
         for k in range(len(tokens)):
             if k + 1 < len(tokens) and not tokens[k + 1].startswith("Ġ"):
                 continue
-            if _ENDS_ALNUM.search(self._decode(list(token_ids[first : k + 1])).strip()):
+            if _ends_alnum(self._decode(list(token_ids[first : k + 1])).strip()):
                 slots.append(k)
             first = k + 1
         return slots
@@ -864,11 +875,11 @@ def proportional_words(text: str, regions: Sequence[tuple[float, float]]) -> lis
     ]
 
 
-_SENTENCE_END = re.compile(r"[.!?。？！]['\")\]]*$")
-# Words ending in "." that rarely end a sentence (English and Dutch titles and common abbreviations).
+_SENTENCE_END = re.compile(r"[.!?؟۔।。？！]['\")\]]*$")
+# Words ending in "." that rarely end a sentence (English, Dutch and Arabic titles and common abbreviations).
 _ABBREVIATIONS = {
     "mr.", "mrs.", "ms.", "dr.", "prof.", "st.", "jr.", "sr.", "vs.", "etc.", "e.g.", "i.e.", "no.",
-    "dhr.", "mevr.", "mw.", "bijv.", "o.a.", "z.g.a.n.", "nr.", "ca.",
+    "dhr.", "mevr.", "mw.", "bijv.", "o.a.", "z.g.a.n.", "nr.", "ca.", "د.", "أ.", "م.",
 }  # fmt: skip
 
 

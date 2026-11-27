@@ -235,3 +235,109 @@ def test_token_logprobs_recorder_keeps_the_greedy_token():
     assert toks == [[1, 2], [0, 0]]
     assert lps[0, 0] == pytest.approx(float(torch.log_softmax(scores[0], -1)[1]))
     assert lps[1, 1] == pytest.approx(float(torch.log(torch.tensor(1 / 3))))
+
+
+def test_default_device_and_mps_dtype(monkeypatch):
+    from rumblex.transcriber import default_device, default_dtype
+
+    assert default_dtype("mps") == torch.bfloat16
+    assert default_dtype("cpu") == torch.float32
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    if hasattr(torch.backends, "mps"):
+        monkeypatch.setattr(torch.backends.mps, "is_available", lambda: True)
+        assert default_device() == torch.device("mps")
+        monkeypatch.setattr(torch.backends.mps, "is_available", lambda: False)
+    assert default_device() == torch.device("cpu")
+
+
+def test_all_45_rumble_languages_resolve():
+    from rumblex.transcriber import EXTRA_LANGUAGE_CODE_TO_NAME, language_name
+
+    assert language_name("hr") == "Croatian" and language_name("Croatian") == "Croatian"
+    assert language_name("uk") == "Ukrainian" and language_name("mt") == "Maltese"
+    assert language_name("nb") == "Norwegian" and language_name("no") == "Norwegian"
+    assert language_name("Norwegian Bokmål") == "Norwegian"
+    assert language_name("bn") == "Bengali" and language_name("Bangla") == "Bengali"
+    for code, name in EXTRA_LANGUAGE_CODE_TO_NAME.items():
+        assert language_name(code) == name and language_name(name) == name
+
+
+def test_extra_language_inputs_match_chat_template():
+    import numpy as np
+    from huggingface_hub import try_to_load_from_cache
+
+    if not isinstance(try_to_load_from_cache("Reson8/Rumble-2-Flash", "tokenizer_config.json"), str):
+        pytest.skip("model files not cached")
+    from transformers import AutoProcessor
+
+    from rumblex.transcriber import _transcription_inputs
+
+    p = AutoProcessor.from_pretrained("Reson8/Rumble-2-Flash")
+    clip = np.zeros(16000, dtype=np.float32)
+    opts = {"digits": True, "filler": False, "verbatim": True}
+    inp = _transcription_inputs(p, [clip], "Croatian", "context", opts)
+    decoded = p.tokenizer.decode(inp["input_ids"][0], skip_special_tokens=False)
+    assert "language Croatian<asr_text>" in decoded and "context" in decoded
+
+
+def test_token_logprobs_survive_extra_post_eos_step(monkeypatch):
+    """transformers >= 5.24 can invoke logits_processor one step past EOS while syncing stopping criteria;
+    word probabilities and ctc_match must still be populated when all text positions match."""
+    import numpy as np
+
+    import rumblex.transcriber as T
+
+    tr = object.__new__(T.RumbleTranscriber)
+    tr.device = torch.device("cpu")
+    tr.dtype = torch.float32
+    tr.tokenizer = type("Tok", (), {"decode": lambda self, ids, **kw: "hi"})()
+    tr.audio_tower = type(
+        "Tower",
+        (),
+        {
+            "ln_post": type(
+                "LN",
+                (),
+                {"register_forward_hook": lambda self, fn: type("H", (), {"remove": lambda s: None})()},
+            )()
+        },
+    )()
+
+    class FakeProc:
+        def apply_transcription_request(self, audio, **kw):
+            from transformers import BatchFeature
+
+            return BatchFeature(
+                {
+                    "input_ids": torch.tensor([[1, 99595, 2]]),
+                    "input_features": torch.zeros((1, 128, 100)),
+                    "input_features_mask": torch.ones((1, 100), dtype=torch.long),
+                }
+            )
+
+    class FakeModel:
+        config = type("Cfg", (), {"audio_token_id": 99595})()
+
+        def generate(self, input_ids, logits_processor, **kw):
+            # Score 3 steps (500, EOS, extra EOS) while returning only 2 generated tokens (500, EOS)
+            for tok in (500, EOS_ID, EOS_ID):
+                s = torch.zeros((1, FIRST_SPECIAL_ID + 100))
+                s[0, tok] = 5.0
+                logits_processor[0](input_ids, s)
+            return torch.tensor([[1, 99595, 2, 500, EOS_ID]])
+
+    tr.processor = FakeProc()
+    tr.model = FakeModel()
+    # Trigger the hook capture inside generate
+    orig_gen = tr.model.generate
+
+    def gen_with_hook(**kw):
+        return orig_gen(**kw)
+
+    monkeypatch.setattr(
+        tr.audio_tower.ln_post,
+        "register_forward_hook",
+        lambda fn: (fn(None, None, torch.zeros((1, 896))), type("H", (), {"remove": lambda s: None})())[1],
+    )
+    out = tr._run_batch(np.zeros(16000, np.float32), [SpeechChunk(0, 16000)], "English", None, {}, True)
+    assert out[0].token_logprobs is not None and len(out[0].token_logprobs) == 1

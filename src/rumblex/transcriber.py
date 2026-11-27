@@ -72,10 +72,21 @@ class ChunkTranscript:
     token_logprobs: list[float] | None = None  # decoder log-prob of each of token_ids when it was generated
 
 
+def default_device() -> torch.device:
+    """cuda if available, else Apple Silicon mps, else cpu."""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
 def default_dtype(device: str | torch.device) -> torch.dtype:
-    """bf16 on Ampere and newer, float32 elsewhere (Pascal has no bf16 and slow fp16)."""
+    """bf16 on Ampere+ GPUs and Apple Silicon MPS, float32 elsewhere (Pascal has no bf16 and slow fp16)."""
     device = torch.device(device)
     if device.type == "cuda" and torch.cuda.get_device_capability(device)[0] >= 8:
+        return torch.bfloat16
+    if device.type == "mps":
         return torch.bfloat16
     return torch.float32
 
@@ -113,14 +124,67 @@ def quiet_loading() -> Iterator[None]:
             hf_logging.enable_progress_bar()
 
 
+# Rumble-2-Flash supports 45 languages (docs.reson8.dev/speech-to-text/features/languages/), 15 more
+# than Qwen3-ASR's processor table in transformers. Values match the `language <Name>` prefix the model
+# emits when detecting the language (`nb` -> "Norwegian", `bn` -> "Bengali").
+EXTRA_LANGUAGE_CODE_TO_NAME: dict[str, str] = {
+    "af": "Afrikaans",
+    "bn": "Bengali",
+    "bs": "Bosnian",
+    "ca": "Catalan",
+    "ceb": "Cebuano",
+    "eu": "Basque",
+    "hr": "Croatian",
+    "is": "Icelandic",
+    "lt": "Lithuanian",
+    "lv": "Latvian",
+    "mt": "Maltese",
+    "nb": "Norwegian",
+    "no": "Norwegian",
+    "sq": "Albanian",
+    "sr": "Serbian",
+    "uk": "Ukrainian",
+}
+_LANGUAGE_ALIASES: dict[str, str] = {
+    "bangla": "Bengali",
+    "norwegian bokmål": "Norwegian",
+    "norwegian bokmal": "Norwegian",
+}
+
+
 def language_name(language: str | None) -> str | None:
-    """'nl' / 'dutch' / 'Dutch' -> 'Dutch', resolved the same way the transformers processor does."""
+    """'nl' / 'dutch' / 'Dutch' / 'hr' / 'Croatian' -> canonical English name for Rumble-2-Flash."""
     if language is None:
         return None
+    key = language.strip().lower()
+    if key in _LANGUAGE_ALIASES:
+        return _LANGUAGE_ALIASES[key]
     from transformers.audio_utils import prepare_language_inputs
     from transformers.models.qwen3_asr.processing_qwen3_asr import LANGUAGE_CODE_TO_NAME
 
-    return prepare_language_inputs(language, 1, LANGUAGE_CODE_TO_NAME, return_code=False)[0]
+    codes = {**LANGUAGE_CODE_TO_NAME, **EXTRA_LANGUAGE_CODE_TO_NAME}
+    return prepare_language_inputs(language, 1, codes, return_code=False)[0]
+
+
+def _transcription_inputs(processor, clips, forced: str | None, prompt: str | None, options: dict):
+    """Build processor inputs, bypassing Qwen3-ASR's 30-language allowlist for Rumble's extra 15 languages."""
+    from transformers.models.qwen3_asr.processing_qwen3_asr import LANGUAGE_CODE_TO_NAME
+
+    if forced is None or forced in LANGUAGE_CODE_TO_NAME.values():
+        return processor.apply_transcription_request(audio=clips, language=forced, prompt=prompt, **options)
+    conversations = []
+    for clip in clips:
+        messages = []
+        if prompt is not None:
+            messages.append({"role": "system", "content": [{"type": "text", "text": prompt}]})
+        messages.append({"role": "user", "content": [{"type": "audio", "audio": clip}]})
+        messages.append(
+            {"role": "assistant", "content": [{"type": "text", "text": f"language {forced}<asr_text>"}]}
+        )
+        conversations.append(messages)
+    return processor.apply_chat_template(
+        conversations, tokenize=True, return_dict=True, continue_final_message=True, **options
+    )
 
 
 def parse_generated(
@@ -244,7 +308,7 @@ class RumbleTranscriber:
 
         if batch_size < 1:
             raise ValueError(f"batch_size must be at least 1, got {batch_size}")
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(device) if device else default_device()
         self.dtype = resolve_dtype(dtype) or default_dtype(self.device)
         self.batch_size = batch_size
         with quiet_loading():
@@ -362,15 +426,13 @@ class RumbleTranscriber:
 
     def _run_batch(self, audio, batch, language, prompt, options, keep_states, hotwords=None):
         clips = [prepare_clip(c.slice(audio)) for c in batch]
-        inputs = self.processor.apply_transcription_request(
-            audio=clips, language=language, prompt=prompt, **options
-        )
+        forced = language_name(language)
+        inputs = _transcription_inputs(self.processor, clips, forced, prompt, options)
         zero_feature_padding(inputs)
         # Each <|audio_pad|> placeholder receives one encoder frame, so its count per row is that clip's
         # share of the packed encoder output.
         frames = (inputs["input_ids"] == self.model.config.audio_token_id).sum(-1).tolist()
         inputs = inputs.to(self.device, dtype=self.dtype)
-        forced = language_name(language)
 
         from transformers import LogitsProcessorList
 
@@ -401,9 +463,9 @@ class RumbleTranscriber:
             text_ids, lang = parse_generated(row, self._decode_special, forced)
             pos = text_positions(row)
             lps = None
-            # a row that already stopped keeps getting scored while others decode, but its pad tokens aren't
-            # text positions, so only the positions of text tokens are compared
-            if picked and len(picked[b]) == len(row) and all(picked[b][p] == row[p] for p in pos):
+            # a row that already stopped keeps getting scored while others decode, and newer transformers
+            # may score one extra step while syncing stopping criteria on device, so check the text positions
+            if picked and all(p < len(picked[b]) and picked[b][p] == row[p] for p in pos):
                 lps = [float(logprobs[b, p]) for p in pos]
             text = self.tokenizer.decode(text_ids, clean_up_tokenization_spaces=False).strip()
             results.append(

@@ -150,6 +150,9 @@ def test_main_rejects_unknown_language(tmp_path, capsys):
     rc = main([str(audio), "-o", str(tmp_path), "-f", "txt", "--language", " nl ", "-q"],
               load_pipeline=lambda args: (tr, None, None))  # fmt: skip
     assert rc == 0 and tr.calls[0]["language"] == "nl"
+    rc_hr = main([str(audio), "-o", str(tmp_path), "-f", "txt", "--language", "hr", "-q"],
+                 load_pipeline=lambda args: (tr, None, None))  # fmt: skip
+    assert rc_hr == 0 and tr.calls[1]["language"] == "hr"
 
 
 def test_main_load_failure_has_hint_and_no_traceback(tmp_path, capsys):
