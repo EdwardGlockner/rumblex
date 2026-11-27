@@ -53,6 +53,7 @@ Limits:
 - Speed is one pass over 200 short files with no batching for either; the first utterance is aligned once
   before timing starts.
 
-Raw output of `scripts/runpod_qwen_aligner.sh` at commit `650846e`: the two score files
+Raw output of `scripts/runpod_qwen_aligner.sh` at commit `650846e` (a commit on the branch before it was
+rebased onto main; the scripts are the same as in the commit that added this file): the two score files
 (`qwen_aligner_float32.json`, `qwen_aligner_bfloat16.json`), each system's words and seconds per
 utterance, `envs.txt` and `session.log`.
