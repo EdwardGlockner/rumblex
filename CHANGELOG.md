@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 (2026-11-27)
 
 - Transcribed words have `ctc_match`: false when the CTC head's greedy text for the chunk doesn't
   contain the word, compared as casefolded letters and digits. On AMI and Earnings-22 test words,
