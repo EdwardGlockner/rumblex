@@ -10,6 +10,9 @@ JSON object per line from stdout:
 Task `align` gives the reference transcript to `rumblex.align` (FA-Bench track 1). Task `transcribe` runs
 `rumblex.transcribe` on the audio alone (track 2), in English, with numbers spelled out and fillers kept,
 since the references spell numbers out and include "um" and "uh". Everything else is the package default.
+Set FABENCH_RUMBLEX_FILLER=0 in the recipe's `env` to turn fillers off. Punctuation at the edges of a
+transcribed word (quotation marks and what is inside them, like `want."`) is removed, since FA-Bench
+compares the labels as they come.
 
 The recipe and adapter that call this are in scripts/fabench.patch; docs/fabench_eval.md has the setup.
 """
@@ -17,8 +20,17 @@ The recipe and adapter that call this are in scripts/fabench.patch; docs/fabench
 from __future__ import annotations
 
 import json
+import os
+import re
 import sys
 import time
+
+_EDGE = re.compile(r"^[^\w']+|[^\w']+$")
+
+
+def clean(word: str) -> str:
+    """The word without punctuation before and after it; apostrophes and inner hyphens stay."""
+    return _EDGE.sub("", word)
 
 
 def main(argv: list[str]) -> int:
@@ -34,6 +46,7 @@ def main(argv: list[str]) -> int:
 
     if not (device.startswith("cuda") and torch.cuda.is_available()):
         device = "cpu"
+    filler = os.environ.get("FABENCH_RUMBLEX_FILLER", "1") != "0"
     model = rumblex.load_model(model_id, device=device)
     with open(jobs_path, encoding="utf-8") as f:
         jobs = [json.loads(line) for line in f if line.strip()]
@@ -45,9 +58,12 @@ def main(argv: list[str]) -> int:
                 result = rumblex.align(job["audio_path"], job.get("transcript", ""), model)
             else:
                 result = rumblex.transcribe(
-                    job["audio_path"], model, language="en", digits=False, filler=True, verbatim=True
+                    job["audio_path"], model, language="en", digits=False, filler=filler, verbatim=True
                 )
-            rec["words"] = [[w.word, w.start, w.end, w.score] for s in result.segments for w in s.words]
+            words = [[w.word, w.start, w.end, w.score] for s in result.segments for w in s.words]
+            if task == "transcribe":
+                words = [[clean(w[0]), *w[1:]] for w in words if clean(w[0])]
+            rec["words"] = words
         except Exception as e:  # noqa: BLE001  one bad item shouldn't lose the batch
             rec["error"] = f"{type(e).__name__}: {e}"
         print(json.dumps(rec), flush=True)

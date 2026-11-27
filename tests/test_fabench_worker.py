@@ -29,7 +29,7 @@ def worker(monkeypatch):
 
     def transcribe(audio, model, **kwargs):
         calls.append(("transcribe", audio, kwargs))
-        return result(["heard", "this"])
+        return result(['"heard', "this.\"", "—", "mm-hmm", "it's"] if "quoted" in audio else ["heard", "this"])
 
     monkeypatch.setattr(rumblex, "load_model", lambda model_id, device=None: (model_id, device))
     monkeypatch.setattr(rumblex, "align", align)
@@ -66,6 +66,23 @@ def test_transcribe_ignores_the_transcript_and_asks_for_raw_words(worker, tmp_pa
     assert [w[0] for w in rec["words"]] == ["heard", "this"]
     options = {"language": "en", "digits": False, "filler": True, "verbatim": True}
     assert calls == [("transcribe", "a.wav", options)]
+
+
+def test_transcribe_strips_punctuation_at_word_edges_and_drops_empty_words(worker, tmp_path, capsys):
+    mod, _ = worker
+    jobs = [{"item_id": "a", "audio_path": "quoted.wav"}]
+    assert mod.main([write_jobs(tmp_path, jobs), "some/model", "cpu", "transcribe"]) == 0
+    rec = json.loads(capsys.readouterr().out.splitlines()[0])
+    assert rec["words"] == [["heard", 0.0, 0.4, 0.9], ["this", 0.5, 0.9, 0.9], ["mm-hmm", 1.5, 1.9, 0.9],
+                            ["it's", 2.0, 2.4, 0.9]]
+
+
+def test_fillers_can_be_turned_off_from_the_environment(worker, tmp_path, capsys, monkeypatch):
+    mod, calls = worker
+    monkeypatch.setenv("FABENCH_RUMBLEX_FILLER", "0")
+    jobs = [{"item_id": "a", "audio_path": "a.wav"}]
+    assert mod.main([write_jobs(tmp_path, jobs), "some/model", "cpu", "transcribe"]) == 0
+    assert calls[0][2]["filler"] is False
 
 
 def test_unknown_task_is_refused(worker, tmp_path):
