@@ -27,6 +27,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | [boundary_head.md](boundary_head.md) | The learned correction of word starts and ends: what it is, how it was fitted, timing error on LibriSpeech with and without it | `scripts/collect_boundary_train.py`, `scripts/boundary_head.py` |
 | [fabench_eval.md](fabench_eval.md) | Word timing accuracy of `rumblex.align` and WhisperX against Buckeye's human word labels, scored by FA-Bench | `scripts/fabench_worker.py`, `scripts/fabench.patch` |
 | [confidence_eval.md](confidence_eval.md) | Whether word scores tell right words from wrong ones on AMI and Earnings-22: CTC vs decoder scores, AUC, thresholds | `scripts/collect_confidence_states.py`, `scripts/eval_confidence.py` |
+| [word_trust_eval.md](word_trust_eval.md) | Whether disagreement between the CTC head and the decoder finds wrong or deleted words beyond `probability`, on the same AMI and Earnings-22 utterances | `scripts/eval_word_trust.py` |
 | [hotwords.md](hotwords.md) | How hotwords work and what they change on Earnings-21 clips with Rev's biasing list: WER, recall of list words, false triggers, decode time | `scripts/eval_hotwords.py` |
 | [chunk_context_eval.md](chunk_context_eval.md) | Whether giving the model the previous chunk's text as context helps on long recordings (TED-LIUM long-form, dev split): it doesn't | `scripts/eval_chunk_context.py` |
 | [bench_2026-11-20_rtx4090](bench_2026-11-20_rtx4090/README.md) | First comparison with WhisperX (LibriSpeech) | `scripts/runpod_bench.sh` |
@@ -46,6 +47,7 @@ repository. Re-running those scripts on v0.1.0 will not reproduce every number e
 | `inspection_cpu.json`, `inspection_gpu_fp32.json` | Raw output behind `model_inspection.md` | `scripts/inspect_rumble_ctc.py` |
 | `alignment_eval.json` | Raw output behind `alignment_eval.md`: transcription run, WER, every grid / end rule / start shift variant | `scripts/collect_alignment_states.py`, `scripts/eval_alignment.py` |
 | `confidence_eval.json` | Raw output behind `confidence_eval.md`, with calibration bins for every score | `scripts/eval_confidence.py` |
+| `word_trust_eval.json` | Raw output behind `word_trust_eval.md`, with fitted weights and every deletion threshold | `scripts/eval_word_trust.py` |
 | `hotwords_eval.json` | Raw output behind `hotwords.md` (no transcripts) | `scripts/eval_hotwords.py score` |
 | `chunk_context_eval.json` | Raw output behind `chunk_context_eval.md` (numbers only, no transcripts) | `scripts/eval_chunk_context.py` |
 | `align_text_eval.json` | Raw output behind `align_text_eval.md` | `scripts/eval_align_text.py` |

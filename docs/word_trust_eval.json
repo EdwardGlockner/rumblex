@@ -1,0 +1,723 @@
+{
+ "blank_penalty": 5.0,
+ "sure_threshold": 0.95,
+ "weights": {
+  "dec+peak": {
+   "bias": 3.4695,
+   "dec_mean": 3.895,
+   "ctc_peak_min": 0.2996
+  },
+  "dec+margin": {
+   "bias": 2.4753,
+   "dec_mean": 3.6584,
+   "ctc_margin_min": 0.2151
+  },
+  "dec+gap": {
+   "bias": 3.4937,
+   "dec_mean": 4.394,
+   "ctc_gap": 0.3134
+  },
+  "dec+match": {
+   "bias": 1.8692,
+   "dec_mean": 3.9837,
+   "ctc_word_match": 1.6826
+  },
+  "dec+all": {
+   "bias": 1.899,
+   "dec_mean": 3.4657,
+   "ctc_peak_min": 0.0213,
+   "ctc_margin_min": 0.1534,
+   "ctc_top1": -0.0987,
+   "ctc_gap": -0.051,
+   "ctc_word_match": 1.0598
+  },
+  "ctc_all": {
+   "bias": 1.4068,
+   "ctc_peak_min": 0.0677,
+   "ctc_margin_min": 0.1595,
+   "ctc_top1": 0.2325,
+   "ctc_gap": -0.0056,
+   "ctc_word_match": 1.0592
+  }
+ },
+ "sets": {
+  "ami": {
+   "utterances_with_digits_skipped": 0,
+   "dev": {
+    "utterances": 597,
+    "words": 3736,
+    "wrong": 243,
+    "error_rate": 0.065,
+    "auc": {
+     "dec_mean": 0.8413,
+     "ctc_peak_min": 0.815,
+     "ctc_margin_min": 0.7924,
+     "ctc_top1": 0.7448,
+     "ctc_gap": 0.7218,
+     "ctc_word_match": 0.747,
+     "dec+peak": 0.8477,
+     "dec+margin": 0.8369,
+     "dec+gap": 0.8166,
+     "dec+match": 0.8585,
+     "dec+all": 0.8481,
+     "ctc_all": 0.8179
+    },
+    "flag_10pct": {
+     "dec_mean": {
+      "flagged": 0.1226,
+      "errors_caught": 0.5267,
+      "flagged_wrong": 0.2795
+     },
+     "ctc_peak_min": {
+      "flagged": 0.1293,
+      "errors_caught": 0.5062,
+      "flagged_wrong": 0.2547
+     },
+     "ctc_margin_min": {
+      "flagged": 0.1365,
+      "errors_caught": 0.4444,
+      "flagged_wrong": 0.2118
+     },
+     "ctc_top1": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "ctc_gap": {
+      "flagged": 0.121,
+      "errors_caught": 0.3745,
+      "flagged_wrong": 0.2013
+     },
+     "ctc_word_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "dec+peak": {
+      "flagged": 0.1274,
+      "errors_caught": 0.5885,
+      "flagged_wrong": 0.3004
+     },
+     "dec+margin": {
+      "flagged": 0.1325,
+      "errors_caught": 0.5597,
+      "flagged_wrong": 0.2747
+     },
+     "dec+gap": {
+      "flagged": 0.1255,
+      "errors_caught": 0.5514,
+      "flagged_wrong": 0.2857
+     },
+     "dec+match": {
+      "flagged": 0.1336,
+      "errors_caught": 0.6049,
+      "flagged_wrong": 0.2946
+     },
+     "dec+all": {
+      "flagged": 0.1314,
+      "errors_caught": 0.5679,
+      "flagged_wrong": 0.2811
+     },
+     "ctc_all": {
+      "flagged": 0.1338,
+      "errors_caught": 0.5103,
+      "flagged_wrong": 0.248
+     }
+    },
+    "sure": {
+     "words": 2965,
+     "share_of_words": 0.7936,
+     "wrong": 78,
+     "share_of_all_errors": 0.321,
+     "auc": {
+      "dec_mean": 0.7418,
+      "ctc_peak_min": 0.7374,
+      "ctc_margin_min": 0.7179,
+      "ctc_top1": 0.6502,
+      "ctc_gap": 0.632,
+      "ctc_word_match": 0.6332,
+      "ctc_all": 0.7387,
+      "ctc_all_fitted_on_sure": 0.7368
+     }
+    },
+    "deletions": [
+     {
+      "threshold": 0.0,
+      "gaps": 4523,
+      "gaps_with_deletion": 168,
+      "gaps_flagged": 56,
+      "precision": 0.1786,
+      "precision_within_one_gap": 0.2679,
+      "recall": 0.0595,
+      "deleted_words": 202,
+      "deleted_words_found_with_same_text": 0.0594
+     },
+     {
+      "threshold": 0.3,
+      "gaps": 4523,
+      "gaps_with_deletion": 168,
+      "gaps_flagged": 51,
+      "precision": 0.1961,
+      "precision_within_one_gap": 0.2941,
+      "recall": 0.0595,
+      "deleted_words": 202,
+      "deleted_words_found_with_same_text": 0.0594
+     },
+     {
+      "threshold": 0.5,
+      "gaps": 4523,
+      "gaps_with_deletion": 168,
+      "gaps_flagged": 27,
+      "precision": 0.2222,
+      "precision_within_one_gap": 0.3704,
+      "recall": 0.0357,
+      "deleted_words": 202,
+      "deleted_words_found_with_same_text": 0.0347
+     },
+     {
+      "threshold": 0.7,
+      "gaps": 4523,
+      "gaps_with_deletion": 168,
+      "gaps_flagged": 11,
+      "precision": 0.3636,
+      "precision_within_one_gap": 0.5455,
+      "recall": 0.0238,
+      "deleted_words": 202,
+      "deleted_words_found_with_same_text": 0.0198
+     },
+     {
+      "threshold": 0.9,
+      "gaps": 4523,
+      "gaps_with_deletion": 168,
+      "gaps_flagged": 3,
+      "precision": 0.6667,
+      "precision_within_one_gap": 0.6667,
+      "recall": 0.0119,
+      "deleted_words": 202,
+      "deleted_words_found_with_same_text": 0.0099
+     }
+    ]
+   },
+   "test": {
+    "utterances": 596,
+    "words": 3689,
+    "wrong": 203,
+    "error_rate": 0.055,
+    "auc": {
+     "dec_mean": 0.8819,
+     "ctc_peak_min": 0.8556,
+     "ctc_margin_min": 0.8409,
+     "ctc_top1": 0.79,
+     "ctc_gap": 0.7533,
+     "ctc_word_match": 0.7965,
+     "dec+peak": 0.8871,
+     "dec+margin": 0.8805,
+     "dec+gap": 0.8605,
+     "dec+match": 0.9018,
+     "dec+all": 0.8924,
+     "ctc_all": 0.8609
+    },
+    "flag_10pct": {
+     "dec_mean": {
+      "flagged": 0.1209,
+      "errors_caught": 0.6108,
+      "flagged_wrong": 0.278
+     },
+     "ctc_peak_min": {
+      "flagged": 0.1309,
+      "errors_caught": 0.5567,
+      "flagged_wrong": 0.234
+     },
+     "ctc_margin_min": {
+      "flagged": 0.1404,
+      "errors_caught": 0.5616,
+      "flagged_wrong": 0.2201
+     },
+     "ctc_top1": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "ctc_gap": {
+      "flagged": 0.1092,
+      "errors_caught": 0.3941,
+      "flagged_wrong": 0.1985
+     },
+     "ctc_word_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "dec+peak": {
+      "flagged": 0.1247,
+      "errors_caught": 0.6108,
+      "flagged_wrong": 0.2696
+     },
+     "dec+margin": {
+      "flagged": 0.1312,
+      "errors_caught": 0.6256,
+      "flagged_wrong": 0.2624
+     },
+     "dec+gap": {
+      "flagged": 0.122,
+      "errors_caught": 0.6158,
+      "flagged_wrong": 0.2778
+     },
+     "dec+match": {
+      "flagged": 0.1342,
+      "errors_caught": 0.7192,
+      "flagged_wrong": 0.2949
+     },
+     "dec+all": {
+      "flagged": 0.1347,
+      "errors_caught": 0.6798,
+      "flagged_wrong": 0.2777
+     },
+     "ctc_all": {
+      "flagged": 0.1353,
+      "errors_caught": 0.6305,
+      "flagged_wrong": 0.2565
+     }
+    },
+    "auc_gain_over_dec_mean_95ci": {
+     "dec+peak": [
+      -0.0074,
+      0.0168
+     ],
+     "dec+margin": [
+      -0.0153,
+      0.012
+     ],
+     "dec+gap": [
+      -0.0371,
+      -0.0068
+     ],
+     "dec+match": [
+      0.0083,
+      0.0318
+     ],
+     "dec+all": [
+      -0.0043,
+      0.0257
+     ],
+     "ctc_all": [
+      -0.0431,
+      0.0004
+     ]
+    },
+    "sure": {
+     "words": 2916,
+     "share_of_words": 0.7905,
+     "wrong": 47,
+     "share_of_all_errors": 0.2315,
+     "auc": {
+      "dec_mean": 0.7986,
+      "ctc_peak_min": 0.7974,
+      "ctc_margin_min": 0.7787,
+      "ctc_top1": 0.696,
+      "ctc_gap": 0.6642,
+      "ctc_word_match": 0.725,
+      "ctc_all": 0.8031,
+      "ctc_all_fitted_on_sure": 0.8028
+     }
+    },
+    "deletions": [
+     {
+      "threshold": 0.0,
+      "gaps": 4474,
+      "gaps_with_deletion": 141,
+      "gaps_flagged": 48,
+      "precision": 0.1875,
+      "precision_within_one_gap": 0.2708,
+      "recall": 0.0638,
+      "deleted_words": 182,
+      "deleted_words_found_with_same_text": 0.0275
+     },
+     {
+      "threshold": 0.3,
+      "gaps": 4474,
+      "gaps_with_deletion": 141,
+      "gaps_flagged": 46,
+      "precision": 0.1739,
+      "precision_within_one_gap": 0.2609,
+      "recall": 0.0567,
+      "deleted_words": 182,
+      "deleted_words_found_with_same_text": 0.022
+     },
+     {
+      "threshold": 0.5,
+      "gaps": 4474,
+      "gaps_with_deletion": 141,
+      "gaps_flagged": 30,
+      "precision": 0.2,
+      "precision_within_one_gap": 0.3,
+      "recall": 0.0426,
+      "deleted_words": 182,
+      "deleted_words_found_with_same_text": 0.022
+     },
+     {
+      "threshold": 0.7,
+      "gaps": 4474,
+      "gaps_with_deletion": 141,
+      "gaps_flagged": 10,
+      "precision": 0.0,
+      "precision_within_one_gap": 0.0,
+      "recall": 0.0,
+      "deleted_words": 182,
+      "deleted_words_found_with_same_text": 0.0
+     },
+     {
+      "threshold": 0.9,
+      "gaps": 4474,
+      "gaps_with_deletion": 141,
+      "gaps_flagged": 2,
+      "precision": 0.0,
+      "precision_within_one_gap": 0.0,
+      "recall": 0.0,
+      "deleted_words": 182,
+      "deleted_words_found_with_same_text": 0.0
+     }
+    ]
+   }
+  },
+  "earnings22": {
+   "utterances_with_digits_skipped": 241,
+   "dev": {
+    "utterances": 485,
+    "words": 7578,
+    "wrong": 528,
+    "error_rate": 0.0697,
+    "auc": {
+     "dec_mean": 0.8358,
+     "ctc_peak_min": 0.827,
+     "ctc_margin_min": 0.8162,
+     "ctc_top1": 0.7332,
+     "ctc_gap": 0.7032,
+     "ctc_word_match": 0.7076,
+     "dec+peak": 0.8507,
+     "dec+margin": 0.8399,
+     "dec+gap": 0.8096,
+     "dec+match": 0.8458,
+     "dec+all": 0.845,
+     "ctc_all": 0.8262
+    },
+    "flag_10pct": {
+     "dec_mean": {
+      "flagged": 0.0889,
+      "errors_caught": 0.4621,
+      "flagged_wrong": 0.362
+     },
+     "ctc_peak_min": {
+      "flagged": 0.0856,
+      "errors_caught": 0.4034,
+      "flagged_wrong": 0.3282
+     },
+     "ctc_margin_min": {
+      "flagged": 0.0821,
+      "errors_caught": 0.3617,
+      "flagged_wrong": 0.3071
+     },
+     "ctc_top1": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "ctc_gap": {
+      "flagged": 0.0897,
+      "errors_caught": 0.3201,
+      "flagged_wrong": 0.2485
+     },
+     "ctc_word_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "dec+peak": {
+      "flagged": 0.0866,
+      "errors_caught": 0.4792,
+      "flagged_wrong": 0.3857
+     },
+     "dec+margin": {
+      "flagged": 0.0841,
+      "errors_caught": 0.4678,
+      "flagged_wrong": 0.3878
+     },
+     "dec+gap": {
+      "flagged": 0.0875,
+      "errors_caught": 0.464,
+      "flagged_wrong": 0.3695
+     },
+     "dec+match": {
+      "flagged": 0.0835,
+      "errors_caught": 0.4867,
+      "flagged_wrong": 0.406
+     },
+     "dec+all": {
+      "flagged": 0.0846,
+      "errors_caught": 0.4848,
+      "flagged_wrong": 0.3994
+     },
+     "ctc_all": {
+      "flagged": 0.0834,
+      "errors_caught": 0.4148,
+      "flagged_wrong": 0.3465
+     }
+    },
+    "sure": {
+     "words": 6438,
+     "share_of_words": 0.8496,
+     "wrong": 201,
+     "share_of_all_errors": 0.3807,
+     "auc": {
+      "dec_mean": 0.7159,
+      "ctc_peak_min": 0.7436,
+      "ctc_margin_min": 0.7124,
+      "ctc_top1": 0.6168,
+      "ctc_gap": 0.6117,
+      "ctc_word_match": 0.6019,
+      "ctc_all": 0.7255,
+      "ctc_all_fitted_on_sure": 0.7263
+     }
+    },
+    "deletions": [
+     {
+      "threshold": 0.0,
+      "gaps": 8245,
+      "gaps_with_deletion": 178,
+      "gaps_flagged": 141,
+      "precision": 0.1702,
+      "precision_within_one_gap": 0.1915,
+      "recall": 0.1348,
+      "deleted_words": 234,
+      "deleted_words_found_with_same_text": 0.0769
+     },
+     {
+      "threshold": 0.3,
+      "gaps": 8245,
+      "gaps_with_deletion": 178,
+      "gaps_flagged": 138,
+      "precision": 0.1739,
+      "precision_within_one_gap": 0.1957,
+      "recall": 0.1348,
+      "deleted_words": 234,
+      "deleted_words_found_with_same_text": 0.0769
+     },
+     {
+      "threshold": 0.5,
+      "gaps": 8245,
+      "gaps_with_deletion": 178,
+      "gaps_flagged": 99,
+      "precision": 0.1919,
+      "precision_within_one_gap": 0.2222,
+      "recall": 0.1067,
+      "deleted_words": 234,
+      "deleted_words_found_with_same_text": 0.0556
+     },
+     {
+      "threshold": 0.7,
+      "gaps": 8245,
+      "gaps_with_deletion": 178,
+      "gaps_flagged": 44,
+      "precision": 0.2955,
+      "precision_within_one_gap": 0.3409,
+      "recall": 0.073,
+      "deleted_words": 234,
+      "deleted_words_found_with_same_text": 0.0427
+     },
+     {
+      "threshold": 0.9,
+      "gaps": 8245,
+      "gaps_with_deletion": 178,
+      "gaps_flagged": 13,
+      "precision": 0.5385,
+      "precision_within_one_gap": 0.5385,
+      "recall": 0.0393,
+      "deleted_words": 234,
+      "deleted_words_found_with_same_text": 0.0299
+     }
+    ]
+   },
+   "test": {
+    "utterances": 474,
+    "words": 7318,
+    "wrong": 512,
+    "error_rate": 0.07,
+    "auc": {
+     "dec_mean": 0.8372,
+     "ctc_peak_min": 0.8294,
+     "ctc_margin_min": 0.8167,
+     "ctc_top1": 0.7491,
+     "ctc_gap": 0.7146,
+     "ctc_word_match": 0.7208,
+     "dec+peak": 0.8475,
+     "dec+margin": 0.8404,
+     "dec+gap": 0.8042,
+     "dec+match": 0.8546,
+     "dec+all": 0.8456,
+     "ctc_all": 0.8283
+    },
+    "flag_10pct": {
+     "dec_mean": {
+      "flagged": 0.0868,
+      "errors_caught": 0.4395,
+      "flagged_wrong": 0.3543
+     },
+     "ctc_peak_min": {
+      "flagged": 0.082,
+      "errors_caught": 0.4316,
+      "flagged_wrong": 0.3683
+     },
+     "ctc_margin_min": {
+      "flagged": 0.0806,
+      "errors_caught": 0.4121,
+      "flagged_wrong": 0.3576
+     },
+     "ctc_top1": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "ctc_gap": {
+      "flagged": 0.0883,
+      "errors_caught": 0.3125,
+      "flagged_wrong": 0.2477
+     },
+     "ctc_word_match": {
+      "flagged": 0.0,
+      "errors_caught": 0.0,
+      "flagged_wrong": null
+     },
+     "dec+peak": {
+      "flagged": 0.0821,
+      "errors_caught": 0.4766,
+      "flagged_wrong": 0.406
+     },
+     "dec+margin": {
+      "flagged": 0.079,
+      "errors_caught": 0.4922,
+      "flagged_wrong": 0.436
+     },
+     "dec+gap": {
+      "flagged": 0.0835,
+      "errors_caught": 0.4453,
+      "flagged_wrong": 0.3732
+     },
+     "dec+match": {
+      "flagged": 0.0763,
+      "errors_caught": 0.4824,
+      "flagged_wrong": 0.4427
+     },
+     "dec+all": {
+      "flagged": 0.0782,
+      "errors_caught": 0.4922,
+      "flagged_wrong": 0.4406
+     },
+     "ctc_all": {
+      "flagged": 0.0779,
+      "errors_caught": 0.4531,
+      "flagged_wrong": 0.407
+     }
+    },
+    "auc_gain_over_dec_mean_95ci": {
+     "dec+peak": [
+      -0.0008,
+      0.0205
+     ],
+     "dec+margin": [
+      -0.0097,
+      0.0167
+     ],
+     "dec+gap": [
+      -0.0471,
+      -0.0194
+     ],
+     "dec+match": [
+      0.0084,
+      0.0267
+     ],
+     "dec+all": [
+      -0.0063,
+      0.0223
+     ],
+     "ctc_all": [
+      -0.0273,
+      0.0087
+     ]
+    },
+    "sure": {
+     "words": 6231,
+     "share_of_words": 0.8515,
+     "wrong": 210,
+     "share_of_all_errors": 0.4102,
+     "auc": {
+      "dec_mean": 0.7434,
+      "ctc_peak_min": 0.7434,
+      "ctc_margin_min": 0.7246,
+      "ctc_top1": 0.6236,
+      "ctc_gap": 0.6094,
+      "ctc_word_match": 0.613,
+      "ctc_all": 0.7359,
+      "ctc_all_fitted_on_sure": 0.7369
+     }
+    },
+    "deletions": [
+     {
+      "threshold": 0.0,
+      "gaps": 7941,
+      "gaps_with_deletion": 180,
+      "gaps_flagged": 113,
+      "precision": 0.1239,
+      "precision_within_one_gap": 0.1504,
+      "recall": 0.0778,
+      "deleted_words": 251,
+      "deleted_words_found_with_same_text": 0.0319
+     },
+     {
+      "threshold": 0.3,
+      "gaps": 7941,
+      "gaps_with_deletion": 180,
+      "gaps_flagged": 110,
+      "precision": 0.1182,
+      "precision_within_one_gap": 0.1455,
+      "recall": 0.0722,
+      "deleted_words": 251,
+      "deleted_words_found_with_same_text": 0.0319
+     },
+     {
+      "threshold": 0.5,
+      "gaps": 7941,
+      "gaps_with_deletion": 180,
+      "gaps_flagged": 71,
+      "precision": 0.1268,
+      "precision_within_one_gap": 0.1408,
+      "recall": 0.05,
+      "deleted_words": 251,
+      "deleted_words_found_with_same_text": 0.0239
+     },
+     {
+      "threshold": 0.7,
+      "gaps": 7941,
+      "gaps_with_deletion": 180,
+      "gaps_flagged": 23,
+      "precision": 0.2609,
+      "precision_within_one_gap": 0.2609,
+      "recall": 0.0333,
+      "deleted_words": 251,
+      "deleted_words_found_with_same_text": 0.0159
+     },
+     {
+      "threshold": 0.9,
+      "gaps": 7941,
+      "gaps_with_deletion": 180,
+      "gaps_flagged": 0,
+      "precision": null,
+      "precision_within_one_gap": null,
+      "recall": 0.0,
+      "deleted_words": 251,
+      "deleted_words_found_with_same_text": 0.0
+     }
+    ]
+   }
+  }
+ }
+}
