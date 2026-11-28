@@ -58,6 +58,31 @@ Limits:
 - The reference times are MFA's, not hand labels.
 - Chunking by rumblex's VAD is not how NeMo would cut a long file itself.
 
+## The same on a GTX 1070
+
+The same data and script on a local GTX 1070 (8 GB), float32, 2026-11-28, at commit `30641e9`, each
+system with the machine to itself. NeMo is not installed here, so Parakeet ran through the transformers
+port only. Batch size was 8 for rumblex and 16 for Parakeet instead of 32.
+
+| | rumblex | Parakeet, transformers |
+|---|---|---|
+| WER | 2.1% | 1.8% |
+| word start MAE | 20.9 ms | 67.4 ms |
+| starts ≤ 100 ms | 98.0% | 77.8% |
+| word end MAE | 31.8 ms | 74.8 ms |
+| ends ≤ 100 ms | 93.5% | 74.4% |
+| 1 h file, times real time | 39× | 30× |
+| 1 h file, seconds | 91.6 | 120.6 |
+| peak GPU memory | 6.5 GB | 6.1 GB |
+
+WER and word times are the same as in the float32 runs on the RTX 4090. The speed column compares rumblex
+with the slow port, as in the third column above; on the 4090 NeMo was about 12 times faster in float32 than the
+port, so this says nothing about how fast Parakeet can run on this card. rumblex's 91.6 s include 13.4 s
+of alignment. Files: `rumblex_gtx1070_float32_librispeech.json` and
+`parakeet_gtx1070_float32_librispeech.json`.
+
+## Files
+
 Raw output of `scripts/runpod_parakeet.sh`: one JSON per run, `table.md`, `envs.txt`, `session.log`. The
 rumblex and transformers runs are at commit `0169240`. The two NeMo runs were added in the same pod session
 afterwards, with the `parakeet-nemo` system of the next commit copied to the pod and the same arguments;
