@@ -18,8 +18,7 @@ Qwen3-ForcedAligner-0.6B was added on 2026-11-27 through FA-Bench's own `qwen3_f
 and same data, on a GTX 1070. Its two rows have an empty `run` column, like WhisperX's.
 
 This is FA-Bench's track 1: the tools are handed the reference words and only have to place them.
-Transcribing from audio alone (track 2) has been run for rumblex on dev only; see
-[Track 2](#track-2-dev-only) below.
+Transcribing from audio alone (track 2) has been run for rumblex only; see [Track 2](#track-2) below.
 
 ## Setup
 
@@ -113,9 +112,9 @@ MMS-FA 0.344 / 37.1 ms. rumblex 0.5.0, at 0.358 / 42.5 ms on test, sat next to M
 WhisperX on MAE. 0.6.0, at 0.536 / 30.3 ms, is ahead of MMS-FA and WhisperX on both and still clearly
 behind the aligners built on phone models.
 
-## Track 2 (dev only)
+## Track 2
 
-`rumblex.transcribe` on the dev split, 2026-11-27, rumblex 0.6.1 at commit `deb1d8c` with the worker of
+`rumblex.transcribe` on the dev split first, 2026-11-27, rumblex 0.6.1 at commit `deb1d8c` with the worker of
 this branch, GTX 1070, float32. Three results, `track 2 first run`, `track 2 fillers kept` and `track 2`
 in the CSV:
 
@@ -142,8 +141,18 @@ words, not FA-Bench's scorer) says part of the WER is spelling convention and no
 writes `yknow`, `gonna` and `wanna` where rumblex writes "you know" (251 times), "going to" (85) and
 "want to" (49), each counted as two errors. That has been left as it is.
 
-The test split is to be run once with the kept setting. The WhisperX side (`whisperx_asr`) has not been
-run. The runs took 61 to 79 minutes on a shared card and are not speed measurements.
+The test split was then run once, on 2026-11-28, with the kept setting and the same worker (`track 2`,
+`test` in the CSV):
+
+| test | WER | words matched | start MAE | end MAE | timestamp MAE | boundary MAE | F1 @ 20 ms |
+|---|---|---|---|---|---|---|---|
+| fillers left out | 10.4% | 42,282 of 45,922 | 24.1 ms | 29.5 ms | 26.8 ms | 29.1 ms | 0.504 |
+
+It agrees with dev: WER 10.4% against 10.7%, timing on matched words within 1 ms, F1 0.504 against 0.507.
+Track 1 on test gave start 25.1 ms, end 29.6 ms and F1 0.536.
+
+The WhisperX side (`whisperx_asr`) has not been run, so there is no other tool to compare with here. The
+runs took 58 to 79 minutes each on a shared card and are not speed measurements.
 
 Background and how to run it:
 
