@@ -13,6 +13,7 @@ from rumblex.vad import SpeechChunk, SpeechRegion
 
 def test_word_key():
     assert word_key("Mr.") == "mr" and word_key('"Don\'t,"') == "don't" and word_key("—") == ""
+    assert word_key("دايماً،") == word_key("دايما") and word_key("شـركة") == word_key("شركة")
 
 
 def test_assign_words_follows_matches():

@@ -135,6 +135,8 @@ class Diarizer:
         if pipeline is None:
             import torch
 
+            from rumblex.transcriber import default_device
+
             _disable_pyannote_telemetry()
             from pyannote.audio import Pipeline
 
@@ -143,7 +145,7 @@ class Diarizer:
                 raise RuntimeError(
                     f"could not load {model}; accept its conditions on Hugging Face and log in"
                 )
-            pipeline.to(torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu")))
+            pipeline.to(torch.device(device) if device else default_device())
         self.pipeline = pipeline
 
     def __call__(

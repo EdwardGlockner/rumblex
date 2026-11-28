@@ -37,9 +37,11 @@ def _add_model_args(p: argparse.ArgumentParser) -> None:
     m = p.add_argument_group("model")
     m.add_argument("--model", default="Reson8/Rumble-2-Flash",
                    help="Hugging Face repo id or local folder (default: %(default)s)")  # fmt: skip
-    m.add_argument("--device", default=None, help="cuda, cuda:1, cpu (default: cuda if available)")
+    m.add_argument(
+        "--device", default=None, help="cuda, cuda:1, mps, cpu (default: cuda or mps if available)"
+    )
     m.add_argument("--compute_type", default=None, choices=["float32", "float16", "bfloat16"],
-                   help="default: bfloat16 on Ampere+ GPUs, float32 otherwise")  # fmt: skip
+                   help="default: bfloat16 on Ampere+ GPUs and mps, float32 otherwise")  # fmt: skip
     m.add_argument("--batch_size", type=_positive(int), default=8,
                    help="chunks decoded together (default: %(default)s)")  # fmt: skip
     m.add_argument(
@@ -192,14 +194,14 @@ def _check_args(args) -> str | None:
     if args.language is not None:
         args.language = args.language.strip() or None
     if args.language is not None:
-        from rumblex.transcriber import language_name
+        from rumblex.transcriber import EXTRA_LANGUAGE_CODE_TO_NAME, language_name
 
         try:
             language_name(args.language)
         except ValueError:
             from transformers.models.qwen3_asr.processing_qwen3_asr import LANGUAGE_CODE_TO_NAME
 
-            codes = ", ".join(sorted(LANGUAGE_CODE_TO_NAME))
+            codes = ", ".join(sorted({**LANGUAGE_CODE_TO_NAME, **EXTRA_LANGUAGE_CODE_TO_NAME}))
             return f"unsupported language {args.language!r}; use a language name or one of: {codes}"
     return None
 

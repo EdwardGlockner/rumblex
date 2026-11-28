@@ -503,3 +503,21 @@ def test_boundary_head_moves_starts_and_ends():
     old = Aligner(FakeHead(), FakeTokenizer(), AlignOptions(boundary_head=False, blank_penalty=0.0))
     other = torch.zeros(20, 3)
     assert al.align_tokens([7, 8, 10], other, 10.0) == old.align_tokens([7, 8, 10], other, 10.0)
+
+
+def test_multilingual_marks_tatweel_and_sentence_splits():
+    from rumblex.aligner import _ends_alnum
+
+    assert word_key("دايماً") == word_key("دايما")
+    assert word_key("شـركة") == word_key("شركة")
+    assert word_key("café") == word_key("cafe\u0301")
+    assert _ends_alnum("دايماً") and _ends_alnum("مرحباً") and _ends_alnum("है")
+    assert not _ends_alnum("دايماً.") and not _ends_alnum("شنو؟")
+    words = [
+        WordSegment("د.", 0.0, 0.2, 1.0),
+        WordSegment("محمد", 0.2, 0.5, 1.0),
+        WordSegment("شنو؟", 0.5, 0.9, 1.0),
+        WordSegment("نعم.", 1.0, 1.3, 1.0),
+    ]
+    segs = split_sentences(Segment(0.0, 1.3, "", words))
+    assert [s.text for s in segs] == ["د. محمد شنو؟", "نعم."]

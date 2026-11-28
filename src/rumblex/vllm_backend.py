@@ -30,6 +30,7 @@ from rumblex.transcriber import (
     MAX_TOKENS_PER_SECOND,
     ChunkTranscript,
     RumbleTranscriber,
+    default_device,
     default_dtype,
     encode_clips,
     language_from_prefix,
@@ -104,7 +105,7 @@ class EncoderRunner:
     ):
         from transformers import AutoProcessor, Qwen3ASRForConditionalGeneration
 
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(device) if device else default_device()
         self.dtype = resolve_dtype(dtype) or default_dtype(self.device)
         with quiet_loading():
             self.processor = AutoProcessor.from_pretrained(model)
@@ -139,7 +140,7 @@ class VLLMTranscriber:
         # does not load the encoder.
         if batch_size < 1:
             raise ValueError(f"batch_size must be at least 1, got {batch_size}")
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(device) if device else default_device()
         self.dtype = resolve_dtype(dtype) or default_dtype(self.device)
         if client is None:
             from openai import OpenAI

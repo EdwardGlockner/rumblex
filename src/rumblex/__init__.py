@@ -29,9 +29,10 @@ def load_model(
     compute_type: str | torch.dtype | None = None,
     batch_size: int = 8,
 ) -> RumbleTranscriber:
-    """Load the model (a Hugging Face repo id or a local folder). `device` defaults to cuda if available.
-    `compute_type`: float32 / float16 / bfloat16 (or fp32 / fp16 / bf16); default bfloat16 on Ampere and
-    newer GPUs, float32 otherwise. `batch_size` is the number of chunks decoded together."""
+    """Load the model (a Hugging Face repo id or a local folder). `device` defaults to cuda or mps if
+    available, else cpu. `compute_type`: float32 / float16 / bfloat16 (or fp32 / fp16 / bf16); default
+    bfloat16 on Ampere+ GPUs and Apple Silicon MPS, float32 otherwise. `batch_size` is the number of chunks
+    decoded together."""
     from rumblex.transcriber import RumbleTranscriber, resolve_dtype
 
     dtype = resolve_dtype(compute_type)
